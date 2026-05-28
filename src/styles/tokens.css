@@ -1,0 +1,378 @@
+/* ============================================================================
+   Sigil — Global Design System
+   tokens.css
+   
+   Single source of truth for all design tokens used across the application.
+   Organised into:
+     1.  Google Fonts Import
+     2.  CSS Custom Properties (Design Tokens)
+         a. Colour Palette — Raw hue/chroma definitions
+         b. Paper Texture Tokens — Per-texture colour surfaces
+         c. Paper Luminance Guardrails — Ink & Wax colour allow-lists
+         d. Wax Seal Palette
+         e. Typography Scale & Families
+         f. Spacing & Sizing Scale
+         g. Z-Index Layers
+         h. Animation Timings
+         i. Shadow & Depth
+         j. Deckled Edge & Border Radii
+     3.  Utility Resets
+   ============================================================================ */
+
+/* ── 1. Google Fonts ──────────────────────────────────────────────────────── */
+
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400;1,600;1,700&family=IM+Fell+English:ital@0;1&family=Cinzel+Decorative:wght@400;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400;1,600&family=Spectral:ital,wght@0,300;0,400;1,300;1,400&family=GFS+Didot&display=swap');
+
+/* ── 2. Design Tokens ─────────────────────────────────────────────────────── */
+
+:root {
+
+  /* ── 2a. Colour Palette — Raw definitions ──────────────────────────────── */
+
+  /* Neutral bedrock */
+  --hue-neutral:        30;
+  --hue-warm:           38;
+
+  --color-ink-900:      hsl(220 18% 10%);
+  --color-ink-800:      hsl(220 14% 16%);
+  --color-ink-700:      hsl(220 10% 25%);
+  --color-ink-600:      hsl(220  8% 36%);
+  --color-ink-500:      hsl(220  6% 52%);
+  --color-ink-400:      hsl(220  5% 68%);
+  --color-ink-300:      hsl(220  4% 80%);
+  --color-ink-200:      hsl(220  3% 90%);
+  --color-ink-100:      hsl(220  2% 96%);
+
+  /* Warm sepia chain */
+  --color-sepia-900:    hsl(30 28% 14%);
+  --color-sepia-800:    hsl(30 26% 22%);
+  --color-sepia-700:    hsl(32 24% 34%);
+  --color-sepia-600:    hsl(34 22% 46%);
+  --color-sepia-500:    hsl(36 20% 58%);
+  --color-sepia-400:    hsl(38 18% 70%);
+  --color-sepia-300:    hsl(40 16% 82%);
+  --color-sepia-200:    hsl(42 14% 90%);
+  --color-sepia-100:    hsl(44 12% 96%);
+
+  /* Gold metallics */
+  --color-gold-rich:    hsl(43 88% 58%);
+  --color-gold-pale:    hsl(46 70% 74%);
+  --color-gold-burnish: hsl(40 76% 44%);
+  --color-gold-foil:    hsl(48 96% 66%);
+  --color-silver:       hsl(220 8% 80%);
+  --color-silver-bright:hsl(220 10% 90%);
+
+  /* Accent burgundy */
+  --color-burgundy-deep:  hsl(348 60% 22%);
+  --color-burgundy-mid:   hsl(348 54% 38%);
+  --color-burgundy-light: hsl(348 48% 56%);
+
+  /* ── 2b. Paper Texture Tokens ───────────────────────────────────────────── */
+
+  /* Each paper texture gets a surface colour, a grain overlay opacity, and a
+     luminance classification that gates ink/wax choices. */
+
+  --paper-parchment:          hsl(44 52% 88%);
+  --paper-parchment-grain:    0.25;
+  --paper-parchment-luminance: LIGHT;  /* reference value for JS */
+
+  --paper-linen:              hsl(38 28% 84%);
+  --paper-linen-grain:        0.30;
+  --paper-linen-luminance:    LIGHT;
+
+  --paper-cotton-rag:         hsl(50 18% 92%);
+  --paper-cotton-rag-grain:   0.18;
+  --paper-cotton-rag-luminance: LIGHT;
+
+  --paper-vellum:             hsl(48 35% 78%);
+  --paper-vellum-grain:       0.20;
+  --paper-vellum-luminance:   MEDIUM;
+
+  /* Dark paper (future expansion) */
+  --paper-midnight:           hsl(220 22% 12%);
+  --paper-midnight-grain:     0.15;
+
+  --paper-charcoal:           hsl(220 14% 20%);
+  --paper-charcoal-grain:     0.12;
+
+  /* ── 2c. Paper Luminance Guardrails ─────────────────────────────────────── */
+
+  /* LIGHT paper → dark ink, deep wax permitted */
+  --ink-on-light:             var(--color-sepia-800);
+  --ink-alt-on-light:         var(--color-ink-900);
+  --ink-accent-on-light:      var(--color-gold-burnish);
+  --wax-allowed-on-light:     "crimson, midnight, forest, indigo";   /* advisory */
+
+  /* MEDIUM paper → warm sepia ink or white ink */
+  --ink-on-medium:            var(--color-sepia-900);
+  --ink-alt-on-medium:        hsl(44 50% 96%);
+  --ink-accent-on-medium:     var(--color-gold-foil);
+  --wax-allowed-on-medium:    "crimson, midnight, charcoal, ivory";
+
+  /* DARK paper → light ink mandatory */
+  --ink-on-dark:              hsl(44 60% 94%);
+  --ink-alt-on-dark:          var(--color-silver-bright);
+  --ink-accent-on-dark:       var(--color-gold-foil);
+  --wax-allowed-on-dark:      "ivory, champagne, gold";
+
+  /* ── 2d. Wax Seal Palette ───────────────────────────────────────────────── */
+
+  --wax-crimson:       hsl(348 72% 32%);
+  --wax-crimson-light: hsl(348 60% 52%);
+  --wax-crimson-sheen: hsl(348 80% 22%);
+
+  --wax-midnight:      hsl(225 50% 16%);
+  --wax-midnight-light:hsl(225 40% 32%);
+  --wax-midnight-sheen:hsl(225 60% 10%);
+
+  --wax-forest:        hsl(160 44% 18%);
+  --wax-forest-light:  hsl(160 36% 32%);
+  --wax-forest-sheen:  hsl(160 54% 10%);
+
+  --wax-ivory:         hsl(44 48% 82%);
+  --wax-ivory-light:   hsl(44 40% 92%);
+  --wax-ivory-sheen:   hsl(44 56% 72%);
+
+  --wax-obsidian:      hsl(220 18% 8%);
+  --wax-obsidian-light:hsl(220 14% 20%);
+  --wax-obsidian-sheen:hsl(220 22% 4%);
+
+  --wax-amethyst:      hsl(280 48% 28%);
+  --wax-amethyst-light:hsl(280 40% 44%);
+  --wax-amethyst-sheen:hsl(280 56% 18%);
+
+  /* ── 2e. Typography Scale & Families ───────────────────────────────────── */
+
+  --font-display:      'Cinzel Decorative', serif;
+  --font-script:       'Cormorant Garamond', serif;
+  --font-editorial:    'Playfair Display', serif;
+  --font-body:         'Spectral', serif;
+  --font-historica:    'IM Fell English', serif;
+  --font-mono:         'Courier New', monospace;
+
+  /* Fluid type scale (clamp: min | preferred | max) */
+  --text-xs:           clamp(0.65rem,  0.5vw + 0.45rem, 0.75rem);
+  --text-sm:           clamp(0.80rem,  0.6vw + 0.55rem, 0.90rem);
+  --text-base:         clamp(0.95rem,  0.7vw + 0.65rem, 1.05rem);
+  --text-md:           clamp(1.10rem,  0.9vw + 0.80rem, 1.30rem);
+  --text-lg:           clamp(1.30rem,  1.1vw + 0.90rem, 1.60rem);
+  --text-xl:           clamp(1.60rem,  1.5vw + 1.00rem, 2.00rem);
+  --text-2xl:          clamp(2.00rem,  2.0vw + 1.20rem, 2.80rem);
+  --text-3xl:          clamp(2.60rem,  3.0vw + 1.40rem, 3.80rem);
+  --text-4xl:          clamp(3.20rem,  4.0vw + 1.60rem, 5.00rem);
+
+  /* ── 2f. Spacing & Sizing Scale ─────────────────────────────────────────── */
+
+  --space-1:    0.25rem;
+  --space-2:    0.50rem;
+  --space-3:    0.75rem;
+  --space-4:    1.00rem;
+  --space-5:    1.25rem;
+  --space-6:    1.50rem;
+  --space-8:    2.00rem;
+  --space-10:   2.50rem;
+  --space-12:   3.00rem;
+  --space-16:   4.00rem;
+  --space-20:   5.00rem;
+  --space-24:   6.00rem;
+
+  /* Invitation sheet proportions (ISO B5 landscape proxy) */
+  --stage-width:        min(640px, 90vw);
+  --stage-height:       calc(var(--stage-width) * 1.41421);   /* √2 ratio */
+  --stage-padding:      var(--space-12);
+
+  /* Inspector sidebar */
+  --inspector-width:    320px;
+  --toolbar-height:     56px;
+
+  /* Wax seal base size */
+  --seal-base-size:     96px;
+
+  /* ── 2g. Z-Index Layers ─────────────────────────────────────────────────── */
+
+  --z-base:        0;
+  --z-texture:     1;
+  --z-content:     10;
+  --z-seal:        20;
+  --z-overlay:     30;
+  --z-inspector:   40;
+  --z-toolbar:     50;
+  --z-modal:       60;
+  --z-toast:       70;
+
+  /* ── 2h. Animation Timings ──────────────────────────────────────────────── */
+
+  --ease-luxury:          cubic-bezier(0.22, 0.61, 0.36, 1.00);
+  --ease-spring:          cubic-bezier(0.34, 1.56, 0.64, 1.00);
+  --ease-silk:            cubic-bezier(0.65, 0.00, 0.35, 1.00);
+  --ease-reveal:          cubic-bezier(0.16, 1.00, 0.30, 1.00);
+  --ease-out-expo:        cubic-bezier(0.19, 1.00, 0.22, 1.00);
+
+  --dur-instant:          80ms;
+  --dur-fast:             180ms;
+  --dur-normal:           320ms;
+  --dur-slow:             560ms;
+  --dur-envelope-flip:    900ms;
+  --dur-scroll-unfurl:    1200ms;
+  --dur-seal-break:       600ms;
+  --dur-reveal-fade:      800ms;
+
+  /* ── 2i. Shadow & Depth ─────────────────────────────────────────────────── */
+
+  /* Paper sheet resting on the canvas surface */
+  --shadow-paper:
+    0  2px   4px  hsl(220 20% 12% / 0.06),
+    0  6px  16px  hsl(220 20% 12% / 0.10),
+    0 16px  40px  hsl(220 20% 12% / 0.14),
+    0 32px  64px  hsl(220 20% 12% / 0.08);
+
+  /* Wax seal raised surface */
+  --shadow-seal:
+    0  2px   6px  hsl(0 60% 10% / 0.35),
+    0  6px  18px  hsl(0 60% 10% / 0.20),
+    0  1px   2px  hsl(0 60% 10% / 0.50) inset;
+
+  /* Toolbar / Inspector panels */
+  --shadow-panel:
+    0  1px   3px  hsl(220 20% 8% / 0.08),
+    0  4px  12px  hsl(220 20% 8% / 0.12);
+
+  /* Hover lift on interactive elements */
+  --shadow-lift:
+    0  8px  24px  hsl(220 20% 8% / 0.22),
+    0 20px  48px  hsl(220 20% 8% / 0.14);
+
+  /* Text embossing (blend mode overlay) */
+  --shadow-emboss:
+    0  1px  0  hsl(44 60% 96% / 0.40),
+    0 -1px  0  hsl(30 30% 14% / 0.30);
+
+  /* ── 2j. Deckled Edge & Border Radii ───────────────────────────────────── */
+
+  --radius-xs:     2px;
+  --radius-sm:     4px;
+  --radius-md:     8px;
+  --radius-lg:     16px;
+  --radius-xl:     24px;
+  --radius-pill:   9999px;
+
+  /* Deckled / torn-paper edge clip-path — used on invitation borders.
+     A multi-stop polygon mimicking hand-torn fibres. Adjusted per border. */
+  --deckle-top:    polygon(
+    0%  2.2%, 1.5%  0.8%, 3.1%  2.0%, 4.8%  0.4%, 6.3%  1.8%,
+    7.9%  0.2%, 9.4%  2.1%, 11.0%  0.6%, 12.6%  1.9%, 14.2%  0.3%,
+    15.7%  2.2%, 17.3%  0.5%, 18.9%  1.8%, 20.5%  0.1%, 22.0%  2.0%,
+    23.6%  0.4%, 25.2%  1.7%, 26.7%  0.3%, 28.3%  2.1%, 29.9%  0.6%,
+    31.5%  1.9%, 33.0%  0.2%, 34.6%  2.0%, 36.2%  0.5%, 37.7%  1.8%,
+    39.3%  0.1%, 40.9%  2.2%, 42.4%  0.4%, 44.0%  1.8%, 45.6%  0.2%,
+    47.2%  2.1%, 48.7%  0.5%, 50.3%  1.9%, 51.9%  0.3%, 53.4%  2.0%,
+    55.0%  0.4%, 56.6%  1.8%, 58.2%  0.2%, 59.7%  2.1%, 61.3%  0.5%,
+    62.9%  1.9%, 64.4%  0.3%, 66.0%  2.0%, 67.6%  0.5%, 69.2%  1.8%,
+    70.7%  0.2%, 72.3%  2.1%, 73.9%  0.5%, 75.4%  1.9%, 77.0%  0.3%,
+    78.6%  2.0%, 80.2%  0.4%, 81.7%  1.8%, 83.3%  0.2%, 84.9%  2.1%,
+    86.4%  0.5%, 88.0%  1.9%, 89.6%  0.3%, 91.2%  2.0%, 92.7%  0.4%,
+    94.3%  1.8%, 95.9%  0.2%, 97.4%  2.1%, 98.2%  0.5%, 100% 2.0%,
+    100% 100%, 0% 100%
+  );
+
+  /* ── UI Shell colours ───────────────────────────────────────────────────── */
+
+  --ui-bg:           hsl(220 18% 10%);
+  --ui-surface:      hsl(220 14% 14%);
+  --ui-surface-raised: hsl(220 12% 17%);
+  --ui-border:       hsl(220 10% 22%);
+  --ui-border-subtle:hsl(220  8% 18%);
+  --ui-text-primary: hsl(220  6% 92%);
+  --ui-text-secondary: hsl(220  5% 62%);
+  --ui-text-muted:   hsl(220  4% 42%);
+  --ui-accent:       var(--color-gold-burnish);
+  --ui-accent-glow:  hsl(40 76% 44% / 0.25);
+}
+
+/* ── 3. Utility Resets & Base ─────────────────────────────────────────────── */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  color: var(--ui-text-primary);
+  background-color: var(--ui-bg);
+  line-height: 1.6;
+  min-height: 100dvh;
+  overflow-x: hidden;
+}
+
+/* Suppression of user-agent focus rings for mouse users;
+   preserved for keyboard navigation via :focus-visible */
+:focus {
+  outline: none;
+}
+
+:focus-visible {
+  outline: 2px solid var(--ui-accent);
+  outline-offset: 3px;
+  border-radius: var(--radius-sm);
+}
+
+/* Smooth image rendering */
+img,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+/* Button base strip */
+button {
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+}
+
+/* Input base strip */
+input,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
+  background: transparent;
+  border: none;
+}
+
+/* Remove list decorations for elements with role=list */
+ul[role='list'],
+ol[role='list'] {
+  list-style: none;
+}
+
+/* Typography defaults on <p> */
+p {
+  max-width: 70ch;
+}
+
+/* Prevent text overflow globally */
+h1, h2, h3, h4, h5, h6 {
+  overflow-wrap: break-word;
+  line-height: 1.2;
+}
+
+/* Root mount node */
+#root {
+  display: contents;
+}

@@ -1,0 +1,212 @@
+/* ============================================================================
+   Sigil — Main Entry Stylesheet
+   index.css
+   
+   Imports all stylesheets in dependency order. No utility-framework classes.
+   All layout and component styles are co-located in their own .css files.
+   ============================================================================ */
+
+@import './styles/tokens.css';
+@import './styles/creator.css';
+
+/* ── Application Shell ───────────────────────────────────────────────────── */
+
+.sigil-app {
+  display: grid;
+  grid-template-rows: var(--toolbar-height) 1fr;
+  grid-template-columns: 1fr var(--inspector-width);
+  grid-template-areas:
+    "toolbar   toolbar"
+    "canvas    inspector";
+  height: 100dvh;
+  width: 100%;
+  overflow: hidden;
+  background-color: var(--ui-bg);
+}
+
+/* When in recipient mode, collapse the inspector and toolbar */
+.sigil-app[data-mode="RECIPIENT"] {
+  grid-template-rows: 1fr;
+  grid-template-columns: 1fr;
+  grid-template-areas: "canvas";
+}
+
+/* ── Canvas Stage Backdrop ───────────────────────────────────────────────── */
+
+.canvas-backdrop {
+  grid-area: canvas;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: auto;
+  padding: var(--space-8);
+  
+  /* Subtle dot-grid pattern to suggest a design surface */
+  background-image:
+    radial-gradient(circle, hsl(220 10% 28% / 0.6) 1px, transparent 1px);
+  background-size: 28px 28px;
+  background-position: center center;
+}
+
+/* ── Toolbar Shell ───────────────────────────────────────────────────────── */
+
+.toolbar {
+  grid-area: toolbar;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--space-6);
+  background: var(--ui-surface);
+  border-bottom: 1px solid var(--ui-border);
+  box-shadow: var(--shadow-panel);
+  z-index: var(--z-toolbar);
+}
+
+/* ── Inspector Shell ─────────────────────────────────────────────────────── */
+
+.inspector {
+  grid-area: inspector;
+  display: flex;
+  flex-direction: column;
+  background: var(--ui-surface);
+  border-left: 1px solid var(--ui-border);
+  overflow-y: auto;
+  z-index: var(--z-inspector);
+}
+
+/* ── Invitation Stage ────────────────────────────────────────────────────── */
+
+.invitation-stage {
+  position: relative;
+  width: var(--stage-width);
+  height: var(--stage-height);
+  box-shadow: var(--shadow-paper);
+  transform-style: preserve-3d;
+  will-change: transform;
+  
+  /* Default parchment background — overridden per-design by inline style */
+  background-color: var(--paper-parchment);
+  
+  /* Deckled edge — uses clip-path polygon defined in tokens */
+  clip-path: var(--deckle-top);
+}
+
+/* ── Paper Texture Overlay (SVG noise grain) ─────────────────────────────── */
+
+.invitation-stage::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: var(--z-texture);
+  pointer-events: none;
+  border-radius: inherit;
+  
+  /* SVG noise texture rendered via filter; actual texture swapping
+     is handled by a filter on the stage element itself */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E");
+  background-size: 300px 300px;
+  mix-blend-mode: multiply;
+  opacity: var(--paper-parchment-grain, 0.25);
+}
+
+/* ── Mix-blend ink effect on text blocks ─────────────────────────────────── */
+
+.text-block {
+  position: absolute;
+  z-index: var(--z-content);
+  transform: translate(-50%, -50%);
+  mix-blend-mode: multiply;
+  pointer-events: auto;
+  cursor: text;
+  user-select: none;
+  transition:
+    outline var(--dur-fast) var(--ease-luxury),
+    box-shadow var(--dur-fast) var(--ease-luxury);
+}
+
+.text-block:hover {
+  outline: 1.5px dashed hsl(220 10% 50% / 0.5);
+  outline-offset: 6px;
+}
+
+.text-block.is-selected {
+  outline: 2px solid var(--ui-accent);
+  outline-offset: 6px;
+}
+
+/* ── Wax Seal Positioner ─────────────────────────────────────────────────── */
+
+.wax-seal-positioner {
+  position: absolute;
+  bottom: 10%;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: var(--z-seal);
+  cursor: pointer;
+}
+
+/* ── SVG Filter Definitions (hidden) ─────────────────────────────────────── */
+
+.sigil-svg-filters {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  pointer-events: none;
+  visibility: hidden;
+}
+
+/* ── Recipient Mode — full-bleed background ──────────────────────────────── */
+
+.recipient-backdrop {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100dvh;
+  background: radial-gradient(
+    ellipse 80% 80% at 50% 50%,
+    hsl(30 20% 8%) 0%,
+    hsl(220 20% 6%) 100%
+  );
+  overflow: hidden;
+}
+
+/* ── Reveal Overlay ──────────────────────────────────────────────────────── */
+
+.reveal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-overlay);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: hsl(220 22% 4% / 0.92);
+  backdrop-filter: blur(4px);
+}
+
+/* ── Utility classes (non-Tailwind, semantic) ─────────────────────────────── */
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.no-select {
+  user-select: none;
+  -webkit-user-select: none;
+}

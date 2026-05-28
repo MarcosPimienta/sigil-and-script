@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- SEO -->
+    <title>Sigil — Premium Digital Invitation Designer</title>
+    <meta
+      name="description"
+      content="Sigil is a luxury digital invitation customizer inspired by physical stationery — wax seals, parchment papers, and tactile opening animations."
+    />
+
+    <!-- Security headers (supplemented by server-side headers in production) -->
+    <!--
+      TODO(security): In production, move this CSP to a server-sent header.
+      The meta-tag CSP cannot block all attack vectors (e.g. navigation to data: URLs).
+      Nonces are not supported in meta-tag CSP, so we use 'self' for script-src.
+      X-Frame-Options and X-Content-Type-Options MUST be set server-side.
+    -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="
+        default-src 'self';
+        script-src  'self';
+        style-src   'self' 'unsafe-inline' https://fonts.googleapis.com;
+        font-src    'self' https://fonts.gstatic.com;
+        img-src     'self' data: blob:;
+        connect-src 'self';
+        object-src  'none';
+        frame-ancestors 'none';
+      "
+    />
+
+    <!-- Anti-clickjacking (meta fallback; prefer server header) -->
+    <meta http-equiv="X-Frame-Options" content="DENY" />
+
+    <!-- Google Fonts preconnect for performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
