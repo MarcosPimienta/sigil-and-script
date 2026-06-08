@@ -11,6 +11,7 @@ import {
   PAPER_CSS_VAR,
 } from '../../utils/luminanceGuards';
 import { WaxSeal } from './WaxSeal';
+import { WaxColorPicker } from './WaxColorPicker';
 
 // ── Wax colour option map ──────────────────────────────────────────────────────
 
@@ -171,7 +172,7 @@ export function LeftPanel() {
 
   // ── Determine currently active wax option id ──────────────────────────────
   const activeWaxId =
-    WAX_OPTIONS.find((o) => o.color === waxSeal.color)?.id ?? 'crimson';
+    WAX_OPTIONS.find((o) => o.color === waxSeal.color)?.id ?? null;
 
   return (
     <aside className="left-panel">
@@ -277,6 +278,10 @@ export function LeftPanel() {
               />
             ))}
           </div>
+          <WaxColorPicker
+            value={waxSeal.color}
+            paperLuminance={design.paperLuminance}
+          />
         </section>
 
         <Divider />

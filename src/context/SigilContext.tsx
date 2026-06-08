@@ -386,6 +386,7 @@ export function SigilProvider({ children, initialGuest }: SigilProviderProps) {
  * Primary hook for all Sigil state and actions.
  * Must be used inside a <SigilProvider>.
  */
+// eslint-disable-next-line react-refresh/only-export-components
 export function useSigil(): SigilContextValue {
   const ctx = useContext(SigilContext);
   if (ctx === null) {
@@ -398,6 +399,7 @@ export function useSigil(): SigilContextValue {
  * Lightweight selector hook — avoids re-renders when only reading
  * a derived slice of state.
  */
+// eslint-disable-next-line react-refresh/only-export-components
 export function useSigilSelector<T>(selector: (state: SigilAppState) => T): T {
   const { state } = useSigil();
   return selector(state);
