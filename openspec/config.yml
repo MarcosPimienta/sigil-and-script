@@ -1,0 +1,27 @@
+context: |
+  Tech stack: React 19, TypeScript 6, Vite 8
+  Architecture: Component-based SPA with useReducer + Context for global state (SigilContext)
+  Domain: Sigil & Script — a luxury digital invitation creator with wax-seal break animations and personalized guest reveals
+  All code, comments, documentation, and technical artifacts must be in English
+  No backend, no API — this is a pure frontend application
+  We use conventional commits (imperative English subject)
+
+  Project specs (single source of truth): All artifact creation and implementation MUST follow the project's technical context in docs/. Read and apply these when creating or implementing:
+  - docs/base-standards.md — core principles, TDD, type safety, language standards
+  - docs/frontend-standards.md — React 19 component patterns, useReducer + Context, CSS design tokens, Vite config
+  - docs/data-model.md — domain entities (InvitationDesign, WaxSealConfig, TextBlockConfig, GuestPayload), state shape, and action types
+  - docs/documentation-standards.md — documentation structure and maintenance
+
+  For implementation: adopt ai-specs/agents/frontend-developer.md for all feature work.
+  Use ai-specs/skills/ for workflow guidance when applicable.
+
+# Per-artifact rules
+rules:
+  _global:
+    - Before creating any artifact, read and apply docs/base-standards.md
+    - For all feature artifacts, read docs/frontend-standards.md and adopt guidelines from ai-specs/agents/frontend-developer.md
+    - Use docs/data-model.md for domain consistency in specs and tasks (types, state shape, action naming)
+    - All TypeScript must be strict — no any, all types explicit
+    - CSS values must reference design tokens from src/styles/tokens.css, never raw hex or pixel literals
+    - Any new types must be added to src/types/sigil.types.ts and documented in docs/data-model.md
+    - Any new state fields or actions must go through sigilReducer in src/context/SigilContext.tsx
