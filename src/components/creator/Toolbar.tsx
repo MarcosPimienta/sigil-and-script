@@ -8,7 +8,9 @@ const NAV_LINKS = ['Create', 'Templates', 'Features', 'Inspiration'] as const;
 
 export function Toolbar() {
   const { state, setAppMode } = useSigil();
-  const isRecipient = state.appMode === 'RECIPIENT';
+  const { appMode } = state;
+  const isRecipient = appMode === 'RECIPIENT';
+  const isDashboard = appMode === 'DASHBOARD';
 
   return (
     <header className="site-toolbar" role="banner">
@@ -44,17 +46,33 @@ export function Toolbar() {
           Log In
         </button>
 
-        {/* Mode toggle — swaps between Creator and Recipient preview */}
-        <button
-          id="btn-mode-toggle"
-          className={`toolbar-btn-primary${isRecipient ? ' toolbar-btn-primary--exit' : ''}`}
-          type="button"
-          onClick={() => setAppMode(isRecipient ? 'CREATOR' : 'RECIPIENT')}
-          aria-pressed={isRecipient}
-          aria-label={isRecipient ? 'Return to Studio' : 'Preview as Recipient'}
-        >
-          {isRecipient ? '← Studio' : 'Preview Invitation'}
-        </button>
+        {/* Dashboard toggle — hidden in recipient mode */}
+        {!isRecipient && (
+          <button
+            id="btn-dashboard"
+            className={`toolbar-btn-ghost${isDashboard ? ' toolbar-btn-ghost--active' : ''}`}
+            type="button"
+            onClick={() => setAppMode(isDashboard ? 'CREATOR' : 'DASHBOARD')}
+            aria-pressed={isDashboard}
+            aria-label={isDashboard ? 'Return to Studio' : 'Open guest dashboard'}
+          >
+            {isDashboard ? '← Studio' : 'Dashboard'}
+          </button>
+        )}
+
+        {/* Preview toggle — swaps between Creator and Recipient preview */}
+        {!isDashboard && (
+          <button
+            id="btn-mode-toggle"
+            className={`toolbar-btn-primary${isRecipient ? ' toolbar-btn-primary--exit' : ''}`}
+            type="button"
+            onClick={() => setAppMode(isRecipient ? 'CREATOR' : 'RECIPIENT')}
+            aria-pressed={isRecipient}
+            aria-label={isRecipient ? 'Return to Studio' : 'Preview as Recipient'}
+          >
+            {isRecipient ? '← Studio' : 'Preview Invitation'}
+          </button>
+        )}
       </div>
     </header>
   );

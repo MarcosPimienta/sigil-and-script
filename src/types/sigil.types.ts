@@ -5,7 +5,7 @@
 // ── App Mode ─────────────────────────────────────────────────────────────────
 
 /** Top-level mode: who is currently using the canvas */
-export type AppMode = 'CREATOR' | 'RECIPIENT';
+export type AppMode = 'CREATOR' | 'RECIPIENT' | 'DASHBOARD';
 
 // ── Recipient Reveal State Machine ────────────────────────────────────────────
 
@@ -65,6 +65,34 @@ export interface TextBlockConfig {
   textAlign: 'left' | 'center' | 'right';
   letterSpacing: number; // em units
   lineHeight: number;
+}
+
+// ── Guest Roster ──────────────────────────────────────────────────────────────
+
+export interface Dependent {
+  id: string;
+  name: string;
+  included: boolean;
+}
+
+export type InvitationStatus =
+  | 'PENDING'
+  | 'SENT'
+  | 'OPENED'
+  | 'RSVP_YES'
+  | 'RSVP_NO';
+
+export interface InviteeRecord {
+  id: string;
+  name: string;
+  email?: string;
+  dependents: Dependent[];
+  status: InvitationStatus;
+  openedAt?: string;
+}
+
+export interface GuestRoster {
+  invitees: InviteeRecord[];
 }
 
 // ── Guest System ──────────────────────────────────────────────────────────────

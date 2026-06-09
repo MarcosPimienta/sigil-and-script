@@ -15,6 +15,7 @@ import React, {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useReducer,
   type ReactNode,
 } from 'react';
@@ -22,9 +23,12 @@ import React, {
 import type {
   AppMode,
   CanvasSelection,
+  Dependent,
   GuestPayload,
+  GuestRoster,
   InspectorFocus,
   InvitationDesign,
+  InviteeRecord,
   RevealState,
 } from '../types/sigil.types';
 
@@ -138,6 +142,8 @@ export interface SigilAppState {
   canvasSelection: CanvasSelection;
   /** Whether the text editor is in active editing mode */
   isEditingText: boolean;
+  /** The full guest roster for this event session */
+  guestRoster: GuestRoster;
 }
 
 const INITIAL_STATE: SigilAppState = {
@@ -148,6 +154,7 @@ const INITIAL_STATE: SigilAppState = {
   inspectorFocus: { type: 'NONE' },
   canvasSelection: { selectedTextBlockId: null },
   isEditingText: false,
+  guestRoster: { invitees: [] },
 };
 
 // ── Action Types ──────────────────────────────────────────────────────────────
@@ -165,7 +172,15 @@ export type SigilAction =
   | { type: 'UPDATE_TEXT_BLOCK'; payload: { blockId: string; updates: Partial<import('../types/sigil.types').TextBlockConfig> } }
   | { type: 'UPDATE_WAX_SEAL'; payload: Partial<import('../types/sigil.types').WaxSealConfig> }
   | { type: 'SET_GUEST'; payload: Partial<GuestPayload> }
-  | { type: 'RESET_TO_DEFAULTS' };
+  | { type: 'RESET_TO_DEFAULTS' }
+  // ── Guest Roster ──────────────────────────────────────────────────────────
+  | { type: 'ADD_INVITEE'; payload: { name: string; email?: string } }
+  | { type: 'REMOVE_INVITEE'; payload: { inviteeId: string } }
+  | { type: 'UPDATE_INVITEE'; payload: { inviteeId: string; updates: Partial<Pick<InviteeRecord, 'name' | 'email' | 'status'>> } }
+  | { type: 'ADD_DEPENDENT'; payload: { inviteeId: string; name: string } }
+  | { type: 'REMOVE_DEPENDENT'; payload: { inviteeId: string; dependentId: string } }
+  | { type: 'TOGGLE_DEPENDENT'; payload: { inviteeId: string; dependentId: string } }
+  | { type: 'MARK_INVITATION_OPENED'; payload: { inviteeId: string } };
 
 // ── Reducer ───────────────────────────────────────────────────────────────────
 
@@ -251,10 +266,135 @@ function sigilReducer(state: SigilAppState, action: SigilAction): SigilAppState 
     case 'RESET_TO_DEFAULTS':
       return { ...INITIAL_STATE };
 
+    // ── Guest Roster ─────────────────────────────────────────────────────────
+    case 'ADD_INVITEE': {
+      const trimmed = action.payload.name.trim();
+      if (!trimmed) return state;
+      const record: InviteeRecord = {
+        id: crypto.randomUUID(),
+        name: trimmed,
+        email: action.payload.email,
+        dependents: [],
+        status: 'PENDING',
+      };
+      return {
+        ...state,
+        guestRoster: { invitees: [...state.guestRoster.invitees, record] },
+      };
+    }
+
+    case 'REMOVE_INVITEE':
+      return {
+        ...state,
+        guestRoster: {
+          invitees: state.guestRoster.invitees.filter(
+            (inv) => inv.id !== action.payload.inviteeId,
+          ),
+        },
+      };
+
+    case 'UPDATE_INVITEE':
+      return {
+        ...state,
+        guestRoster: {
+          invitees: state.guestRoster.invitees.map((inv) =>
+            inv.id === action.payload.inviteeId
+              ? { ...inv, ...action.payload.updates }
+              : inv,
+          ),
+        },
+      };
+
+    case 'ADD_DEPENDENT': {
+      const depName = action.payload.name.trim();
+      if (!depName) return state;
+      const dep: Dependent = {
+        id: crypto.randomUUID(),
+        name: depName,
+        included: true,
+      };
+      return {
+        ...state,
+        guestRoster: {
+          invitees: state.guestRoster.invitees.map((inv) =>
+            inv.id === action.payload.inviteeId
+              ? { ...inv, dependents: [...inv.dependents, dep] }
+              : inv,
+          ),
+        },
+      };
+    }
+
+    case 'REMOVE_DEPENDENT':
+      return {
+        ...state,
+        guestRoster: {
+          invitees: state.guestRoster.invitees.map((inv) =>
+            inv.id === action.payload.inviteeId
+              ? {
+                  ...inv,
+                  dependents: inv.dependents.filter(
+                    (d) => d.id !== action.payload.dependentId,
+                  ),
+                }
+              : inv,
+          ),
+        },
+      };
+
+    case 'TOGGLE_DEPENDENT': {
+      const targetInv = state.guestRoster.invitees.find(
+        (inv) => inv.id === action.payload.inviteeId,
+      );
+      if (!targetInv) return state;
+      const targetDep = targetInv.dependents.find(
+        (d) => d.id === action.payload.dependentId,
+      );
+      if (!targetDep) return state;
+      return {
+        ...state,
+        guestRoster: {
+          invitees: state.guestRoster.invitees.map((inv) =>
+            inv.id === action.payload.inviteeId
+              ? {
+                  ...inv,
+                  dependents: inv.dependents.map((d) =>
+                    d.id === action.payload.dependentId
+                      ? { ...d, included: !d.included }
+                      : d,
+                  ),
+                }
+              : inv,
+          ),
+        },
+      };
+    }
+
+    case 'MARK_INVITATION_OPENED': {
+      const inv = state.guestRoster.invitees.find(
+        (i) => i.id === action.payload.inviteeId,
+      );
+      if (!inv || inv.status === 'OPENED') return state;
+      return {
+        ...state,
+        guestRoster: {
+          invitees: state.guestRoster.invitees.map((i) =>
+            i.id === action.payload.inviteeId
+              ? { ...i, status: 'OPENED', openedAt: new Date().toISOString() }
+              : i,
+          ),
+        },
+      };
+    }
+
     default:
       return state;
   }
 }
+
+// ── Test export (reducer only, no React dependency) ───────────────────────────
+// eslint-disable-next-line react-refresh/only-export-components
+export { sigilReducer as sigilReducerForTest };
 
 // ── Context & Dispatch Types ──────────────────────────────────────────────────
 
@@ -272,6 +412,14 @@ interface SigilContextValue {
   updateTextBlock: (blockId: string, updates: Partial<import('../types/sigil.types').TextBlockConfig>) => void;
   updateWaxSeal: (updates: Partial<import('../types/sigil.types').WaxSealConfig>) => void;
   setGuest: (payload: Partial<GuestPayload>) => void;
+  // ── Guest Roster ────────────────────────────────────────────────────────
+  addInvitee: (name: string, email?: string) => void;
+  removeInvitee: (inviteeId: string) => void;
+  updateInvitee: (inviteeId: string, updates: Partial<Pick<InviteeRecord, 'name' | 'email' | 'status'>>) => void;
+  addDependent: (inviteeId: string, name: string) => void;
+  removeDependent: (inviteeId: string, dependentId: string) => void;
+  toggleDependent: (inviteeId: string, dependentId: string) => void;
+  markInvitationOpened: (inviteeId: string) => void;
 }
 
 // ── Context Creation ──────────────────────────────────────────────────────────
@@ -291,11 +439,29 @@ export function SigilProvider({ children, initialGuest }: SigilProviderProps) {
   const [state, dispatch] = useReducer(
     sigilReducer,
     INITIAL_STATE,
-    (base) => ({
-      ...base,
-      guest: initialGuest ? { ...DEFAULT_GUEST, ...initialGuest } : base.guest,
-    }),
+    (base) => {
+      let roster: GuestRoster = { invitees: [] };
+      try {
+        const stored = localStorage.getItem('sigil-guest-roster');
+        if (stored) roster = JSON.parse(stored) as GuestRoster;
+      } catch {
+        // Malformed JSON or storage unavailable — use empty roster
+      }
+      return {
+        ...base,
+        guestRoster: roster,
+        guest: initialGuest ? { ...DEFAULT_GUEST, ...initialGuest } : base.guest,
+      };
+    },
   );
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('sigil-guest-roster', JSON.stringify(state.guestRoster));
+    } catch {
+      // Storage quota exceeded — fail silently
+    }
+  }, [state.guestRoster]);
 
   // ── Action Creators ──────────────────────────────────────────────────────
 
@@ -358,6 +524,48 @@ export function SigilProvider({ children, initialGuest }: SigilProviderProps) {
     [],
   );
 
+  const addInvitee = useCallback(
+    (name: string, email?: string) =>
+      dispatch({ type: 'ADD_INVITEE', payload: { name, email } }),
+    [],
+  );
+
+  const removeInvitee = useCallback(
+    (inviteeId: string) =>
+      dispatch({ type: 'REMOVE_INVITEE', payload: { inviteeId } }),
+    [],
+  );
+
+  const updateInvitee = useCallback(
+    (inviteeId: string, updates: Partial<Pick<InviteeRecord, 'name' | 'email' | 'status'>>) =>
+      dispatch({ type: 'UPDATE_INVITEE', payload: { inviteeId, updates } }),
+    [],
+  );
+
+  const addDependent = useCallback(
+    (inviteeId: string, name: string) =>
+      dispatch({ type: 'ADD_DEPENDENT', payload: { inviteeId, name } }),
+    [],
+  );
+
+  const removeDependent = useCallback(
+    (inviteeId: string, dependentId: string) =>
+      dispatch({ type: 'REMOVE_DEPENDENT', payload: { inviteeId, dependentId } }),
+    [],
+  );
+
+  const toggleDependent = useCallback(
+    (inviteeId: string, dependentId: string) =>
+      dispatch({ type: 'TOGGLE_DEPENDENT', payload: { inviteeId, dependentId } }),
+    [],
+  );
+
+  const markInvitationOpened = useCallback(
+    (inviteeId: string) =>
+      dispatch({ type: 'MARK_INVITATION_OPENED', payload: { inviteeId } }),
+    [],
+  );
+
   const value: SigilContextValue = {
     state,
     dispatch,
@@ -371,6 +579,13 @@ export function SigilProvider({ children, initialGuest }: SigilProviderProps) {
     updateTextBlock,
     updateWaxSeal,
     setGuest,
+    addInvitee,
+    removeInvitee,
+    updateInvitee,
+    addDependent,
+    removeDependent,
+    toggleDependent,
+    markInvitationOpened,
   };
 
   return (
@@ -386,6 +601,7 @@ export function SigilProvider({ children, initialGuest }: SigilProviderProps) {
  * Primary hook for all Sigil state and actions.
  * Must be used inside a <SigilProvider>.
  */
+// eslint-disable-next-line react-refresh/only-export-components
 export function useSigil(): SigilContextValue {
   const ctx = useContext(SigilContext);
   if (ctx === null) {
@@ -398,6 +614,7 @@ export function useSigil(): SigilContextValue {
  * Lightweight selector hook — avoids re-renders when only reading
  * a derived slice of state.
  */
+// eslint-disable-next-line react-refresh/only-export-components
 export function useSigilSelector<T>(selector: (state: SigilAppState) => T): T {
   const { state } = useSigil();
   return selector(state);

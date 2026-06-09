@@ -6,6 +6,7 @@
 import { useCallback, type ChangeEvent } from 'react';
 import { useSigil } from '../../context/SigilContext';
 import type { EnvelopeStyle, PaperTexture, WaxSealConfig } from '../../types/sigil.types';
+import { GuestRosterPanel } from './GuestRosterPanel';
 import {
   getAllowedWaxOptions,
   PAPER_CSS_VAR,
@@ -495,6 +496,8 @@ export function LeftPanel() {
             Upload CSV
           </button>
         </section>
+
+        <GuestRosterPanel />
 
         {/* Bottom spacer */}
         <div style={{ height: 40 }} />

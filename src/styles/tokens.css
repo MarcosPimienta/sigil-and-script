@@ -287,6 +287,18 @@
   --ui-text-muted:   hsl(220  4% 42%);
   --ui-accent:       var(--color-gold-burnish);
   --ui-accent-glow:  hsl(40 76% 44% / 0.25);
+
+  /* ── 2k. Invitation Status Palette ─────────────────────────────────────── */
+  --status-pending:  #a89070;
+  --status-sent:     #4a7c9e;
+  --status-opened:   #3a7a50;
+  --status-rsvp-yes: #5a6b28;
+  --status-rsvp-no:  #8b3a3a;
+
+  /* ── 2l. Dashboard Surfaces ─────────────────────────────────────────────── */
+  --dashboard-bg:          var(--paper-parchment);
+  --roster-row-bg:         rgba(255,255,255,0.4);
+  --roster-row-hover-bg:   rgba(255,255,255,0.7);
 }
 
 /* ── 3. Utility Resets & Base ─────────────────────────────────────────────── */
