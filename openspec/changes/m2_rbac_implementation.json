@@ -1,0 +1,84 @@
+{
+  "milestone": "M2_RBAC_INFRASTRUCTURE",
+  "name": "Dynamic Route Token Validation Engine",
+  "created": "2026-07-12",
+  "proposal": {
+    "problem": "Currently, the invitation stage resolves guest information locally from the client-side memory using query parameters (?guest=<id>). This bypasses backend database verification, guest opened telemetry updates, and role validation controls.",
+    "solution": "Bridge the frontend client with the Express backend infrastructure built in Phase 1 by implementing dynamic route pathname parsing, backend hydration fetch triggers, and role-based header guards.",
+    "filesToModify": [
+      {
+        "file": "src/App.tsx",
+        "change": "Parse pathname routes /invite/:token on mount and query the backend."
+      },
+      {
+        "file": "src/context/SigilContext.tsx",
+        "change": "Add async action creator to fetch invitation details and handle status states."
+      },
+      {
+        "file": "src/components/dashboard/DashboardView.tsx",
+        "change": "Send HOST role headers on roster updates."
+      },
+      {
+        "file": "src/components/creator/LeftPanel.tsx",
+        "change": "Secure host configuration updates."
+      }
+    ],
+    "scope": {
+      "inScope": [
+        "Client-side routing resolution for /invite/:token.",
+        "Backend integration for guest hydration and envelope telemetry.",
+        "Adding header guards on HOST and ADMIN data operations."
+      ],
+      "outOfScope": [
+        "Migrating state to Zustand (Phase 3).",
+        "Styling migration to Tailwind CSS (Phase 3).",
+        "Envelope Framer Motion animation mechanics (Phase 4)."
+      ]
+    }
+  },
+  "design": {
+    "architecturalDecisions": [
+      {
+        "id": "Pure Pathname Router Matching",
+        "choice": "Parse paths matching /invite/:token directly using window location APIs without react-router-dom.",
+        "why": "Complies with project constraints (no routing libraries) and provides dynamic URL parsing."
+      },
+      {
+        "id": "Backend Hydration & Telemetry",
+        "choice": "On mounting /invite/:token, fetch guest allocation and canvas setup from GET /api/invite/:token.",
+        "why": "Syncs canvas configuration from the DB and automatically records guest opened telemetry."
+      },
+      {
+        "id": "Role-Based Header Injection",
+        "choice": "Build fetch utility apiFetch centralizing X-Role: HOST or X-Role: ADMIN header injections.",
+        "why": "Secures all host/admin modifications and metrics queries."
+      }
+    ],
+    "risksAndMitigations": [
+      {
+        "risk": "Latency when resolving guest token",
+        "mitigation": "Render a themed loading spinner state."
+      },
+      {
+        "risk": "Server connection failure or offline status",
+        "mitigation": "Fall back to localStorage cache and show an Offline Mode alert."
+      }
+    ]
+  },
+  "tasks": [
+    "Confirm that both frontend unit tests and backend tests pass cleanly",
+    "Check that the backend server is running locally on port 5001",
+    "Create client-side HTTP helper src/utils/api.ts with baseURL http://localhost:5001",
+    "Implement header configuration appending X-Role based on context",
+    "Add api status indicators ('idle' | 'loading' | 'success' | 'error') to sigil.types.ts",
+    "Add actions FETCH_INVITATION_START/SUCCESS/FAILURE to reducer",
+    "Implement async fetchInvitationDetails(token: string) in SigilContext.tsx",
+    "Refactor mount loader in src/App.tsx matching routes /invite/:token via regex",
+    "If route matches, transition app to RECIPIENT mode and hydrate invitation data",
+    "Add visual overlay/spinner when loading states are active",
+    "Update dashboard queries in DashboardView.tsx to supply X-Role: HOST headers",
+    "Update canvas layout state synchronization mutations to inject authorization properties",
+    "Run regression tests verifying frontend and backend stability",
+    "Assert that dynamic routing resolutions load without throwing errors"
+  ]
+}

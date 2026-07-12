@@ -1,0 +1,97 @@
+{
+  "milestone": "M3_CREATOR_STUDIO_V2",
+  "name": "Zustand Custom Design Engine & Dynamic Forms Configurator",
+  "created": "2026-07-12",
+  "proposal": {
+    "problem": "The current application architecture relies on React Context + useReducer to manage the designer's state. When modifying single text fields or canvas alignments, the entire React component tree re-renders. Additionally, hosts lack tools to batch ingest guest lists from a CSV file or configure dynamic RSVP forms.",
+    "solution": "Introduce Zustand state store selective subscribers, client-side CSV parser uploader, and adaptive form configurators.",
+    "filesToCreate": [
+      {
+        "file": "src/state/sigilStore.ts",
+        "purpose": "Zustand store containing CanvasDesign and GuestRoster."
+      },
+      {
+        "file": "src/components/creator/CsvIngestionButton.tsx",
+        "purpose": "Upload and ingest guest lists from CSV."
+      },
+      {
+        "file": "src/components/creator/FormConfiguratorPanel.tsx",
+        "purpose": "Enable/disable specific fields in guest RSVP form."
+      }
+    ],
+    "filesToModify": [
+      {
+        "file": "src/types/sigil.types.ts",
+        "change": "Add RsvpFormConfig properties."
+      },
+      {
+        "file": "src/App.tsx",
+        "change": "Switch SigilProvider to Zustand store selectors."
+      },
+      {
+        "file": "src/components/creator/LeftPanel.tsx",
+        "change": "Mount CSV button and form config panels."
+      }
+    ],
+    "scope": {
+      "inScope": [
+        "Full migration of application state to Zustand.",
+        "Client-side CSV file parsing and roster injection.",
+        "Adding form configuration options."
+      ],
+      "outOfScope": [
+        "Multi-phase envelope animations and Framer Motion visual timelines (Phase 4).",
+        "Ambient audio triggers (Phase 4)."
+      ]
+    }
+  },
+  "design": {
+    "architecturalDecisions": [
+      {
+        "id": "Zustand store implementation",
+        "choice": "Single store useSigilStore managing design, guest, and roster state.",
+        "why": "Enables component-level subscription filtering to avoid whole-tree context re-renders."
+      },
+      {
+        "id": "Custom client-side CSV parser",
+        "choice": "Implement lightweight parser parseGuestCsv(text) mapping headers 'name' and 'email'.",
+        "why": "Avoids bulky npm dependencies while handling commas and escaping."
+      },
+      {
+        "id": "Schema-driven RSVP form configuration",
+        "choice": "Store RsvpFormConfig properties on the InvitationDesign model.",
+        "why": "Ensures form configurations sync with canvas designs."
+      }
+    ],
+    "risksAndMitigations": [
+      {
+        "risk": "Memory lag with large CSV uploads",
+        "mitigation": "Limit parser payload bounds to 500 rows maximum."
+      },
+      {
+        "risk": "Missing or malformed headers",
+        "mitigation": "Verify headers case-insensitively and prompt templates on errors."
+      }
+    ]
+  },
+  "tasks": [
+    "Scan and verify safety of zustand package",
+    "Install zustand dependency in project workspace",
+    "Create Zustand state store src/state/sigilStore.ts",
+    "Port all state properties from SigilAppState and initial defaults",
+    "Implement store mutations corresponding to all previous reducer action handlers",
+    "Integrate localStorage sync utility within the store configuration",
+    "Refactor src/App.tsx replacing SigilProvider hook with Zustand selector calls",
+    "Refactor editor canvas, Toolbar, LeftPanel, and DashboardView to reference store selectors directly",
+    "Assert that existing unit tests pass cleanly after context removal",
+    "Create custom parsing utility src/utils/csvParser.ts resolving names and email properties",
+    "Create React file uploader src/components/creator/CsvIngestionButton.tsx",
+    "Integrate button into GuestRosterPanel triggering batch additions into the store",
+    "Add unit tests validating parser behavior against typical inputs and edge-case syntax",
+    "Define RsvpFormConfig parameters inside types and store structures",
+    "Create configurations options panel src/components/creator/FormConfiguratorPanel.tsx",
+    "Update recipient invitation RSVP form to selectively render input elements based on configuration settings",
+    "Execute unit and integration tests confirming core stability",
+    "Build production package checking compilation success"
+  ]
+}

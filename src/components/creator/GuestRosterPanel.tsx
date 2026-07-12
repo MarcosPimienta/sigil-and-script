@@ -1,6 +1,7 @@
 import { useSigilSelector } from '../../context/SigilContext';
 import { AddInviteeForm } from './AddInviteeForm';
 import { InviteeRow } from './InviteeRow';
+import { CsvIngestionButton } from './CsvIngestionButton';
 
 export function GuestRosterPanel() {
   const invitees = useSigilSelector((s) => s.guestRoster.invitees);
@@ -9,6 +10,7 @@ export function GuestRosterPanel() {
     <section className="lp-roster-section">
       <h3 className="lp-section-heading">Guests ({invitees.length})</h3>
       <AddInviteeForm />
+      <CsvIngestionButton />
       {invitees.length === 0 ? (
         <p className="lp-roster-empty">No guests yet. Add the first one above.</p>
       ) : (

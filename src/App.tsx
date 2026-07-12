@@ -12,11 +12,18 @@ import './index.css';
 // ── Inner shell — has access to SigilContext ──────────────────────────────────
 
 function AppShell() {
-  const { state, markInvitationOpened, setGuest, setAppMode } = useSigil();
+  const { state, markInvitationOpened, setGuest, setAppMode, fetchInvitationDetails } = useSigil();
 
-  // Read ?guest=<id> on first mount only; mark invitation opened and enter
-  // recipient mode if a matching invitee exists in the roster.
+  // Read /invite/:token or ?guest=<id> on first mount only
   useEffect(() => {
+    const inviteMatch = window.location.pathname.match(/\/invite\/([a-fA-F0-9-]+)/);
+    if (inviteMatch) {
+      const token = inviteMatch[1];
+      setAppMode('RECIPIENT');
+      fetchInvitationDetails(token);
+      return;
+    }
+
     const guestId = new URLSearchParams(window.location.search).get('guest');
     if (!guestId) return;
 
@@ -37,6 +44,57 @@ function AppShell() {
     window.history.replaceState({}, '', window.location.pathname);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // intentionally empty — runs once on mount
+
+  if (state.apiStatus === 'loading') {
+    return (
+      <div className="canvas-loading-overlay" style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: '100vh',
+        width: '100vw',
+        background: 'var(--paper-parchment)',
+        fontFamily: "'Cormorant Garamond', serif",
+        fontSize: '1.5rem',
+        fontStyle: 'italic',
+        color: 'var(--status-pending)'
+      }}>
+        Loading your invitation...
+      </div>
+    );
+  }
+
+  if (state.apiStatus === 'error') {
+    return (
+      <div className="canvas-error-overlay" style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: '100vh',
+        width: '100vw',
+        background: 'var(--paper-parchment)',
+        fontFamily: "'Cormorant Garamond', serif",
+        color: 'var(--status-rsvp-no)'
+      }}>
+        <h2 style={{ fontSize: '2rem', fontStyle: 'italic' }}>Invitation Not Found</h2>
+        <p style={{ marginTop: '1rem', color: 'rgba(0,0,0,0.5)' }}>{state.apiError}</p>
+        <button 
+          onClick={() => window.location.href = '/'}
+          style={{
+            marginTop: '2rem',
+            padding: '8px 16px',
+            fontFamily: 'inherit',
+            background: 'none',
+            border: '1px solid currentColor',
+            cursor: 'pointer'
+          }}
+        >
+          Return to Studio
+        </button>
+      </div>
+    );
+  }
 
   const { appMode } = state;
 

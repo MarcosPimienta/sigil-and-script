@@ -1,0 +1,88 @@
+{
+  "milestone": "M4_INTERACTIVE_SHELL",
+  "name": "Multi-Phase Envelope Animations & Ambient Audio Triggers",
+  "created": "2026-07-12",
+  "proposal": {
+    "problem": "The current recipient view mounts the card directly without premium folds, seal cracking, or ambient soundscapes.",
+    "solution": "Construct an animatable envelope container, implement procedural audio synthesis on load gestures, and mount interactive speaker toggle controls.",
+    "filesToCreate": [
+      {
+        "file": "src/components/creator/EnvelopeWrapper.tsx",
+        "purpose": "Handles 3D fold, crack seal, and letter slide-out animations."
+      },
+      {
+        "file": "src/utils/audioEngine.ts",
+        "purpose": "Web Audio synthesis/playback controller for click cues and ambient chords."
+      },
+      {
+        "file": "src/components/shared/AudioToggle.tsx",
+        "purpose": "Floating wave button to toggle mute state."
+      }
+    ],
+    "filesToModify": [
+      {
+        "file": "src/App.tsx",
+        "change": "Nest recipient stage inside the EnvelopeWrapper."
+      },
+      {
+        "file": "src/styles/creator.css",
+        "change": "Add 3D keyframe properties for folding animations."
+      }
+    ],
+    "scope": {
+      "inScope": [
+        "CSS 3D envelope visual unfolding animations.",
+        "Interactive wax seal click trigger.",
+        "Sound synthesis on user gesture.",
+        "Interactive sound volume controls."
+      ],
+      "outOfScope": [
+        "Full-screen video backgrounds."
+      ]
+    }
+  },
+  "design": {
+    "architecturalDecisions": [
+      {
+        "id": "CSS 3D Animations",
+        "choice": "Utilize perspective-1200px keyframe classes in pure CSS.",
+        "why": "Avoids rendering libraries while ensuring smooth 60fps GPU execution."
+      },
+      {
+        "id": "Gesture-Activated Audio Playback",
+        "choice": "Initialize Web Audio API upon clicking the wax seal.",
+        "why": "Bypasses browser autoplay blocks while keeping actions intuitive."
+      },
+      {
+        "id": "Floating Volume Controls",
+        "choice": "Render fixed audio widgets fixed to bottom right screen coordinates.",
+        "why": "Offers sound feedback without cluttering main envelope styles."
+      }
+    ],
+    "risksAndMitigations": [
+      {
+        "risk": "Autoplay policy block exceptions",
+        "mitigation": "Gracefully handle audio play rejects and show unmuted controls."
+      },
+      {
+        "risk": "3D transform rendering artifact boundaries",
+        "mitigation": "Enforce backface-visibility properties."
+      }
+    ]
+  },
+  "tasks": [
+    "Create folder and component src/components/creator/EnvelopeWrapper.tsx",
+    "Implement the multi-phase states: closed sealed, breaking seal, unfolding, and slide-out",
+    "Add envelope style classes in src/styles/creator.css for classic, scroll, and booklet options",
+    "Implement procedurally synthesized audio cues inside src/utils/audioEngine.ts",
+    "Trigger seal breaking synthesis sound effect on user seal click gesture",
+    "Initialize and trigger ambient music loops on envelope open success",
+    "Create interactive floating volume button src/components/shared/AudioToggle.tsx",
+    "Add wavelength animations indicating audio level and speaker mute status",
+    "Link toggles to the central audio engine mute/unmute functions",
+    "Update src/App.tsx recipient loading path to wrap InvitationStage with EnvelopeWrapper",
+    "Allow guests to override audio status via floating overlay triggers",
+    "Confirm compilation builds cleanly",
+    "Validate that existing regression tests pass"
+  ]
+}

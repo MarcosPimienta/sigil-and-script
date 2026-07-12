@@ -182,10 +182,12 @@ function getClipPath(borderStyle: string): string {
 interface InvitationStageProps {
   /** Recipient-facing render: disables click-to-select/edit interactions and hides the wax seal */
   readOnly?: boolean;
+  transparent?: boolean;
 }
 
 export function InvitationStage({
   readOnly = false,
+  transparent = false,
 }: InvitationStageProps = {}) {
   const {
     state,
@@ -265,14 +267,18 @@ export function InvitationStage({
   }, []);
 
   return (
-    <div className="stage-wrapper">
+    <div className="stage-wrapper" style={transparent ? { boxShadow: 'none', background: 'transparent' } : undefined}>
       <SvgFilterBank />
 
       <div
         ref={stageRef}
         id="invitation-stage"
-        className={`invitation-stage border-${design.borderStyle}`}
-        style={{
+        className={`invitation-stage border-${design.borderStyle} ${transparent ? 'is-transparent' : ''}`}
+        style={transparent ? {
+          backgroundColor: 'transparent',
+          boxShadow: 'none',
+          color: 'var(--color-sepia-800)',
+        } : {
           backgroundColor: `var(${paperBg.replace('var(', '').replace(')', '')})`,
           ...(design.paperImage && {
             backgroundImage: `url(${design.paperImage})`,
@@ -286,10 +292,10 @@ export function InvitationStage({
         aria-label="Invitation canvas"
       >
         {/* ── Paper grain texture overlay ─── */}
-        <div className="stage-grain-overlay" aria-hidden="true" />
+        {!transparent && <div className="stage-grain-overlay" aria-hidden="true" />}
 
         {/* ── Ornamental border — a custom uploaded frame replaces the procedural one ─── */}
-        {hasCustomFrame ? (
+        {!transparent && (hasCustomFrame ? (
           <img
             src={design.frameImage}
             alt=""
@@ -310,7 +316,7 @@ export function InvitationStage({
             height={measuredHeight}
             style={design.borderStyle}
           />
-        )}
+        ))}
 
         {/* ── Flowing content column ─── */}
         <div className="stage-content">
@@ -326,25 +332,27 @@ export function InvitationStage({
           )}
 
           {/* ── Text Blocks — flow top-to-bottom in array order ─── */}
-          {design.textBlocks.map((block, i) => {
-            const displayText = resolveTokens(block.content, guest);
-            return (
-              <Fragment key={block.id}>
-                {/* Decorative divider right after the headline (first block) */}
-                {i === 1 && <DividerOrnament width={STAGE_W} />}
-                <TextBlock
-                  config={block}
-                  displayText={displayText}
-                  isSelected={canvasSelection.selectedTextBlockId === block.id}
-                  isEditing={editingBlockId === block.id}
-                  onSelect={() => handleBlockSelect(block.id)}
-                  onEdit={() => handleBlockEdit(block.id)}
-                  onBlur={handleBlockBlur}
-                  onContentChange={(c) => handleContentChange(block.id, c)}
-                />
-              </Fragment>
-            );
-          })}
+          {design.textBlocks
+            .filter((block) => !transparent || block.id === 'tb-headline')
+            .map((block, i) => {
+              const displayText = resolveTokens(block.content, guest);
+              return (
+                <Fragment key={block.id}>
+                  {/* Decorative divider right after the headline (first block) */}
+                  {i === 1 && <DividerOrnament width={STAGE_W} />}
+                  <TextBlock
+                    config={block}
+                    displayText={displayText}
+                    isSelected={canvasSelection.selectedTextBlockId === block.id}
+                    isEditing={editingBlockId === block.id}
+                    onSelect={() => handleBlockSelect(block.id)}
+                    onEdit={() => handleBlockEdit(block.id)}
+                    onBlur={handleBlockBlur}
+                    onContentChange={(c) => handleContentChange(block.id, c)}
+                  />
+                </Fragment>
+              );
+            })}
         </div>
       </div>
     </div>

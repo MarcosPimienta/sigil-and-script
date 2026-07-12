@@ -102,7 +102,37 @@ export interface InvitationDesign {
   frameImage?: string;
   /** Tiled/cover background texture for the paper itself */
   paperImage?: string;
+  rsvpFormConfig?: RsvpFormConfig;
+  countdownTarget?: string;
+  itinerary?: ItineraryItem[];
+  colorPalette?: string[];
+  dressCodeText?: string;
+  registryLink?: string;
+  registryText?: string;
+  closedEnvelopeImage?: string;
+  openedEnvelopeImage?: string;
 }
+
+// ── Itinerary Schema ──────────────────────────────────────────────────────────
+
+export interface ItineraryItem {
+  id: string;
+  title: string;
+  locationName: string;
+  time: string;
+  mapLink?: string;
+}
+
+
+// ── RSVP Form Configuration ──────────────────────────────────────────────────
+
+export interface RsvpFormConfig {
+  requireMealPreference: boolean;
+  requireDietaryRestrictions: boolean;
+  allowPlusOnes: boolean;
+  customNotesLabel: string | null;
+}
+
 
 // ── Inspector Focus ───────────────────────────────────────────────────────────
 
@@ -117,3 +147,13 @@ export type InspectorFocus =
 export interface CanvasSelection {
   selectedTextBlockId: string | null;
 }
+
+// ── API State Indicators ──────────────────────────────────────────────────────
+
+export type ApiStatus = 'idle' | 'loading' | 'success' | 'error';
+
+export interface ApiState {
+  status: ApiStatus;
+  error: string | null;
+}
+

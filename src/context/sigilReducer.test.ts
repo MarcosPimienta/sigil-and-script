@@ -21,6 +21,8 @@ function makeState(partial?: Partial<SigilAppState>): SigilAppState {
     canvasSelection: { selectedTextBlockId: null },
     isEditingText: false,
     guestRoster: emptyRoster,
+    apiStatus: 'idle',
+    apiError: null,
     ...partial,
   };
 }
@@ -291,4 +293,39 @@ describe('MARK_INVITATION_OPENED', () => {
     });
     expect(next.guestRoster.invitees[0].status).toBe('PENDING');
   });
+
+  describe('API Invitation Fetching Actions', () => {
+    it('FETCH_INVITATION_START should set loading state', () => {
+      const state = makeState();
+      const next = reducer(state, { type: 'FETCH_INVITATION_START' });
+      expect(next.apiStatus).toBe('loading');
+      expect(next.apiError).toBeNull();
+    });
+
+    it('FETCH_INVITATION_SUCCESS should hydrate guest and design states', () => {
+      const state = makeState();
+      const next = reducer(state, {
+        type: 'FETCH_INVITATION_SUCCESS',
+        payload: {
+          guest: { guestName: 'Alice', routingToken: 'tok-1' },
+          design: { title: 'Test Design' } as any,
+        },
+      });
+      expect(next.apiStatus).toBe('success');
+      expect(next.apiError).toBeNull();
+      expect(next.guest.guestName).toBe('Alice');
+      expect(next.design.title).toBe('Test Design');
+    });
+
+    it('FETCH_INVITATION_FAILURE should set error status and message', () => {
+      const state = makeState();
+      const next = reducer(state, {
+        type: 'FETCH_INVITATION_FAILURE',
+        payload: 'Unable to connect',
+      });
+      expect(next.apiStatus).toBe('error');
+      expect(next.apiError).toBe('Unable to connect');
+    });
+  });
 });
+
