@@ -5,46 +5,20 @@
 
 import { useCallback, type ChangeEvent } from 'react';
 import { useSigil } from '../../context/SigilContext';
-import type { EnvelopeStyle, PaperTexture, WaxSealConfig } from '../../types/sigil.types';
+import type { EnvelopeStyle, InvitationDesign, PaperTexture } from '../../types/sigil.types';
 import { GuestRosterPanel } from './GuestRosterPanel';
-import {
-  getAllowedWaxOptions,
-  PAPER_CSS_VAR,
-} from '../../utils/luminanceGuards';
-import { WaxSeal } from './WaxSeal';
+import { PAPER_CSS_VAR } from '../../utils/luminanceGuards';
 
-// ── Wax colour option map ──────────────────────────────────────────────────────
+// ── Custom artwork uploads ───────────────────────────────────────────────────
+// Rendered exclusively via <img src> / CSS background-image (see
+// InvitationStage) — never inlined into the DOM — so even a malicious SVG
+// upload can't execute script; browsers don't run scripts embedded in an
+// SVG loaded that way. Raster-only allow-list closes the remaining gap
+// (an SVG can still reference external resources like a tracking pixel).
+const ACCEPTED_IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/gif'];
+const MAX_IMAGE_BYTES = 8 * 1024 * 1024; // 8MB
 
-const WAX_OPTIONS: Array<{
-  id: string;
-  label: string;
-  color: string;
-  colorLight: string;
-  colorSheen: string;
-  swatch: string; // resolved hex for the clickable swatch UI
-}> = [
-  { id: 'crimson',  label: 'Crimson',  color: 'var(--wax-crimson)',  colorLight: 'var(--wax-crimson-light)',  colorSheen: 'var(--wax-crimson-sheen)',  swatch: '#6b1b28' },
-  { id: 'forest',   label: 'Forest',   color: 'var(--wax-forest)',   colorLight: 'var(--wax-forest-light)',   colorSheen: 'var(--wax-forest-sheen)',   swatch: '#183e2b' },
-  { id: 'midnight', label: 'Midnight', color: 'var(--wax-midnight)', colorLight: 'var(--wax-midnight-light)', colorSheen: 'var(--wax-midnight-sheen)', swatch: '#1a2540' },
-  { id: 'amethyst', label: 'Amethyst', color: 'var(--wax-amethyst)', colorLight: 'var(--wax-amethyst-light)', colorSheen: 'var(--wax-amethyst-sheen)', swatch: '#3d1e5c' },
-  { id: 'obsidian', label: 'Obsidian', color: 'var(--wax-obsidian)', colorLight: 'var(--wax-obsidian-light)', colorSheen: 'var(--wax-obsidian-sheen)', swatch: '#1a1e26' },
-  { id: 'ivory',    label: 'Ivory',    color: 'var(--wax-ivory)',    colorLight: 'var(--wax-ivory-light)',    colorSheen: 'var(--wax-ivory-sheen)',    swatch: '#d4c89a' },
-];
-
-// ── Motif presets ──────────────────────────────────────────────────────────────
-
-const MOTIF_PRESETS: Array<{
-  motif: WaxSealConfig['motif'];
-  monogramText: string;
-  label: string;
-}> = [
-  { motif: 'monogram',    monogramText: 'M&A', label: 'M&A' },
-  { motif: 'monogram',    monogramText: 'S&S', label: 'S&S' },
-  { motif: 'sigil-s',     monogramText: '𝒮',   label: 'Script S' },
-  { motif: 'fleur-de-lis',monogramText: '⚜',   label: 'Fleur' },
-  { motif: 'botanical',   monogramText: '',    label: 'Botanical' },
-  { motif: 'geometric',   monogramText: '',    label: 'Geometric' },
-];
+type ImageField = keyof Pick<InvitationDesign, 'headerImage' | 'frameImage' | 'paperImage'>;
 
 // ── Paper textures ─────────────────────────────────────────────────────────────
 
@@ -70,6 +44,61 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   return <p className="lp-section-label">{children}</p>;
 }
 
+// ── Custom artwork upload slot ───────────────────────────────────────────────
+
+function ImageUploadSlot({
+  id,
+  label,
+  hint,
+  value,
+  onUpload,
+  onClear,
+}: {
+  id: string;
+  label: string;
+  hint: string;
+  value?: string;
+  onUpload: (e: ChangeEvent<HTMLInputElement>) => void;
+  onClear: () => void;
+}) {
+  return (
+    <div className="lp-field">
+      <label className="lp-field-label" htmlFor={id}>
+        {label}
+      </label>
+      {value ? (
+        <div className="lp-image-slot">
+          <img src={value} alt="" className="lp-image-slot-preview" />
+          <button
+            type="button"
+            className="lp-image-slot-remove"
+            onClick={onClear}
+            aria-label={`Remove ${label}`}
+          >
+            Remove
+          </button>
+        </div>
+      ) : (
+        <label className="lp-upload-zone lp-upload-zone--wide" htmlFor={id}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="17 8 12 3 7 8" />
+            <line x1="12" y1="3" x2="12" y2="15" />
+          </svg>
+          <span>{hint}</span>
+        </label>
+      )}
+      <input
+        id={id}
+        type="file"
+        accept={ACCEPTED_IMAGE_TYPES.join(',')}
+        style={{ display: 'none' }}
+        onChange={onUpload}
+      />
+    </div>
+  );
+}
+
 // ── Divider ────────────────────────────────────────────────────────────────────
 
 function Divider() {
@@ -79,54 +108,13 @@ function Divider() {
 // ── Main component ─────────────────────────────────────────────────────────────
 
 export function LeftPanel() {
-  const { state, updateDesign, updateWaxSeal, setGuest } = useSigil();
+  const { state, updateDesign, setGuest } = useSigil();
   const { design, guest } = state;
-  const { waxSeal } = design;
-
-  const allowedWax = getAllowedWaxOptions(design.paperLuminance);
-
-  // ── Wax colour selection ──────────────────────────────────────────────────
-  const handleWaxColor = useCallback(
-    (opt: (typeof WAX_OPTIONS)[0]) => {
-      updateWaxSeal({
-        color: opt.color,
-        colorLight: opt.colorLight,
-        colorSheen: opt.colorSheen,
-      });
-    },
-    [updateWaxSeal],
-  );
-
-  // ── Motif selection ───────────────────────────────────────────────────────
-  const handleMotif = useCallback(
-    (preset: (typeof MOTIF_PRESETS)[0]) => {
-      updateWaxSeal({ motif: preset.motif, monogramText: preset.monogramText });
-    },
-    [updateWaxSeal],
-  );
-
-  // ── Monogram text (custom) ────────────────────────────────────────────────
-  const handleMonogramText = useCallback(
-    (e: ChangeEvent<HTMLInputElement>) => {
-      // Limit to 6 characters to prevent overflow on the seal
-      const val = e.target.value.slice(0, 6);
-      updateWaxSeal({ monogramText: val });
-    },
-    [updateWaxSeal],
-  );
 
   // ── Format (envelope style) ───────────────────────────────────────────────
   const handleFormat = useCallback(
     (style: EnvelopeStyle) => updateDesign({ envelopeStyle: style }),
     [updateDesign],
-  );
-
-  // ── Seal depth (3D lighting) ──────────────────────────────────────────────
-  const handleDepth = useCallback(
-    (e: ChangeEvent<HTMLInputElement>) => {
-      updateWaxSeal({ depth: Number(e.target.value) });
-    },
-    [updateWaxSeal],
   );
 
   // ── Paper texture ─────────────────────────────────────────────────────────
@@ -143,6 +131,31 @@ export function LeftPanel() {
   // ── Border style ──────────────────────────────────────────────────────────
   const handleBorder = useCallback(
     (id: (typeof BORDER_OPTIONS)[0]['id']) => updateDesign({ borderStyle: id }),
+    [updateDesign],
+  );
+
+  // ── Custom artwork uploads ─────────────────────────────────────────────────
+  const handleImageUpload = useCallback(
+    (field: ImageField) => (e: ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      e.target.value = ''; // allow re-selecting the same file later
+      if (!file) return;
+      if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) return;
+      if (file.size > MAX_IMAGE_BYTES) return;
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        if (typeof reader.result === 'string') {
+          updateDesign({ [field]: reader.result });
+        }
+      };
+      reader.readAsDataURL(file);
+    },
+    [updateDesign],
+  );
+
+  const handleImageClear = useCallback(
+    (field: ImageField) => () => updateDesign({ [field]: undefined }),
     [updateDesign],
   );
 
@@ -170,10 +183,6 @@ export function LeftPanel() {
     [setGuest],
   );
 
-  // ── Determine currently active wax option id ──────────────────────────────
-  const activeWaxId =
-    WAX_OPTIONS.find((o) => o.color === waxSeal.color)?.id ?? 'crimson';
-
   return (
     <aside className="left-panel">
       <div className="lp-inner">
@@ -182,105 +191,6 @@ export function LeftPanel() {
         <div className="lp-header">
           <h1 className="lp-title">Invitation Studio</h1>
         </div>
-
-        {/* ══ SIGIL ART ════════════════════════════════════════════════════ */}
-        <section className="lp-section" aria-labelledby="section-sigil-art">
-          <SectionLabel>Sigil Art</SectionLabel>
-
-          {/* Upload zone + preset thumbnails */}
-          <div className="lp-motif-grid">
-            {/* Drop zone */}
-            <label
-              className="lp-upload-zone"
-              htmlFor="sigil-upload"
-              aria-label="Upload custom sigil art"
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                <polyline points="17 8 12 3 7 8" />
-                <line x1="12" y1="3" x2="12" y2="15" />
-              </svg>
-              <span>Drop here</span>
-              <input
-                id="sigil-upload"
-                type="file"
-                accept="image/svg+xml,image/png"
-                style={{ display: 'none' }}
-                // TODO(security): If file upload is enabled in production,
-                // validate file content server-side (magic bytes + allow-list).
-                readOnly
-                aria-hidden="true"
-              />
-            </label>
-
-            {/* Preset motif thumbnails */}
-            {MOTIF_PRESETS.map((preset) => {
-              const isActive =
-                waxSeal.motif === preset.motif &&
-                waxSeal.monogramText === preset.monogramText;
-              return (
-                <button
-                  key={`${preset.motif}-${preset.monogramText}`}
-                  id={`motif-${preset.motif}-${preset.monogramText}`}
-                  className={`lp-motif-thumb${isActive ? ' is-active' : ''}`}
-                  onClick={() => handleMotif(preset)}
-                  aria-pressed={isActive}
-                  aria-label={`Motif: ${preset.label}`}
-                  title={preset.label}
-                >
-                  <WaxSeal
-                    config={{ ...waxSeal, motif: preset.motif, monogramText: preset.monogramText }}
-                    size={52}
-                  />
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Custom monogram text input (only shown when motif is monogram) */}
-          {waxSeal.motif === 'monogram' && (
-            <div className="lp-field" style={{ marginTop: 10 }}>
-              <label className="lp-field-label" htmlFor="monogram-text">
-                Monogram Text
-              </label>
-              <input
-                id="monogram-text"
-                className="lp-input"
-                type="text"
-                maxLength={6}
-                value={waxSeal.monogramText}
-                onChange={handleMonogramText}
-                placeholder="e.g. M&A"
-                autoComplete="off"
-              />
-            </div>
-          )}
-        </section>
-
-        <Divider />
-
-        {/* ══ WAX SEAL COLOUR ══════════════════════════════════════════════ */}
-        <section className="lp-section" aria-labelledby="section-wax-color">
-          <SectionLabel>Wax Seal Color</SectionLabel>
-          <div className="lp-swatch-row">
-            {WAX_OPTIONS.filter((o) =>
-              allowedWax.some((a) => a.id === o.id),
-            ).map((opt) => (
-              <button
-                key={opt.id}
-                id={`wax-${opt.id}`}
-                className={`lp-swatch${activeWaxId === opt.id ? ' is-active' : ''}`}
-                style={{ background: opt.swatch }}
-                onClick={() => handleWaxColor(opt)}
-                aria-pressed={activeWaxId === opt.id}
-                aria-label={`Wax color: ${opt.label}`}
-                title={opt.label}
-              />
-            ))}
-          </div>
-        </section>
-
-        <Divider />
 
         {/* ══ FORMAT ═══════════════════════════════════════════════════════ */}
         <section className="lp-section" aria-labelledby="section-format">
@@ -297,34 +207,6 @@ export function LeftPanel() {
                 {f === 'CLASSIC' ? 'Letter' : f === 'SCROLL' ? 'Scroll' : 'Booklet'}
               </button>
             ))}
-          </div>
-        </section>
-
-        <Divider />
-
-        {/* ══ 3D SEAL DEPTH ════════════════════════════════════════════════ */}
-        <section className="lp-section" aria-labelledby="section-depth">
-          <div className="lp-section-header-row">
-            <SectionLabel>3D Seal Depth</SectionLabel>
-            <span className="lp-value-badge">{waxSeal.depth}</span>
-          </div>
-          <input
-            id="seal-depth"
-            className="lp-range"
-            type="range"
-            min={0}
-            max={100}
-            step={1}
-            value={waxSeal.depth}
-            onChange={handleDepth}
-            aria-label="3D seal depth — higher values flatten the lighting"
-            style={{
-              '--range-fill': `${waxSeal.depth}%`,
-            } as React.CSSProperties}
-          />
-          <div className="lp-range-labels">
-            <span>Dramatic</span>
-            <span>Flat</span>
           </div>
         </section>
 
@@ -397,6 +279,43 @@ export function LeftPanel() {
               </button>
             ))}
           </div>
+        </section>
+
+        <Divider />
+
+        {/* ══ CUSTOM ARTWORK ═══════════════════════════════════════════════ */}
+        <section className="lp-section" aria-labelledby="section-artwork">
+          <SectionLabel>Custom Artwork</SectionLabel>
+          <p className="lp-hint">
+            Upload your own imagery to replace the procedural design below.
+          </p>
+
+          <ImageUploadSlot
+            id="upload-header-image"
+            label="Header Image"
+            hint="Icon or illustration shown above the headline"
+            value={design.headerImage}
+            onUpload={handleImageUpload('headerImage')}
+            onClear={handleImageClear('headerImage')}
+          />
+
+          <ImageUploadSlot
+            id="upload-frame-image"
+            label="Frame Border"
+            hint="Full decorative frame — replaces the border style above"
+            value={design.frameImage}
+            onUpload={handleImageUpload('frameImage')}
+            onClear={handleImageClear('frameImage')}
+          />
+
+          <ImageUploadSlot
+            id="upload-paper-image"
+            label="Paper Pattern"
+            hint="Background texture — replaces the paper texture above"
+            value={design.paperImage}
+            onUpload={handleImageUpload('paperImage')}
+            onClear={handleImageClear('paperImage')}
+          />
         </section>
 
         <Divider />

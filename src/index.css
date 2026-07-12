@@ -135,17 +135,6 @@
   outline-offset: 6px;
 }
 
-/* ── Wax Seal Positioner ─────────────────────────────────────────────────── */
-
-.wax-seal-positioner {
-  position: absolute;
-  bottom: 10%;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: var(--z-seal);
-  cursor: pointer;
-}
-
 /* ── SVG Filter Definitions (hidden) ─────────────────────────────────────── */
 
 .sigil-svg-filters {

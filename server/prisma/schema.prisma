@@ -1,0 +1,32 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model InvitationCanvas {
+  id              String   @id @default(uuid())
+  envelopeColor   String
+  waxSealAsset    String
+  musicUrl        String?
+  countdownTarget String
+  colorPalette    String   // Store array as JSON string
+  itinerary       String   // Store array of objects as JSON string
+  hostId          String
+  invitees        Guest[]
+}
+
+model Guest {
+  id               String            @id @default(uuid())
+  name             String
+  allottedSeats    Int               @default(1)
+  confirmedSeats   Int               @default(0)
+  status           String            @default("PENDING") // PENDING | OPENED | CONFIRMED | DECLINED
+  openedTimestamp  String?           // Stored as ISO-8601 string
+  formResponses    String            @default("{}") // Store record<string, any> as JSON string
+  canvasId         String
+  canvas           InvitationCanvas  @relation(fields: [canvasId], references: [id])
+}

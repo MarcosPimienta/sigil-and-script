@@ -12,7 +12,6 @@ const emptyRoster: GuestRoster = { invitees: [] };
 function makeState(partial?: Partial<SigilAppState>): SigilAppState {
   return {
     appMode: 'CREATOR',
-    revealState: 'LOCKED',
     design: {} as SigilAppState['design'],
     guest: {
       guestName: '',

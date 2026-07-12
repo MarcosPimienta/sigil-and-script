@@ -97,49 +97,20 @@
 
   /* ── 2c. Paper Luminance Guardrails ─────────────────────────────────────── */
 
-  /* LIGHT paper → dark ink, deep wax permitted */
+  /* LIGHT paper → dark ink */
   --ink-on-light:             var(--color-sepia-800);
   --ink-alt-on-light:         var(--color-ink-900);
   --ink-accent-on-light:      var(--color-gold-burnish);
-  --wax-allowed-on-light:     "crimson, midnight, forest, indigo";   /* advisory */
 
   /* MEDIUM paper → warm sepia ink or white ink */
   --ink-on-medium:            var(--color-sepia-900);
   --ink-alt-on-medium:        hsl(44 50% 96%);
   --ink-accent-on-medium:     var(--color-gold-foil);
-  --wax-allowed-on-medium:    "crimson, midnight, charcoal, ivory";
 
   /* DARK paper → light ink mandatory */
   --ink-on-dark:              hsl(44 60% 94%);
   --ink-alt-on-dark:          var(--color-silver-bright);
   --ink-accent-on-dark:       var(--color-gold-foil);
-  --wax-allowed-on-dark:      "ivory, champagne, gold";
-
-  /* ── 2d. Wax Seal Palette ───────────────────────────────────────────────── */
-
-  --wax-crimson:       hsl(348 72% 32%);
-  --wax-crimson-light: hsl(348 60% 52%);
-  --wax-crimson-sheen: hsl(348 80% 22%);
-
-  --wax-midnight:      hsl(225 50% 16%);
-  --wax-midnight-light:hsl(225 40% 32%);
-  --wax-midnight-sheen:hsl(225 60% 10%);
-
-  --wax-forest:        hsl(160 44% 18%);
-  --wax-forest-light:  hsl(160 36% 32%);
-  --wax-forest-sheen:  hsl(160 54% 10%);
-
-  --wax-ivory:         hsl(44 48% 82%);
-  --wax-ivory-light:   hsl(44 40% 92%);
-  --wax-ivory-sheen:   hsl(44 56% 72%);
-
-  --wax-obsidian:      hsl(220 18% 8%);
-  --wax-obsidian-light:hsl(220 14% 20%);
-  --wax-obsidian-sheen:hsl(220 22% 4%);
-
-  --wax-amethyst:      hsl(280 48% 28%);
-  --wax-amethyst-light:hsl(280 40% 44%);
-  --wax-amethyst-sheen:hsl(280 56% 18%);
 
   /* ── 2e. Typography Scale & Families ───────────────────────────────────── */
 
@@ -185,15 +156,11 @@
   --inspector-width:    320px;
   --toolbar-height:     56px;
 
-  /* Wax seal base size */
-  --seal-base-size:     96px;
-
   /* ── 2g. Z-Index Layers ─────────────────────────────────────────────────── */
 
   --z-base:        0;
   --z-texture:     1;
   --z-content:     10;
-  --z-seal:        20;
   --z-overlay:     30;
   --z-inspector:   40;
   --z-toolbar:     50;
@@ -212,9 +179,7 @@
   --dur-fast:             180ms;
   --dur-normal:           320ms;
   --dur-slow:             560ms;
-  --dur-envelope-flip:    900ms;
   --dur-scroll-unfurl:    1200ms;
-  --dur-seal-break:       600ms;
   --dur-reveal-fade:      800ms;
 
   /* ── 2i. Shadow & Depth ─────────────────────────────────────────────────── */

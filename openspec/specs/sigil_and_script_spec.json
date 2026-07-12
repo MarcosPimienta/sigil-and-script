@@ -1,0 +1,126 @@
+{
+  "project": "Sigil & Script - Multi-Tenant Interactive Invitation Platform",
+  "version": "2.0.0",
+  "methodology": "Spec-Driven Development (SDD)",
+  "state_management": "Zustand (Decoupled Decisive State Engines)",
+  "styling": "Tailwind CSS + Custom CSS Variables",
+  "architecture": {
+    "tenants": {
+      "ADMIN": {
+        "description": "Global application controller and metrics dashboard.",
+        "capabilities": [
+          "Read user rosters",
+          "Manage host allocations",
+          "System health auditing"
+        ]
+      },
+      "HOST": {
+        "description": "The invitation designer and real-time analytics tracker.",
+        "capabilities": [
+          "Dynamic JSON canvas editing",
+          "CSV guest ingestion",
+          "Manual status overrides",
+          "RSVP tracking telemetry"
+        ]
+      },
+      "GUEST": {
+        "description": "The interactive responsive presentation layer.",
+        "capabilities": [
+          "Passwordless token-hydrated views",
+          "Envelope open transitions",
+          "Dynamic dynamic field RSVP form delivery"
+        ]
+      }
+    },
+    "data_contracts": {
+      "InvitationCanvasState": {
+        "envelopeColor": "string (Hex)",
+        "waxSealAsset": "string (Url/Slug)",
+        "musicUrl": "string (Url/Null)",
+        "countdownTarget": "string (ISO-8601)",
+        "colorPalette": "array (strings)",
+        "itinerary": [
+          {
+            "type": "CEREMONY | RECEPTION",
+            "time": "string",
+            "locationName": "string",
+            "mapsUrl": "string"
+          }
+        ]
+      },
+      "GuestRecord": {
+        "id": "uuid-v4",
+        "name": "string",
+        "allottedSeats": "number",
+        "confirmedSeats": "number",
+        "status": "PENDING | OPENED | CONFIRMED | DECLINED",
+        "openedTimestamp": "string (ISO-8601 | Null)",
+        "formResponses": "record<string, any>"
+      }
+    },
+    "state_transitions": {
+      "GuestInvitationShell": {
+        "initial": "ENVELOPE_LOCKED",
+        "states": {
+          "ENVELOPE_LOCKED": {
+            "on": {
+              "SEAL_CLICK": "ENVELOPE_OPENING_ANIMATION"
+            }
+          },
+          "ENVELOPE_OPENING_ANIMATION": {
+            "on": {
+              "ANIMATION_END": "INVITATION_REVEALED"
+            }
+          },
+          "INVITATION_REVEALED": {
+            "on": {
+              "SCROLL_PAST_THRESHOLD": "PLAY_AMBIENT_AUDIO"
+            }
+          }
+        }
+      }
+    },
+    "milestones": [
+      {
+        "id": "M1_CORE_SCHEMAS",
+        "name": "Database Schema & OpenAPI Route Layout",
+        "tasks": [
+          "Generate rigorous Prisma/Mongoose schemas matching GuestRecord and Canvas structures",
+          "Draft request/response validation decorators"
+        ]
+      },
+      {
+        "id": "M2_RBAC_INFRASTRUCTURE",
+        "name": "Dynamic Route Token Validation Engine",
+        "tasks": [
+          "Implement /invite/[guest_token] router hydrating automatically via telemetry tracking backend endpoints",
+          "Establish Admin and Host interface security guards"
+        ]
+      },
+      {
+        "id": "M3_CREATOR_STUDIO_V2",
+        "name": "Zustand Custom Design Engine & Dynamic Forms Configurator",
+        "tasks": [
+          "Migrate SigilContext to isolated Zustand canvas stores",
+          "Build CSV batch processing roster systems",
+          "Build adaptive host form toggles"
+        ]
+      },
+      {
+        "id": "M4_INTERACTIVE_SHELL",
+        "name": "Framer Motion Envelope Mechanics & Asset Handoffs",
+        "tasks": [
+          "Construct multi-phase envelope split visual timelines",
+          "Build automated sound fades and sticky performance countdown widgets"
+        ]
+      },
+      {
+        "id": "M5_END_TO_END_VALIDATION",
+        "name": "Telemetry Ingestion Auditing & Verification",
+        "tasks": [
+          "Run end-to-end telemetry simulations for seamless status switches from PENDING to OPENED via headless test scripts"
+        ]
+      }
+    ]
+  }
+}

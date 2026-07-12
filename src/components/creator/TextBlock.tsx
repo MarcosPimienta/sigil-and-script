@@ -10,6 +10,7 @@
 import { useCallback, useEffect, useRef } from 'react';
 import type { TextBlockConfig, InkColor } from '../../types/sigil.types';
 import { INK_COLOR_TO_CSS_VAR } from '../../utils/luminanceGuards';
+import { STAGE_Z } from './InvitationStage';
 
 // ── Resolved text content (tokens already substituted) ────────────────────────
 
@@ -23,9 +24,6 @@ interface TextBlockProps {
   onEdit: () => void;
   onBlur: () => void;
   onContentChange: (newContent: string) => void;
-  /** Stage dimensions for percentage-based positioning */
-  stageWidth: number;
-  stageHeight: number;
 }
 
 function inkColorToCss(ink: InkColor): string {
@@ -41,8 +39,6 @@ export function TextBlock({
   onEdit,
   onBlur,
   onContentChange,
-  stageWidth,
-  stageHeight,
 }: TextBlockProps) {
   const ref = useRef<HTMLDivElement>(null);
 
@@ -102,15 +98,13 @@ export function TextBlock({
   }, [onBlur]);
 
   // ── Derived styles from config ─────────────────────────────────────────────
-
-  const posX = (config.x / 100) * stageWidth;
-  const posY = (config.y / 100) * stageHeight;
+  // Flows top-to-bottom in document order — no more x/y positioning, just a
+  // per-block top margin controlling the gap from whatever came before it.
 
   const style: React.CSSProperties = {
-    position: 'absolute',
-    left: posX,
-    top: posY,
-    transform: 'translate(-50%, -50%)',
+    position: 'relative',
+    width: '82%',
+    margin: `${config.marginTop}rem auto 0`,
     fontFamily: config.fontFamily,
     fontSize: `${config.fontSize}rem`,
     fontStyle: config.fontStyle,
@@ -122,14 +116,12 @@ export function TextBlock({
     mixBlendMode: 'multiply',
     whiteSpace: 'pre-wrap',
     wordBreak: 'break-word',
-    minWidth: 120,
-    maxWidth: stageWidth * 0.82,
     // Editing state
     outline: 'none',
-    cursor: isEditing ? 'text' : isSelected ? 'move' : 'text',
+    cursor: isEditing ? 'text' : 'pointer',
     userSelect: isEditing ? 'text' : 'none',
     WebkitUserSelect: isEditing ? 'text' : 'none',
-    zIndex: isSelected ? 15 : 10,
+    zIndex: isSelected ? STAGE_Z.textSelected : STAGE_Z.text,
     transition: 'filter 120ms ease',
     filter: isSelected ? 'none' : 'url(#sigil-ink-absorb)',
   };

@@ -10,6 +10,7 @@ import { useSigil } from '../../context/SigilContext';
 
 export function CreatorCanvas() {
   const { state } = useSigil();
+  const isRecipient = state.appMode === 'RECIPIENT';
 
   return (
     <div
@@ -32,18 +33,22 @@ export function CreatorCanvas() {
 
           {/* The invitation paper itself */}
           <div className="preview-stage-container">
-            <InvitationStage />
+            {isRecipient ? (
+              <InvitationStage readOnly />
+            ) : (
+              <>
+                <InvitationStage />
 
-            {/* Helper text below the stage */}
-            <p className="preview-hint" aria-live="polite">
-              {state.isEditingText
-                ? 'Editing — click outside to finish'
-                : state.canvasSelection.selectedTextBlockId
-                ? 'Double-click to edit text'
-                : state.inspectorFocus.type === 'WAX_SEAL'
-                ? 'Wax seal selected — adjust in the panel'
-                : 'Click any element to inspect & edit'}
-            </p>
+                {/* Helper text below the stage */}
+                <p className="preview-hint" aria-live="polite">
+                  {state.isEditingText
+                    ? 'Editing — click outside to finish'
+                    : state.canvasSelection.selectedTextBlockId
+                    ? 'Double-click to edit text'
+                    : 'Click any element to inspect & edit'}
+                </p>
+              </>
+            )}
           </div>
         </main>
       </div>

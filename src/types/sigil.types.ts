@@ -7,11 +7,6 @@
 /** Top-level mode: who is currently using the canvas */
 export type AppMode = 'CREATOR' | 'RECIPIENT' | 'DASHBOARD';
 
-// ── Recipient Reveal State Machine ────────────────────────────────────────────
-
-/** The three phases of the invitation reveal sequence */
-export type RevealState = 'LOCKED' | 'ANIMATING' | 'REVEALED';
-
 // ── Envelope / Container Styles ───────────────────────────────────────────────
 
 export type EnvelopeStyle = 'CLASSIC' | 'SCROLL' | 'BOOKLET';
@@ -22,30 +17,6 @@ export type PaperTexture = 'linen' | 'parchment' | 'cotton-rag' | 'vellum';
 
 /** Luminance tier derived from the paper texture — drives ink/wax guardrails */
 export type PaperLuminance = 'LIGHT' | 'MEDIUM' | 'DARK';
-
-// ── Wax Seal ──────────────────────────────────────────────────────────────────
-
-export type SealState = 'INTACT' | 'BREAKING' | 'BROKEN';
-
-export interface WaxSealConfig {
-  /** CSS custom property color token, e.g. var(--wax-crimson) */
-  color: string;
-  /** CSS variable for the lighter sheen of the wax */
-  colorLight: string;
-  /** CSS variable for the deep shadow of the wax */
-  colorSheen: string;
-  /** SVG path/glyph identifier for the seal motif */
-  motif: 'fleur-de-lis' | 'sigil-s' | 'botanical' | 'geometric' | 'monogram';
-  /** Custom text for monogram motif (e.g. "M&A") */
-  monogramText: string;
-  /** Rotation of the entire seal in degrees */
-  rotation: number;
-  /** Scale factor relative to the default 96px base */
-  scale: number;
-  /** 3D depth: maps to feDistantLight elevation (0=dramatic, 100=flat) */
-  depth: number;
-  state: SealState;
-}
 
 // ── Typography ────────────────────────────────────────────────────────────────
 
@@ -59,12 +30,11 @@ export interface TextBlockConfig {
   fontStyle: 'normal' | 'italic';
   fontWeight: 400 | 600 | 700;
   color: InkColor;
-  /** Position as percentage of the invitation stage dimensions */
-  x: number;
-  y: number;
   textAlign: 'left' | 'center' | 'right';
   letterSpacing: number; // em units
   lineHeight: number;
+  /** Space above this block, in the flowing stack of text blocks (rem units) */
+  marginTop: number;
 }
 
 // ── Guest Roster ──────────────────────────────────────────────────────────────
@@ -120,12 +90,18 @@ export interface InvitationDesign {
   paperTexture: PaperTexture;
   paperLuminance: PaperLuminance;
   envelopeStyle: EnvelopeStyle;
-  waxSeal: WaxSealConfig;
   textBlocks: TextBlockConfig[];
   /** Border treatment for the deckled-edge effect */
   borderStyle: 'deckled' | 'torn' | 'clean' | 'scalloped';
   /** CSS color token for the invitation background */
   backgroundColor: string;
+  /** Custom uploaded artwork (data URLs) — layered over the procedural design */
+  /** Shown centered near the top of the stage, above the headline */
+  headerImage?: string;
+  /** Full-bleed decorative frame, stretched to the stage bounds; replaces the procedural border when set */
+  frameImage?: string;
+  /** Tiled/cover background texture for the paper itself */
+  paperImage?: string;
 }
 
 // ── Inspector Focus ───────────────────────────────────────────────────────────
@@ -134,8 +110,7 @@ export interface InvitationDesign {
 export type InspectorFocus =
   | { type: 'NONE' }
   | { type: 'PAPER'; design: InvitationDesign }
-  | { type: 'TEXT_BLOCK'; blockId: string }
-  | { type: 'WAX_SEAL' };
+  | { type: 'TEXT_BLOCK'; blockId: string };
 
 // ── Canvas Selection ──────────────────────────────────────────────────────────
 

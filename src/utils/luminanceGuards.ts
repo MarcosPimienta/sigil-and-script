@@ -50,67 +50,6 @@ export const INK_COLOR_LABELS: Record<InkColor, string> = {
   METALLIC_SILVER:  'Sterling Silver',
 };
 
-// ── Wax Allow-Lists per Luminance ─────────────────────────────────────────────
-
-export interface WaxOption {
-  id: string;
-  label: string;
-  cssVar: string;
-  lightCssVar: string;
-  sheenCssVar: string;
-}
-
-export const ALL_WAX_OPTIONS: WaxOption[] = [
-  {
-    id: 'crimson',
-    label: 'Crimson',
-    cssVar: 'var(--wax-crimson)',
-    lightCssVar: 'var(--wax-crimson-light)',
-    sheenCssVar: 'var(--wax-crimson-sheen)',
-  },
-  {
-    id: 'midnight',
-    label: 'Midnight',
-    cssVar: 'var(--wax-midnight)',
-    lightCssVar: 'var(--wax-midnight-light)',
-    sheenCssVar: 'var(--wax-midnight-sheen)',
-  },
-  {
-    id: 'forest',
-    label: 'Forest',
-    cssVar: 'var(--wax-forest)',
-    lightCssVar: 'var(--wax-forest-light)',
-    sheenCssVar: 'var(--wax-forest-sheen)',
-  },
-  {
-    id: 'ivory',
-    label: 'Ivory',
-    cssVar: 'var(--wax-ivory)',
-    lightCssVar: 'var(--wax-ivory-light)',
-    sheenCssVar: 'var(--wax-ivory-sheen)',
-  },
-  {
-    id: 'obsidian',
-    label: 'Obsidian',
-    cssVar: 'var(--wax-obsidian)',
-    lightCssVar: 'var(--wax-obsidian-light)',
-    sheenCssVar: 'var(--wax-obsidian-sheen)',
-  },
-  {
-    id: 'amethyst',
-    label: 'Amethyst',
-    cssVar: 'var(--wax-amethyst)',
-    lightCssVar: 'var(--wax-amethyst-light)',
-    sheenCssVar: 'var(--wax-amethyst-sheen)',
-  },
-];
-
-const WAX_BY_LUMINANCE: Record<PaperLuminance, string[]> = {
-  LIGHT:  ['crimson', 'midnight', 'forest', 'amethyst', 'obsidian'],
-  MEDIUM: ['crimson', 'midnight', 'forest', 'ivory', 'amethyst', 'obsidian'],
-  DARK:   ['ivory', 'amethyst'],
-};
-
 // ── Public API ────────────────────────────────────────────────────────────────
 
 /**
@@ -130,15 +69,6 @@ export function getAllowedInkColors(luminance: PaperLuminance): InkColor[] {
 }
 
 /**
- * Returns the list of wax options permitted for a given paper luminance.
- * This enforces elegant contrast between wax seal and paper.
- */
-export function getAllowedWaxOptions(luminance: PaperLuminance): WaxOption[] {
-  const allowed = WAX_BY_LUMINANCE[luminance] ?? WAX_BY_LUMINANCE.LIGHT;
-  return ALL_WAX_OPTIONS.filter((opt) => allowed.includes(opt.id));
-}
-
-/**
  * Checks whether a chosen ink colour is valid for the current paper luminance.
  * Used to guard against invalid design states (e.g. light ink on light paper).
  */
@@ -147,13 +77,6 @@ export function isInkColorAllowed(
   luminance: PaperLuminance,
 ): boolean {
   return getAllowedInkColors(luminance).includes(color);
-}
-
-/**
- * Checks whether a wax option id is valid for the current paper luminance.
- */
-export function isWaxAllowed(waxId: string, luminance: PaperLuminance): boolean {
-  return getAllowedWaxOptions(luminance).some((opt) => opt.id === waxId);
 }
 
 /**

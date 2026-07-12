@@ -1,7 +1,6 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // Sigil — App State Context
-// Central state machine coordinating Creator Mode, Recipient Mode, and the
-// invitation Reveal State lifecycle.
+// Central state machine coordinating Creator Mode and Recipient Mode.
 //
 // Security notes:
 //   - No sensitive user data is stored in this context. Guest names are
@@ -29,7 +28,6 @@ import type {
   InspectorFocus,
   InvitationDesign,
   InviteeRecord,
-  RevealState,
 } from '../types/sigil.types';
 
 // ── Default Design ────────────────────────────────────────────────────────────
@@ -40,17 +38,6 @@ const DEFAULT_DESIGN: InvitationDesign = {
   paperTexture: 'parchment',
   paperLuminance: 'LIGHT',
   envelopeStyle: 'CLASSIC',
-  waxSeal: {
-    color: 'var(--wax-crimson)',
-    colorLight: 'var(--wax-crimson-light)',
-    colorSheen: 'var(--wax-crimson-sheen)',
-    motif: 'monogram',
-    monogramText: 'M&A',
-    rotation: -12,
-    scale: 1,
-    depth: 40,
-    state: 'INTACT',
-  },
   textBlocks: [
     {
       id: 'tb-headline',
@@ -60,11 +47,10 @@ const DEFAULT_DESIGN: InvitationDesign = {
       fontStyle: 'italic',
       fontWeight: 400,
       color: 'DARK_INK',
-      x: 50,
-      y: 22,
       textAlign: 'center',
       letterSpacing: 0.04,
       lineHeight: 1.25,
+      marginTop: 0,
     },
     {
       id: 'tb-guest',
@@ -74,11 +60,10 @@ const DEFAULT_DESIGN: InvitationDesign = {
       fontStyle: 'normal',
       fontWeight: 400,
       color: 'DARK_INK',
-      x: 50,
-      y: 38,
       textAlign: 'center',
       letterSpacing: 0.06,
       lineHeight: 1.5,
+      marginTop: 2.5,
     },
     {
       id: 'tb-body',
@@ -89,11 +74,10 @@ const DEFAULT_DESIGN: InvitationDesign = {
       fontStyle: 'normal',
       fontWeight: 400,
       color: 'DARK_INK',
-      x: 50,
-      y: 52,
       textAlign: 'center',
       letterSpacing: 0.02,
       lineHeight: 1.8,
+      marginTop: 1.5,
     },
     {
       id: 'tb-rsvp',
@@ -103,11 +87,10 @@ const DEFAULT_DESIGN: InvitationDesign = {
       fontStyle: 'italic',
       fontWeight: 400,
       color: 'SEPIA_INK',
-      x: 50,
-      y: 78,
       textAlign: 'center',
       letterSpacing: 0.08,
       lineHeight: 1.5,
+      marginTop: 4,
     },
   ],
   borderStyle: 'deckled',
@@ -130,8 +113,6 @@ const DEFAULT_GUEST: GuestPayload = {
 export interface SigilAppState {
   /** Whether the canvas is in designer or recipient view */
   appMode: AppMode;
-  /** Current reveal phase for the recipient experience */
-  revealState: RevealState;
   /** The full invitation design being authored or viewed */
   design: InvitationDesign;
   /** Guest data hydrating the template tokens */
@@ -148,7 +129,6 @@ export interface SigilAppState {
 
 const INITIAL_STATE: SigilAppState = {
   appMode: 'CREATOR',
-  revealState: 'LOCKED',
   design: DEFAULT_DESIGN,
   guest: DEFAULT_GUEST,
   inspectorFocus: { type: 'NONE' },
@@ -161,16 +141,11 @@ const INITIAL_STATE: SigilAppState = {
 
 export type SigilAction =
   | { type: 'SET_APP_MODE'; payload: AppMode }
-  | { type: 'SET_REVEAL_STATE'; payload: RevealState }
-  | { type: 'START_REVEAL_ANIMATION' }
-  | { type: 'COMPLETE_REVEAL' }
-  | { type: 'RESET_REVEAL' }
   | { type: 'SET_INSPECTOR_FOCUS'; payload: InspectorFocus }
   | { type: 'SET_CANVAS_SELECTION'; payload: CanvasSelection }
   | { type: 'SET_IS_EDITING_TEXT'; payload: boolean }
   | { type: 'UPDATE_DESIGN'; payload: Partial<InvitationDesign> }
   | { type: 'UPDATE_TEXT_BLOCK'; payload: { blockId: string; updates: Partial<import('../types/sigil.types').TextBlockConfig> } }
-  | { type: 'UPDATE_WAX_SEAL'; payload: Partial<import('../types/sigil.types').WaxSealConfig> }
   | { type: 'SET_GUEST'; payload: Partial<GuestPayload> }
   | { type: 'RESET_TO_DEFAULTS' }
   // ── Guest Roster ──────────────────────────────────────────────────────────
@@ -191,29 +166,10 @@ function sigilReducer(state: SigilAppState, action: SigilAction): SigilAppState 
       return {
         ...state,
         appMode: action.payload,
-        // Reset reveal when switching back to creator
-        revealState: action.payload === 'CREATOR' ? 'LOCKED' : state.revealState,
         canvasSelection: { selectedTextBlockId: null },
         inspectorFocus: { type: 'NONE' },
         isEditingText: false,
       };
-
-    // ── Reveal State Machine ────────────────────────────────────────────────
-    case 'SET_REVEAL_STATE':
-      return { ...state, revealState: action.payload };
-
-    case 'START_REVEAL_ANIMATION':
-      // Guard: only transition from LOCKED
-      if (state.revealState !== 'LOCKED') return state;
-      return { ...state, revealState: 'ANIMATING' };
-
-    case 'COMPLETE_REVEAL':
-      // Guard: only transition from ANIMATING
-      if (state.revealState !== 'ANIMATING') return state;
-      return { ...state, revealState: 'REVEALED' };
-
-    case 'RESET_REVEAL':
-      return { ...state, revealState: 'LOCKED' };
 
     // ── Inspector ───────────────────────────────────────────────────────────
     case 'SET_INSPECTOR_FOCUS':
@@ -245,15 +201,6 @@ function sigilReducer(state: SigilAppState, action: SigilAction): SigilAppState 
         },
       };
     }
-
-    case 'UPDATE_WAX_SEAL':
-      return {
-        ...state,
-        design: {
-          ...state.design,
-          waxSeal: { ...state.design.waxSeal, ...action.payload },
-        },
-      };
 
     // ── Guest Payload ───────────────────────────────────────────────────────
     case 'SET_GUEST':
@@ -403,14 +350,10 @@ interface SigilContextValue {
   dispatch: React.Dispatch<SigilAction>;
   // ── Convenience action creators ─────────────────────────────────────────
   setAppMode: (mode: AppMode) => void;
-  startReveal: () => void;
-  completeReveal: () => void;
-  resetReveal: () => void;
   focusInspector: (focus: InspectorFocus) => void;
   selectTextBlock: (blockId: string | null) => void;
   updateDesign: (updates: Partial<InvitationDesign>) => void;
   updateTextBlock: (blockId: string, updates: Partial<import('../types/sigil.types').TextBlockConfig>) => void;
-  updateWaxSeal: (updates: Partial<import('../types/sigil.types').WaxSealConfig>) => void;
   setGuest: (payload: Partial<GuestPayload>) => void;
   // ── Guest Roster ────────────────────────────────────────────────────────
   addInvitee: (name: string, email?: string) => void;
@@ -470,21 +413,6 @@ export function SigilProvider({ children, initialGuest }: SigilProviderProps) {
     [],
   );
 
-  const startReveal = useCallback(
-    () => dispatch({ type: 'START_REVEAL_ANIMATION' }),
-    [],
-  );
-
-  const completeReveal = useCallback(
-    () => dispatch({ type: 'COMPLETE_REVEAL' }),
-    [],
-  );
-
-  const resetReveal = useCallback(
-    () => dispatch({ type: 'RESET_REVEAL' }),
-    [],
-  );
-
   const focusInspector = useCallback(
     (focus: InspectorFocus) =>
       dispatch({ type: 'SET_INSPECTOR_FOCUS', payload: focus }),
@@ -509,12 +437,6 @@ export function SigilProvider({ children, initialGuest }: SigilProviderProps) {
   const updateTextBlock = useCallback(
     (blockId: string, updates: Partial<import('../types/sigil.types').TextBlockConfig>) =>
       dispatch({ type: 'UPDATE_TEXT_BLOCK', payload: { blockId, updates } }),
-    [],
-  );
-
-  const updateWaxSeal = useCallback(
-    (updates: Partial<import('../types/sigil.types').WaxSealConfig>) =>
-      dispatch({ type: 'UPDATE_WAX_SEAL', payload: updates }),
     [],
   );
 
@@ -570,14 +492,10 @@ export function SigilProvider({ children, initialGuest }: SigilProviderProps) {
     state,
     dispatch,
     setAppMode,
-    startReveal,
-    completeReveal,
-    resetReveal,
     focusInspector,
     selectTextBlock,
     updateDesign,
     updateTextBlock,
-    updateWaxSeal,
     setGuest,
     addInvitee,
     removeInvitee,
