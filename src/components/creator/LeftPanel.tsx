@@ -21,7 +21,7 @@ const MAX_IMAGE_BYTES = 8 * 1024 * 1024; // 8MB
 
 type ImageField = keyof Pick<
   InvitationDesign,
-  'headerImage' | 'frameImage' | 'paperImage' | 'closedEnvelopeImage' | 'openedEnvelopeImage'
+  'headerImage' | 'frameImage' | 'paperImage' | 'closedEnvelopeImage' | 'openedEnvelopeImage' | 'stickerImage'
 >;
 
 
@@ -211,6 +211,15 @@ export function LeftPanel() {
             value={design.openedEnvelopeImage}
             onUpload={handleImageUpload('openedEnvelopeImage')}
             onClear={handleImageClear('openedEnvelopeImage')}
+          />
+
+          <ImageUploadSlot
+            id="upload-sticker-image"
+            label="Sticker Label / Seal"
+            hint="Custom PNG image to keep the invitation sealed"
+            value={design.stickerImage}
+            onUpload={handleImageUpload('stickerImage')}
+            onClear={handleImageClear('stickerImage')}
           />
         </section>
 

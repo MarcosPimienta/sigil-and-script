@@ -113,17 +113,25 @@ export function EnvelopeWrapper({ children, onPhaseChange, alwaysOpen }: Envelop
         </div>
 
         {/* Wax Seal Button centered */}
-        {phase !== 'SLIDEOUT' && (
+        {(phase === 'CLOSED' || phase === 'CRACKING') && (
           <div
             className={`envelope-seal ${phase === 'CRACKING' ? 'cracking' : ''}`}
             onClick={handleSealClick}
             role="button"
             aria-label="Break wax seal and open invitation"
           >
-            <div className="wax-seal-btn">
-              <span>S</span>
-              {phase === 'CRACKING' && <div className="seal-crack-line" />}
-            </div>
+            {design.stickerImage ? (
+              <img
+                src={design.stickerImage}
+                alt="Sticker seal"
+                className="envelope-sticker-image"
+              />
+            ) : (
+              <div className="wax-seal-btn">
+                <span>S</span>
+                {phase === 'CRACKING' && <div className="seal-crack-line" />}
+              </div>
+            )}
           </div>
         )}
       </div>

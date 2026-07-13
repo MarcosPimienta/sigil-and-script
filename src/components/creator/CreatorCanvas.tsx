@@ -224,7 +224,7 @@ export function CreatorCanvas() {
                 </>
               )}
             </div>
-            {isRecipient && <AudioToggle />}
+             <AudioToggle />
           </div>
         </main>
       </div>

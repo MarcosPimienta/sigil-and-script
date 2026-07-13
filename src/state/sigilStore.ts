@@ -64,6 +64,7 @@ const DEFAULT_DESIGN: InvitationDesign = {
   registryLink: '',
   closedEnvelopeImage: '',
   openedEnvelopeImage: '',
+  stickerImage: '',
 };
 
 const DEFAULT_GUEST: GuestPayload = {

@@ -111,6 +111,7 @@ export interface InvitationDesign {
   registryText?: string;
   closedEnvelopeImage?: string;
   openedEnvelopeImage?: string;
+  stickerImage?: string;
 }
 
 // ── Itinerary Schema ──────────────────────────────────────────────────────────

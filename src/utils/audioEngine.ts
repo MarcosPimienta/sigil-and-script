@@ -1,6 +1,6 @@
 class AudioEngine {
   private ctx: AudioContext | null = null;
-  private isMuted: boolean = false;
+  private isMuted: boolean = true;
   private activeOscillators: { osc: OscillatorNode; gain: GainNode }[] = [];
   private loopInterval: any = null;
 
