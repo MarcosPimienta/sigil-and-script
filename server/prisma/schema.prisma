@@ -16,6 +16,7 @@ model InvitationCanvas {
   colorPalette    String   // Store array as JSON string
   itinerary       String   // Store array of objects as JSON string
   hostId          String
+  designData      String   @default("{}")
   invitees        Guest[]
 }
 

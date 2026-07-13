@@ -47,3 +47,94 @@ export async function getInviteByToken(req: Request, res: Response): Promise<voi
     res.status(500).json({ error: 'Internal server error' });
   }
 }
+
+export async function getCanvases(req: Request, res: Response): Promise<void> {
+  try {
+    const canvases = await prisma.invitationCanvas.findMany();
+    res.json(canvases);
+  } catch (error) {
+    console.error('Error listing canvases:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
+export async function saveCanvas(req: Request, res: Response): Promise<void> {
+  const {
+    id,
+    envelopeColor,
+    waxSealAsset,
+    musicUrl,
+    countdownTarget,
+    colorPalette,
+    itinerary,
+    hostId,
+    designData,
+  } = req.body;
+
+  try {
+    if (id) {
+      const existing = await prisma.invitationCanvas.findUnique({
+        where: { id },
+      });
+
+      if (existing) {
+        const updated = await prisma.invitationCanvas.update({
+          where: { id },
+          data: {
+            envelopeColor: envelopeColor ?? existing.envelopeColor,
+            waxSealAsset: waxSealAsset ?? existing.waxSealAsset,
+            musicUrl: musicUrl !== undefined ? musicUrl : existing.musicUrl,
+            countdownTarget: countdownTarget ?? existing.countdownTarget,
+            colorPalette: colorPalette ?? existing.colorPalette,
+            itinerary: itinerary ?? existing.itinerary,
+            hostId: hostId ?? existing.hostId,
+            designData: designData ?? existing.designData,
+          },
+        });
+        res.json(updated);
+        return;
+      }
+    }
+
+    const created = await prisma.invitationCanvas.create({
+      data: {
+        id: id || undefined,
+        envelopeColor: envelopeColor || '#f6ebe2',
+        waxSealAsset: waxSealAsset || 'classic-red',
+        musicUrl: musicUrl || null,
+        countdownTarget: countdownTarget || new Date().toISOString(),
+        colorPalette: colorPalette || JSON.stringify([]),
+        itinerary: itinerary || JSON.stringify([]),
+        hostId: hostId || 'host-default',
+        designData: designData || '{}',
+      },
+    });
+    res.json(created);
+  } catch (error) {
+    console.error('Error saving canvas:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
+export async function deleteCanvas(req: Request, res: Response): Promise<void> {
+  const { id } = req.params;
+  if (typeof id !== 'string') {
+    res.status(400).json({ error: 'Invalid ID parameter' });
+    return;
+  }
+
+  try {
+    await prisma.guest.deleteMany({
+      where: { canvasId: id },
+    });
+
+    await prisma.invitationCanvas.delete({
+      where: { id },
+    });
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error deleting canvas:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+}

@@ -155,8 +155,25 @@ export function LeftPanel() {
       <div className="lp-inner">
 
         {/* ── Header ──────────────────────────────────────────────────────── */}
-        <div className="lp-header">
-          <h1 className="lp-title">Invitation Studio</h1>
+        <div className="lp-header" style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+          <h1 className="lp-title" style={{ margin: 0 }}>Invitation Studio</h1>
+          <input
+            id="input-design-title"
+            type="text"
+            className="lp-input"
+            value={design.title || ''}
+            onChange={(e) => updateDesign({ title: e.target.value })}
+            placeholder="Invitation Title (e.g. Oscar & Rocio)"
+            style={{
+              width: '100%',
+              fontSize: '0.85rem',
+              padding: '6px 10px',
+              backgroundColor: 'var(--cr-input-bg)',
+              border: '1px solid var(--cr-input-border)',
+              borderRadius: '4px',
+              color: 'var(--cr-text)',
+            }}
+          />
         </div>
 
 

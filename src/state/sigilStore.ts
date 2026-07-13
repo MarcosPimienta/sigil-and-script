@@ -107,7 +107,11 @@ export interface SigilState {
   toggleDependent: (inviteeId: string, dependentId: string) => void;
   markInvitationOpened: (inviteeId: string) => void;
   fetchInvitationDetails: (token: string) => Promise<void>;
-  
+  saveCurrentDesign: () => Promise<void>;
+  loadDesign: (designId: string) => Promise<void>;
+  fetchSavedDesigns: () => Promise<{ id: string; title: string; countdownTarget: string }[]>;
+  deleteSavedDesign: (designId: string) => Promise<void>;
+
   // CSV Batch Ingest Action
   ingestGuestsBatch: (records: { name: string; email?: string }[]) => void;
 }
@@ -122,7 +126,7 @@ function loadRoster(): GuestRoster {
   return { invitees: [] };
 }
 
-export const useSigilStore = create<SigilState>((set) => ({
+export const useSigilStore = create<SigilState>((set, get) => ({
   appMode: 'CREATOR',
   design: DEFAULT_DESIGN,
   guest: DEFAULT_GUEST,
@@ -328,5 +332,129 @@ export const useSigilStore = create<SigilState>((set) => ({
       localStorage.setItem('sigil-guest-roster', JSON.stringify(roster));
       return { guestRoster: roster };
     });
+  },
+
+  saveCurrentDesign: async () => {
+    const { design } = get();
+    set({ apiStatus: 'loading', apiError: null });
+    try {
+      const isDefaultId = design.id === 'design-default';
+      const body = {
+        id: isDefaultId ? undefined : design.id,
+        envelopeColor: design.backgroundColor,
+        waxSealAsset: design.stickerImage || 'classic-red',
+        musicUrl: null,
+        countdownTarget: design.countdownTarget || new Date().toISOString(),
+        colorPalette: JSON.stringify([design.backgroundColor]),
+        itinerary: JSON.stringify(design.itinerary || []),
+        hostId: 'host-default',
+        designData: JSON.stringify(design),
+      };
+
+      const data = await apiFetch('/canvas', {
+        method: 'POST',
+        body: JSON.stringify(body),
+      });
+
+      set((state) => ({
+        apiStatus: 'success',
+        design: {
+          ...state.design,
+          id: data.id,
+        },
+      }));
+    } catch (error: any) {
+      set({
+        apiStatus: 'error',
+        apiError: error.message || 'Failed to save configuration',
+      });
+      throw error;
+    }
+  },
+
+  loadDesign: async (designId) => {
+    set({ apiStatus: 'loading', apiError: null });
+    try {
+      const canvases = await apiFetch('/canvas');
+      const canvas = canvases.find((c: any) => c.id === designId);
+      if (!canvas) {
+        throw new Error('Configuration not found');
+      }
+
+      let loadedDesign: Partial<InvitationDesign> = {};
+      try {
+        if (canvas.designData) {
+          loadedDesign = JSON.parse(canvas.designData);
+        }
+      } catch (e) {
+        console.error('Failed to parse designData, falling back to columns', e);
+      }
+
+      const mergedDesign: InvitationDesign = {
+        ...DEFAULT_DESIGN,
+        ...loadedDesign,
+        id: canvas.id,
+        backgroundColor: canvas.envelopeColor || loadedDesign.backgroundColor || DEFAULT_DESIGN.backgroundColor,
+        stickerImage: canvas.waxSealAsset !== 'classic-red' ? canvas.waxSealAsset : (loadedDesign.stickerImage || DEFAULT_DESIGN.stickerImage),
+        countdownTarget: canvas.countdownTarget || loadedDesign.countdownTarget || DEFAULT_DESIGN.countdownTarget,
+        itinerary: canvas.itinerary ? JSON.parse(canvas.itinerary) : (loadedDesign.itinerary || DEFAULT_DESIGN.itinerary),
+      };
+
+      set({
+        apiStatus: 'success',
+        design: mergedDesign,
+      });
+    } catch (error: any) {
+      set({
+        apiStatus: 'error',
+        apiError: error.message || 'Failed to load configuration',
+      });
+      throw error;
+    }
+  },
+
+  fetchSavedDesigns: async () => {
+    try {
+      const data = await apiFetch('/canvas');
+      return data.map((canvas: any) => {
+        let title = 'Untitled Invitation';
+        try {
+          if (canvas.designData) {
+            const parsed = JSON.parse(canvas.designData);
+            if (parsed.title) title = parsed.title;
+          }
+        } catch {
+          // ignore
+        }
+        return {
+          id: canvas.id,
+          title,
+          countdownTarget: canvas.countdownTarget,
+        };
+      });
+    } catch (error: any) {
+      console.error('Failed to fetch saved configurations:', error);
+      throw error;
+    }
+  },
+
+  deleteSavedDesign: async (designId) => {
+    try {
+      await apiFetch(`/canvas/${designId}`, {
+        method: 'DELETE',
+      });
+      const { design } = get();
+      if (design.id === designId) {
+        set({
+          design: {
+            ...DEFAULT_DESIGN,
+            id: 'design-default',
+          },
+        });
+      }
+    } catch (error: any) {
+      console.error('Failed to delete configuration:', error);
+      throw error;
+    }
   },
 }));
