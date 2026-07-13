@@ -1,7 +1,9 @@
 const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
 
 export async function apiFetch<T = any>(path: string, options: RequestInit = {}): Promise<T> {
-  const url = `${BASE_URL}${path.startsWith('/') ? path : `/${path}`}`;
+  const cleanBase = BASE_URL.endsWith('/') ? BASE_URL.slice(0, -1) : BASE_URL;
+  const cleanPath = path.startsWith('/') ? path : `/${path}`;
+  const url = `${cleanBase}${cleanPath}`;
   
   const headers = new Headers(options.headers || {});
   if (!headers.has('Content-Type')) {
