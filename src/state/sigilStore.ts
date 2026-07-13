@@ -65,6 +65,7 @@ const DEFAULT_DESIGN: InvitationDesign = {
   closedEnvelopeImage: '',
   openedEnvelopeImage: '',
   stickerImage: '',
+  sealSize: 75,
 };
 
 const DEFAULT_GUEST: GuestPayload = {

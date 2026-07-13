@@ -119,6 +119,9 @@ export function EnvelopeWrapper({ children, onPhaseChange, alwaysOpen }: Envelop
             onClick={handleSealClick}
             role="button"
             aria-label="Break wax seal and open invitation"
+            style={{
+              ['--seal-scale' as any]: (design.sealSize ?? 75) / 75
+            }}
           >
             {design.stickerImage ? (
               <img

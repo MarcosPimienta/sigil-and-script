@@ -12,7 +12,6 @@ import { useSigil } from '../../context/SigilContext';
 
 export function CreatorCanvas() {
   const { state } = useSigil();
-  const { design } = state;
   const isRecipient = state.appMode === 'RECIPIENT';
 
   const [envelopePhase, setEnvelopePhase] = useState<'CLOSED' | 'CRACKING' | 'OPENING' | 'SLIDEOUT'>('CLOSED');
@@ -51,10 +50,6 @@ export function CreatorCanvas() {
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            ...(design.paperImage && {
-              backgroundImage: `url(${design.paperImage})`,
-              backgroundRepeat: 'repeat',
-            })
           }}>
             <div style={{ maxWidth: '480px', width: '100%', display: 'flex', flexDirection: 'column', gap: '2rem' }}>
               

@@ -2,8 +2,11 @@ import { useSigil } from '../../context/SigilContext';
 import type { ItineraryItem } from '../../types/sigil.types';
 
 export function SectionEditor() {
-  const { state, updateDesign } = useSigil();
+  const { state, updateDesign, updateTextBlock } = useSigil();
   const design = state.design;
+
+  const headlineBlock = design.textBlocks?.find((b) => b.id === 'tb-headline');
+  const hostNames = headlineBlock ? headlineBlock.content : 'Oscar & Rocio';
 
   const handleFieldChange = (key: string, value: any) => {
     updateDesign({ [key]: value });
@@ -41,6 +44,21 @@ export function SectionEditor() {
 
   return (
     <div className="section-editor-panel" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      {/* ── Host Names ── */}
+      <div className="lp-field">
+        <label className="lp-field-label" htmlFor="host-names-input">
+          Nombres de los Novios (Host Names)
+        </label>
+        <input
+          id="host-names-input"
+          type="text"
+          className="lp-input"
+          placeholder="Ej: Oscar & Rocio"
+          value={hostNames}
+          onChange={(e) => updateTextBlock('tb-headline', { content: e.target.value })}
+        />
+      </div>
+
       {/* ── Countdown ── */}
       <div className="lp-field">
         <label className="lp-field-label" htmlFor="countdown-input">

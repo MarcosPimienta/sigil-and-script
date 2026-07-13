@@ -935,14 +935,14 @@
   position: absolute;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%) scale(var(--seal-scale, 1));
   z-index: 6;
   cursor: pointer;
   transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.5s ease-out;
 }
 
 .envelope-seal:hover {
-  transform: translate(-50%, -50%) scale(1.08);
+  transform: translate(-50%, -50%) scale(calc(var(--seal-scale, 1) * 1.08));
 }
 
 .envelope-sticker-image {

@@ -112,6 +112,7 @@ export interface InvitationDesign {
   closedEnvelopeImage?: string;
   openedEnvelopeImage?: string;
   stickerImage?: string;
+  sealSize?: number;
 }
 
 // ── Itinerary Schema ──────────────────────────────────────────────────────────

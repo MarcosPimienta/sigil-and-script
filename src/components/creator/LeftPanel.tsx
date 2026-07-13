@@ -169,42 +169,6 @@ export function LeftPanel() {
           </p>
 
           <ImageUploadSlot
-            id="upload-header-image"
-            label="Header Image"
-            hint="Icon or illustration shown above the headline"
-            value={design.headerImage}
-            onUpload={handleImageUpload('headerImage')}
-            onClear={handleImageClear('headerImage')}
-          />
-
-          <ImageUploadSlot
-            id="upload-frame-image"
-            label="Frame Border"
-            hint="Full decorative frame — replaces the border style above"
-            value={design.frameImage}
-            onUpload={handleImageUpload('frameImage')}
-            onClear={handleImageClear('frameImage')}
-          />
-
-          <ImageUploadSlot
-            id="upload-paper-image"
-            label="Paper Pattern"
-            hint="Background texture — replaces the paper texture above"
-            value={design.paperImage}
-            onUpload={handleImageUpload('paperImage')}
-            onClear={handleImageClear('paperImage')}
-          />
-
-          <ImageUploadSlot
-            id="upload-closed-envelope"
-            label="Envelope Decoration (Closed)"
-            hint="Floral or corner art overlay draped over the sealed cover"
-            value={design.closedEnvelopeImage}
-            onUpload={handleImageUpload('closedEnvelopeImage')}
-            onClear={handleImageClear('closedEnvelopeImage')}
-          />
-
-          <ImageUploadSlot
             id="upload-opened-envelope"
             label="Envelope Polaroid Image (Opened)"
             hint="Couple photo or focus picture inside the envelope"
@@ -221,6 +185,31 @@ export function LeftPanel() {
             onUpload={handleImageUpload('stickerImage')}
             onClear={handleImageClear('stickerImage')}
           />
+
+          <div className="lp-field" style={{ marginTop: '0.8rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <label className="lp-field-label" htmlFor="slider-seal-size">
+                Tamaño del Sello (Seal Size)
+              </label>
+              <span style={{ fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.5)' }}>
+                {design.sealSize ?? 75}px
+              </span>
+            </div>
+            <input
+              id="slider-seal-size"
+              type="range"
+              min="40"
+              max="150"
+              value={design.sealSize ?? 75}
+              onChange={(e) => updateDesign({ sealSize: parseInt(e.target.value, 10) })}
+              style={{
+                width: '100%',
+                marginTop: '4px',
+                accentColor: 'var(--cr-accent)',
+                cursor: 'pointer',
+              }}
+            />
+          </div>
         </section>
 
         <Divider />

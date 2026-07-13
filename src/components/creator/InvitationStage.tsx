@@ -247,7 +247,6 @@ export function InvitationStage({
 
   const paperBg = PAPER_CSS_VAR[design.paperTexture] ?? 'var(--paper-parchment)';
   const clipPath = getClipPath(design.borderStyle);
-  const hasCustomFrame = Boolean(design.frameImage);
 
   // The stage is a tall, flowing single page now — its height is whatever
   // its content needs, not a fixed print size. The border overlay's SVG
@@ -280,11 +279,6 @@ export function InvitationStage({
           color: 'var(--color-sepia-800)',
         } : {
           backgroundColor: `var(${paperBg.replace('var(', '').replace(')', '')})`,
-          ...(design.paperImage && {
-            backgroundImage: `url(${design.paperImage})`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-          }),
           clipPath,
           color: 'var(--color-sepia-800)', // default ink — picked up by border SVGs
         }}
@@ -294,42 +288,17 @@ export function InvitationStage({
         {/* ── Paper grain texture overlay ─── */}
         {!transparent && <div className="stage-grain-overlay" aria-hidden="true" />}
 
-        {/* ── Ornamental border — a custom uploaded frame replaces the procedural one ─── */}
-        {!transparent && (hasCustomFrame ? (
-          <img
-            src={design.frameImage}
-            alt=""
-            aria-hidden="true"
-            style={{
-              position: 'absolute',
-              inset: 0,
-              width: '100%',
-              height: '100%',
-              objectFit: 'fill',
-              zIndex: STAGE_Z.frame,
-              pointerEvents: 'none',
-            }}
-          />
-        ) : (
+        {/* ── Ornamental border ─── */}
+        {!transparent && (
           <OrnamentalBorder
             width={STAGE_W}
             height={measuredHeight}
             style={design.borderStyle}
           />
-        ))}
+        )}
 
         {/* ── Flowing content column ─── */}
         <div className="stage-content">
-          {/* ── Custom header artwork ─── */}
-          {design.headerImage && (
-            <img
-              src={design.headerImage}
-              alt=""
-              aria-hidden="true"
-              className="stage-header-image"
-              style={{ zIndex: STAGE_Z.headerImage }}
-            />
-          )}
 
           {/* ── Text Blocks — flow top-to-bottom in array order ─── */}
           {design.textBlocks
