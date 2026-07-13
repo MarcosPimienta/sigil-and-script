@@ -61,17 +61,12 @@ export async function getCanvases(req: Request, res: Response): Promise<void> {
         console.error('Failed to parse designData in getCanvases', e);
       }
 
-      // Strip large base64 image strings to keep payloads small
-      delete designObj.headerImage;
-      delete designObj.frameImage;
-      delete designObj.paperImage;
-      delete designObj.closedEnvelopeImage;
-      delete designObj.openedEnvelopeImage;
-      delete designObj.stickerImage;
-
       return {
-        ...canvas,
-        designData: JSON.stringify(designObj)
+        id: canvas.id,
+        countdownTarget: canvas.countdownTarget || designObj.countdownTarget,
+        designData: JSON.stringify({
+          title: designObj.title || 'Untitled Design'
+        })
       };
     });
     res.json(strippedCanvases);
