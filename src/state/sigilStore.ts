@@ -375,8 +375,7 @@ export const useSigilStore = create<SigilState>((set, get) => ({
   loadDesign: async (designId) => {
     set({ apiStatus: 'loading', apiError: null });
     try {
-      const canvases = await apiFetch('/canvas');
-      const canvas = canvases.find((c: any) => c.id === designId);
+      const canvas = await apiFetch(`/canvas/${designId}`);
       if (!canvas) {
         throw new Error('Configuration not found');
       }

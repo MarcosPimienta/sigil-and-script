@@ -51,9 +51,54 @@ export async function getInviteByToken(req: Request, res: Response): Promise<voi
 export async function getCanvases(req: Request, res: Response): Promise<void> {
   try {
     const canvases = await prisma.invitationCanvas.findMany();
-    res.json(canvases);
+    const strippedCanvases = canvases.map(canvas => {
+      let designObj: any = {};
+      try {
+        if (canvas.designData) {
+          designObj = JSON.parse(canvas.designData);
+        }
+      } catch (e) {
+        console.error('Failed to parse designData in getCanvases', e);
+      }
+
+      // Strip large base64 image strings to keep payloads small
+      delete designObj.headerImage;
+      delete designObj.frameImage;
+      delete designObj.paperImage;
+      delete designObj.closedEnvelopeImage;
+      delete designObj.openedEnvelopeImage;
+      delete designObj.stickerImage;
+
+      return {
+        ...canvas,
+        designData: JSON.stringify(designObj)
+      };
+    });
+    res.json(strippedCanvases);
   } catch (error) {
     console.error('Error listing canvases:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
+export async function getCanvasById(req: Request, res: Response): Promise<void> {
+  const { id } = req.params;
+  if (typeof id !== 'string') {
+    res.status(400).json({ error: 'Invalid ID parameter' });
+    return;
+  }
+
+  try {
+    const canvas = await prisma.invitationCanvas.findUnique({
+      where: { id },
+    });
+    if (!canvas) {
+      res.status(404).json({ error: 'Configuration not found' });
+      return;
+    }
+    res.json(canvas);
+  } catch (error) {
+    console.error('Error getting canvas by ID:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 }
