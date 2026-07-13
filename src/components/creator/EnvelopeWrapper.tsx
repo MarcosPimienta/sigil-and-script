@@ -39,24 +39,80 @@ export function EnvelopeWrapper({ children, onPhaseChange, alwaysOpen }: Envelop
     }, 600);
   };
 
-  const envelopeColor = design.backgroundColor || 'var(--paper-parchment)';
+  const headlineBlock = design.textBlocks?.find((b) => b.id === 'tb-headline');
+  const titleText = headlineBlock ? headlineBlock.content : 'Oscar & Rocio';
+  const photoSrc = design.openedEnvelopeImage || 'https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=600';
+
+  const formatEventDate = (target?: string) => {
+    if (!target) return '17 / 09 / 2026';
+    try {
+      const d = new Date(target);
+      if (isNaN(d.getTime())) return '17 / 09 / 2026';
+      const day = String(d.getDate()).padStart(2, '0');
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const year = d.getFullYear();
+      return `${day} / ${month} / ${year}`;
+    } catch {
+      return '17 / 09 / 2026';
+    }
+  };
+
+  const dateText = formatEventDate(design.countdownTarget);
 
   return (
-    <div
-      className={`envelope-wrapper phase-${phase.toLowerCase()} style-${design.envelopeStyle.toLowerCase()}`}
-      style={{ '--envelope-color': envelopeColor } as React.CSSProperties}
-    >
-      <div className="envelope-container">
-        {/* Back panel */}
-        <div className="envelope-back" />
+    <div className="envelope-png-wrapper">
+      {/* Event Header: Title and Date fading & sliding up */}
+      <div style={{ minHeight: '80px', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', alignItems: 'center', width: '100%' }}>
+        <h2 className={`envelope-header-title ${(phase === 'OPENING' || phase === 'SLIDEOUT') ? 'state-active' : ''}`}>
+          {titleText}
+        </h2>
+        <div className="envelope-header-date">
+          {dateText}
+        </div>
+      </div>
 
-        {/* Flaps */}
-        <div className="envelope-top-flap" />
-        <div className="envelope-left-flap" />
-        <div className="envelope-right-flap" />
-        <div className="envelope-bottom-flap" />
+      <div className="envelope-png-container">
+        {/* Closed Envelope PNG Image Layer */}
+        <img
+          src="/ClosedEnvelope00.png"
+          alt="Closed Envelope"
+          className="envelope-png-layer layer-closed"
+          style={{
+            opacity: (phase === 'CLOSED' || phase === 'CRACKING') ? 1 : 0
+          }}
+          onError={(e) => {
+            // Fallback border box styling if local file is missing initially
+            e.currentTarget.style.border = '2px dashed rgba(255,255,255,0.15)';
+            e.currentTarget.style.borderRadius = '8px';
+          }}
+        />
 
-        {/* Wax Seal */}
+        {/* Opened Envelope PNG Image Layer */}
+        <img
+          src="/OpenedEnvelope00.png"
+          alt="Opened Envelope"
+          className="envelope-png-layer layer-opened"
+          style={{
+            opacity: (phase === 'CLOSED' || phase === 'CRACKING') ? 0 : 1
+          }}
+          onError={(e) => {
+            // Fallback border box styling if local file is missing initially
+            e.currentTarget.style.border = '2px dashed rgba(255,255,255,0.15)';
+            e.currentTarget.style.borderRadius = '8px';
+          }}
+        />
+
+        {/* Couple Photo sliding/fading layer inside pocket clipper */}
+        <div className="envelope-pocket-clipper">
+          <div className={`envelope-couple-photo ${(phase === 'OPENING' || phase === 'SLIDEOUT') ? 'state-active' : ''}`}>
+            <img
+              src={photoSrc}
+              alt="Couple photo"
+            />
+          </div>
+        </div>
+
+        {/* Wax Seal Button centered */}
         {phase !== 'SLIDEOUT' && (
           <div
             className={`envelope-seal ${phase === 'CRACKING' ? 'cracking' : ''}`}
@@ -70,55 +126,8 @@ export function EnvelopeWrapper({ children, onPhaseChange, alwaysOpen }: Envelop
             </div>
           </div>
         )}
-
-        {/* Couple Photo (Open Envelope image) tucked inside the pocket */}
-        {(phase === 'SLIDEOUT' || phase === 'OPENING') && design.openedEnvelopeImage && (
-          <div style={{
-            position: 'absolute',
-            left: '50%',
-            top: '50%',
-            transform: 'translate(-50%, -65%) rotate(-1.5deg)',
-            width: '240px',
-            height: '270px',
-            zIndex: 3,
-            pointerEvents: 'none',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            animation: 'stage-enter 0.6s ease-out',
-          }}>
-            <img
-              src={design.openedEnvelopeImage}
-              alt="Couple photo"
-              style={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover',
-                border: '10px solid #ffffff',
-                boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
-              }}
-            />
-          </div>
-        )}
-
-        {/* Closed envelope decoration layer */}
-        {(phase === 'CLOSED' || phase === 'CRACKING') && design.closedEnvelopeImage && (
-          <img
-            src={design.closedEnvelopeImage}
-            alt="Closed envelope decoration"
-            style={{
-              position: 'absolute',
-              right: '-60px',
-              bottom: '-30px',
-              width: '260px',
-              height: 'auto',
-              zIndex: 7,
-              pointerEvents: 'none',
-              animation: 'stage-enter 0.5s ease-out',
-            }}
-          />
-        )}
       </div>
+
       {children}
     </div>
   );

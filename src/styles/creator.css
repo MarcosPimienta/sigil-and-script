@@ -11,32 +11,32 @@
 
 .creator-canvas {
   /* Surface palette */
-  --cr-bg:              hsl(44 28% 91%);
-  --cr-panel:           hsl(44 22% 94%);
-  --cr-panel-raised:    hsl(44 18% 97%);
-  --cr-panel-border:    hsl(38 18% 82%);
-  --cr-panel-border-s:  hsl(38 12% 88%);
+  --cr-bg: hsl(44 28% 91%);
+  --cr-panel: hsl(44 22% 94%);
+  --cr-panel-raised: hsl(44 18% 97%);
+  --cr-panel-border: hsl(38 18% 82%);
+  --cr-panel-border-s: hsl(38 12% 88%);
 
   /* Typography */
-  --cr-text:            hsl(30 24% 14%);
-  --cr-text-secondary:  hsl(30 14% 38%);
-  --cr-text-muted:      hsl(30 10% 58%);
-  --cr-text-label:      hsl(30 16% 30%);
+  --cr-text: hsl(30 24% 14%);
+  --cr-text-secondary: hsl(30 14% 38%);
+  --cr-text-muted: hsl(30 10% 58%);
+  --cr-text-label: hsl(30 16% 30%);
 
   /* Accent — deep burgundy */
-  --cr-accent:          hsl(348 68% 24%);
-  --cr-accent-hover:    hsl(348 72% 18%);
-  --cr-accent-light:    hsl(348 48% 96%);
-  --cr-accent-border:   hsl(348 50% 82%);
+  --cr-accent: hsl(348 68% 24%);
+  --cr-accent-hover: hsl(348 72% 18%);
+  --cr-accent-light: hsl(348 48% 96%);
+  --cr-accent-border: hsl(348 50% 82%);
 
   /* Preview area */
-  --cr-preview-bg:      hsl(38 22% 82%);
-  --cr-preview-dot:     hsl(38 16% 72%);
+  --cr-preview-bg: hsl(38 22% 82%);
+  --cr-preview-dot: hsl(38 16% 72%);
 
   /* Input states */
-  --cr-input-bg:        hsl(44 20% 98%);
-  --cr-input-border:    hsl(38 18% 80%);
-  --cr-input-focus:     hsl(348 48% 60%);
+  --cr-input-bg: hsl(44 20% 98%);
+  --cr-input-border: hsl(38 18% 80%);
+  --cr-input-focus: hsl(348 48% 60%);
 
   /* Shell */
   display: flex;
@@ -177,7 +177,7 @@
 
 .toolbar-btn-primary--exit {
   background: var(--cr-text);
-  
+
   &:hover {
     background: hsl(30 24% 10%);
     box-shadow: 0 4px 12px hsl(30 20% 10% / 0.25);
@@ -210,9 +210,11 @@
   &::-webkit-scrollbar {
     width: 4px;
   }
+
   &::-webkit-scrollbar-track {
     background: transparent;
   }
+
   &::-webkit-scrollbar-thumb {
     background: hsl(38 16% 75%);
     border-radius: 2px;
@@ -360,7 +362,9 @@
     border-color: var(--cr-accent-border);
     transform: translateY(-1px);
 
-    svg { opacity: 1; }
+    svg {
+      opacity: 1;
+    }
   }
 
   &.is-active {
@@ -368,8 +372,13 @@
     box-shadow: 0 0 0 2px hsl(348 48% 24% / 0.14);
     color: var(--cr-accent);
 
-    svg { opacity: 1; }
-    span { color: var(--cr-accent); }
+    svg {
+      opacity: 1;
+    }
+
+    span {
+      color: var(--cr-accent);
+    }
   }
 }
 
@@ -553,8 +562,15 @@
 }
 
 @keyframes hint-fade-in {
-  from { opacity: 0; transform: translateY(4px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* ── Invitation Stage ────────────────────────────────────────────────────── */
@@ -563,10 +579,10 @@
   position: relative;
   border-radius: 1px;
   box-shadow:
-    0  4px  12px hsl(30 20% 10% / 0.10),
-    0 12px  32px hsl(30 20% 10% / 0.14),
-    0 24px  56px hsl(30 20% 10% / 0.10),
-    0  1px   2px hsl(30 20% 10% / 0.20);
+    0 4px 12px hsl(30 20% 10% / 0.10),
+    0 12px 32px hsl(30 20% 10% / 0.14),
+    0 24px 56px hsl(30 20% 10% / 0.10),
+    0 1px 2px hsl(30 20% 10% / 0.20);
   /* transition for paper swaps */
   transition:
     background-color var(--dur-slow) var(--ease-silk),
@@ -655,6 +671,7 @@
     opacity: 0;
     transform: translateY(16px) scale(0.97);
   }
+
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -666,8 +683,15 @@
 }
 
 @keyframes panel-slide-in {
-  from { transform: translateX(-16px); opacity: 0; }
-  to   { transform: translateX(0); opacity: 1; }
+  from {
+    transform: translateX(-16px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
 }
 
 .left-panel {
@@ -874,7 +898,7 @@
   transform-origin: top center;
   z-index: 5;
   transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .envelope-left-flap {
@@ -921,16 +945,22 @@
   transform: translate(-50%, -50%) scale(1.08);
 }
 
+/* Wax Seal Fade Away Animation */
+.envelope-seal.cracking {
+  opacity: 0 !important;
+  pointer-events: none;
+}
+
 .wax-seal-btn {
   width: 54px;
   height: 54px;
   border-radius: 50%;
   background: #a92020;
-  border: 2.5px solid rgba(255,255,255,0.15);
-  box-shadow: 
-    0 4px 10px rgba(0,0,0,0.3), 
-    inset 0 2px 4px rgba(255,255,255,0.2),
-    inset 0 -2px 4px rgba(0,0,0,0.2);
+  border: 2.5px solid rgba(255, 255, 255, 0.15);
+  box-shadow:
+    0 4px 10px rgba(0, 0, 0, 0.3),
+    inset 0 2px 4px rgba(255, 255, 255, 0.2),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.2);
   position: relative;
   display: flex;
   align-items: center;
@@ -948,14 +978,19 @@
   bottom: 0;
   left: 50%;
   width: 3px;
-  background: rgba(0,0,0,0.7);
+  background: rgba(0, 0, 0, 0.7);
   transform: translateX(-50%) rotate(25deg);
   animation: crackIn 0.3s forwards;
 }
 
 @keyframes crackIn {
-  from { height: 0; }
-  to { height: 100%; }
+  from {
+    height: 0;
+  }
+
+  to {
+    height: 100%;
+  }
 }
 
 /* Letter inside */
@@ -1009,7 +1044,7 @@
 .style-scroll .envelope-container {
   height: 90px;
   border-radius: 45px;
-  background: radial-gradient(circle, var(--envelope-color, #c8b998) 60%, rgba(0,0,0,0.1) 100%);
+  background: radial-gradient(circle, var(--envelope-color, #c8b998) 60%, rgba(0, 0, 0, 0.1) 100%);
 }
 
 .style-scroll .envelope-top-flap {
@@ -1055,8 +1090,17 @@
 
 /* ── Audio micro-animations ── */
 @keyframes waveAnimation {
-  0%, 100% { opacity: 0.35; transform: scaleY(0.7); }
-  50% { opacity: 1; transform: scaleY(1); }
+
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scaleY(0.7);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scaleY(1);
+  }
 }
 
 .audio-wave-1 {
@@ -1105,4 +1149,113 @@
   color: rgba(255, 255, 255, 0.4) !important;
 }
 
+/* ── Image-based PNG Envelope Cover ── */
+.envelope-png-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  position: relative;
+  margin: 1.5rem 0;
+}
 
+.envelope-png-container {
+  width: 100%;
+  max-width: 440px;
+  aspect-ratio: 440 / 340;
+  position: relative;
+  overflow: visible;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.envelope-png-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  z-index: 2;
+  transition: opacity 0.6s ease-in-out;
+}
+
+.envelope-png-layer.layer-closed {
+  z-index: 5;
+}
+
+.envelope-png-layer.layer-opened {
+  z-index: 2;
+}
+
+.envelope-pocket-clipper {
+  position: absolute;
+  inset: -150px -50px 165px -50px;
+  overflow: hidden;
+  z-index: 3;
+  pointer-events: none;
+}
+
+/* Cover header elements */
+.envelope-header-title {
+  text-align: center;
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 2.6rem;
+  font-weight: 400;
+  color: #333333;
+  margin: 0;
+  line-height: 1.2;
+  transform: translateY(12px);
+  opacity: 0;
+  transition: transform 1.2s cubic-bezier(0.16, 1, 0.3, 1), opacity 1.2s ease-out;
+}
+
+.envelope-header-title.state-active {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.envelope-header-date {
+  text-align: center;
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 1.2rem;
+  font-style: italic;
+  color: #666666;
+  margin: 0.25rem 0 1.5rem;
+}
+
+/* Couple photo sliding/fading layer */
+.envelope-couple-photo {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 220px;
+  height: 250px;
+  z-index: 3;
+  pointer-events: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transform: translate(-50%, -10%) scale(0.9);
+  opacity: 0;
+  transition: transform 1.2s cubic-bezier(0.16, 1, 0.3, 1), opacity 1.2s ease-out;
+}
+
+.envelope-couple-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top;
+  /* Ensures heads at the top of the photo are not cut off */
+  border: 8px solid #ffffff;
+  border-bottom: 20px solid #ffffff;
+  /* Gives it a classic Polaroid-style frame */
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+}
+
+.envelope-couple-photo.state-active {
+  transform: translate(-50%, -8%) scale(1) rotate(-1.5deg);
+  opacity: 1;
+}
