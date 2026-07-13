@@ -10,7 +10,8 @@
     "start": "node dist/src/index.js",
     "test": "vitest run",
     "db:generate": "prisma generate",
-    "db:push": "prisma db push"
+    "db:push": "prisma db push",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@prisma/client": "^6.2.1",
