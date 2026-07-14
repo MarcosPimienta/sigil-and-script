@@ -19,7 +19,7 @@ import { SectionEditor } from './SectionEditor';
 const ACCEPTED_IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/gif'];
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024; // 8MB
 
-function compressImage(base64Str: string, maxWidth = 1000, maxHeight = 1000, quality = 0.75): Promise<string> {
+function compressImage(base64Str: string, maxWidth = 1000, maxHeight = 1000): Promise<string> {
   return new Promise((resolve) => {
     const img = new Image();
     img.src = base64Str;
@@ -49,8 +49,9 @@ function compressImage(base64Str: string, maxWidth = 1000, maxHeight = 1000, qua
         return;
       }
 
+      ctx.clearRect(0, 0, width, height); // Ensure background is transparent
       ctx.drawImage(img, 0, 0, width, height);
-      const compressed = canvas.toDataURL('image/jpeg', quality);
+      const compressed = canvas.toDataURL('image/png');
       resolve(compressed);
     };
     img.onerror = () => {
