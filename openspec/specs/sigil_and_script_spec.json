@@ -141,6 +141,16 @@
           "Implement zero-dependency password hashing with PBKDF2 salt vectors",
           "Scope API fetch listing, detail load, and mutations to active user sessions"
         ]
+      },
+      {
+        "id": "M7_EVENTS_HUB_PORTAL",
+        "name": "Unified Host Events Hub Dashboard",
+        "tasks": [
+          "Extend AppMode type union with EVENTS_HUB state",
+          "Construct grid card dashboard containing CRUD action buttons",
+          "Support back-navigation routing inside header toolbar",
+          "Initialize randomized UUIDs to isolate template creations"
+        ]
       }
     ]
   }
