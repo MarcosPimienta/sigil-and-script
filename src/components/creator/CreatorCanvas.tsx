@@ -14,8 +14,18 @@ export function CreatorCanvas() {
   const { state } = useSigil();
   const isRecipient = state.appMode === 'RECIPIENT';
 
-  const [envelopePhase, setEnvelopePhase] = useState<'CLOSED' | 'CRACKING' | 'OPENING' | 'SLIDEOUT'>('CLOSED');
-  const isOpened = envelopePhase === 'SLIDEOUT' || envelopePhase === 'OPENING';
+  // State phases: 'CLOSED' | 'CRACKING' | 'OPENING' | 'LETTER_SLIDING' | 'LETTER_SCALING' | 'FADING_OUT' | 'COMPLETED'
+  const [envelopePhase, setEnvelopePhase] = useState<
+    | 'CLOSED'
+    | 'CRACKING'
+    | 'OPENING'
+    | 'LETTER_SLIDING'
+    | 'LETTER_SCALING'
+    | 'FADING_OUT'
+    | 'COMPLETED'
+  >('CLOSED');
+
+  const showRosterDetails = envelopePhase === 'FADING_OUT' || envelopePhase === 'COMPLETED';
 
   return (
     <div
@@ -45,7 +55,7 @@ export function CreatorCanvas() {
           <div className="recipient-scroll-container" style={{
             width: '100%',
             height: '100%',
-            overflowY: (isOpened || !isRecipient) ? 'auto' : 'hidden',
+            overflowY: (showRosterDetails || !isRecipient) ? 'auto' : 'hidden',
             padding: '2rem 1rem',
             display: 'flex',
             flexDirection: 'column',
@@ -56,10 +66,12 @@ export function CreatorCanvas() {
               {isRecipient ? (
                 /* ── Recipient/Guest View ── */
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', alignItems: 'center', width: '100%' }}>
-                  <EnvelopeWrapper
-                    onPhaseChange={setEnvelopePhase}
-                    alwaysOpen={false}
-                  />
+                  {envelopePhase !== 'COMPLETED' && (
+                    <EnvelopeWrapper
+                      onPhaseChange={setEnvelopePhase}
+                      alwaysOpen={false}
+                    />
+                  )}
                   
                   {(envelopePhase === 'CLOSED' || envelopePhase === 'CRACKING') ? (
                     <div style={{
@@ -96,7 +108,7 @@ export function CreatorCanvas() {
                         Da clic para abrir la invitación
                       </p>
                     </div>
-                  ) : (
+                  ) : envelopePhase === 'COMPLETED' ? (
                     <p style={{
                       fontSize: '0.85rem',
                       color: 'rgba(255, 255, 255, 0.7)',
@@ -110,7 +122,7 @@ export function CreatorCanvas() {
                     }}>
                       Dale play para escuchar nuestra canción
                     </p>
-                  )}
+                  ) : null}
                 </div>
               ) : (
                 /* ── Host Editor View ── */
@@ -195,15 +207,40 @@ export function CreatorCanvas() {
               )}
 
               {/* Additional wedding sections, only visible after envelope slideout or during host editing */}
-              {(isOpened || !isRecipient) && (
-                <>
+              {(showRosterDetails || !isRecipient) && (
+                <div className={`recipient-invite-details ${(showRosterDetails || !isRecipient) ? 'state-visible' : ''}`}>
+                  {/* Event Logo Medallion */}
+                  {state.design.openedEnvelopeImage && (
+                    <div style={{ 
+                      display: 'flex', 
+                      justifyContent: 'center', 
+                      margin: '1.5rem 0 0.5rem 0',
+                      animation: 'stage-enter 0.8s ease-out'
+                    }}>
+                      <img 
+                        src={state.design.openedEnvelopeImage} 
+                        alt="Event Logo" 
+                        style={{
+                          maxWidth: '150px',
+                          maxHeight: '150px',
+                          objectFit: 'contain',
+                          borderRadius: '50%',
+                          border: '2px solid rgba(223, 184, 142, 0.4)',
+                          padding: '6px',
+                          background: 'rgba(255, 255, 255, 0.05)',
+                          boxShadow: '0 8px 24px rgba(0, 0, 0, 0.25)'
+                        }}
+                      />
+                    </div>
+                  )}
+
                   <CountdownTimer />
                   <ItineraryTimeline />
                   <DressCodePanel />
                   <GiftsRegistryPanel />
 
                   {/* RSVP at the bottom */}
-                  <div style={{ marginTop: '1.5rem', animation: 'stage-enter 0.6s ease-out' }}>
+                  <div style={{ marginTop: '1.5rem', width: '100%' }}>
                     <h3 style={{
                       fontSize: '1.8rem',
                       fontStyle: 'italic',
@@ -216,7 +253,7 @@ export function CreatorCanvas() {
                     </h3>
                     <RecipientRsvpPanel />
                   </div>
-                </>
+                </div>
               )}
             </div>
              <AudioToggle />

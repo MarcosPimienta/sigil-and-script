@@ -234,8 +234,8 @@ export function LeftPanel() {
 
           <ImageUploadSlot
             id="upload-opened-envelope"
-            label="Envelope Polaroid Image (Opened)"
-            hint="Couple photo or focus picture inside the envelope"
+            label="Event Logo Image"
+            hint="Couple photo, monogram or initials stamp rendered at the top"
             value={design.openedEnvelopeImage}
             onUpload={handleImageUpload('openedEnvelopeImage')}
             onClear={handleImageClear('openedEnvelopeImage')}

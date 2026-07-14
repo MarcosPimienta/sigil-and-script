@@ -4,23 +4,37 @@ import { useSigilSelector } from '../../context/SigilContext';
 
 interface EnvelopeWrapperProps {
   children?: React.ReactNode;
-  onPhaseChange?: (phase: 'CLOSED' | 'CRACKING' | 'OPENING' | 'SLIDEOUT') => void;
+  onPhaseChange?: (
+    phase:
+      | 'CLOSED'
+      | 'CRACKING'
+      | 'OPENING'
+      | 'LETTER_SLIDING'
+      | 'LETTER_SCALING'
+      | 'FADING_OUT'
+      | 'COMPLETED'
+  ) => void;
   alwaysOpen?: boolean;
 }
 
 export function EnvelopeWrapper({ children, onPhaseChange, alwaysOpen }: EnvelopeWrapperProps) {
   const design = useSigilSelector((s) => s.design);
+  const guest = useSigilSelector((s) => s.guest);
 
-  // Phase states: 'CLOSED' | 'CRACKING' | 'OPENING' | 'SLIDEOUT'
-  const [phase, setPhase] = useState<'CLOSED' | 'CRACKING' | 'OPENING' | 'SLIDEOUT'>(
-    alwaysOpen ? 'SLIDEOUT' : 'CLOSED'
-  );
+  // Expanded cinematic states
+  const [phase, setPhase] = useState<
+    | 'CLOSED'
+    | 'CRACKING'
+    | 'OPENING'
+    | 'LETTER_SLIDING'
+    | 'LETTER_SCALING'
+    | 'FADING_OUT'
+    | 'COMPLETED'
+  >(alwaysOpen ? 'LETTER_SLIDING' : 'CLOSED');
 
   useEffect(() => {
-    if (alwaysOpen) {
-      setPhase('SLIDEOUT');
-    }
-  }, [alwaysOpen]);
+    setPhase(alwaysOpen ? 'LETTER_SLIDING' : 'CLOSED');
+  }, [alwaysOpen, design.id]);
 
   const handleSealClick = () => {
     if (phase !== 'CLOSED') return;
@@ -28,20 +42,40 @@ export function EnvelopeWrapper({ children, onPhaseChange, alwaysOpen }: Envelop
     onPhaseChange?.('CRACKING');
     audioEngine.playCrack();
 
+    // 1. Shakes and cracks (600ms) -> Flap open begins (OPENING)
     setTimeout(() => {
       setPhase('OPENING');
       onPhaseChange?.('OPENING');
+
+      // 2. Flap swinging up (800ms) -> Letter starts sliding (LETTER_SLIDING)
       setTimeout(() => {
-        setPhase('SLIDEOUT');
-        onPhaseChange?.('SLIDEOUT');
+        setPhase('LETTER_SLIDING');
+        onPhaseChange?.('LETTER_SLIDING');
         audioEngine.playAmbient();
+
+        // 3. Letter completes slide-up (1500ms) -> Letter starts full viewport scaling (LETTER_SCALING)
+        setTimeout(() => {
+          setPhase('LETTER_SCALING');
+          onPhaseChange?.('LETTER_SCALING');
+
+          // 4. Letter covers viewport (1200ms) -> Fading out letter, details fading in (FADING_OUT)
+          setTimeout(() => {
+            setPhase('FADING_OUT');
+            onPhaseChange?.('FADING_OUT');
+
+            // 5. Letter fully invisible (1000ms) -> Animation finished (COMPLETED)
+            setTimeout(() => {
+              setPhase('COMPLETED');
+              onPhaseChange?.('COMPLETED');
+            }, 1000);
+          }, 1200);
+        }, 1500);
       }, 800);
     }, 600);
   };
 
   const headlineBlock = design.textBlocks?.find((b) => b.id === 'tb-headline');
-  const titleText = headlineBlock ? headlineBlock.content : 'Oscar & Rocio';
-  const photoSrc = design.openedEnvelopeImage || 'https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=600';
+  const titleText = headlineBlock ? headlineBlock.content : 'You Are Cordially Invited';
 
   const formatEventDate = (target?: string) => {
     if (!target) return '17 / 09 / 2026';
@@ -59,88 +93,115 @@ export function EnvelopeWrapper({ children, onPhaseChange, alwaysOpen }: Envelop
 
   const dateText = formatEventDate(design.countdownTarget);
 
-  return (
-    <div className="envelope-png-wrapper">
-      {/* Event Header: Title and Date fading & sliding up */}
-      <div style={{ minHeight: '80px', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', alignItems: 'center', width: '100%' }}>
-        <h2 className={`envelope-header-title ${(phase === 'OPENING' || phase === 'SLIDEOUT') ? 'state-active' : ''}`}>
-          {titleText}
-        </h2>
-        <div className="envelope-header-date">
-          {dateText}
+  const isEnvelopeVisible = phase !== 'COMPLETED';
+  const isPocketLetterVisible = phase === 'OPENING' || phase === 'LETTER_SLIDING';
+  const isViewportOverlayVisible = phase === 'LETTER_SCALING' || phase === 'FADING_OUT';
+
+  // Paper letter internal content card layout
+  const renderLetterContent = () => (
+    <>
+      <div className="envelope-letter-title">{titleText}</div>
+      <div className="envelope-letter-names">{design.title || 'Marcos & Diana'}</div>
+      <div className="envelope-letter-body">
+        to share in our joy as we celebrate our wedding day.
+        <div style={{ marginTop: '1.5rem', fontWeight: 600, textTransform: 'uppercase', fontSize: '0.8rem', color: '#a08e7c', letterSpacing: '0.05em' }}>
+          Prepared for
+        </div>
+        <div style={{ fontStyle: 'italic', fontSize: '1.1rem', marginTop: '0.2rem', color: '#333333' }}>
+          {guest?.guestName || 'Esteemed Guest'}
         </div>
       </div>
+    </>
+  );
 
-      <div className="envelope-png-container">
-        {/* Closed Envelope PNG Image Layer */}
-        <img
-          src="/ClosedEnvelope00.png"
-          alt="Closed Envelope"
-          className="envelope-png-layer layer-closed"
-          style={{
-            opacity: (phase === 'CLOSED' || phase === 'CRACKING') ? 1 : 0
-          }}
-          onError={(e) => {
-            // Fallback border box styling if local file is missing initially
-            e.currentTarget.style.border = '2px dashed rgba(255,255,255,0.15)';
-            e.currentTarget.style.borderRadius = '8px';
-          }}
-        />
-
-        {/* Opened Envelope PNG Image Layer */}
-        <img
-          src="/OpenedEnvelope00.png"
-          alt="Opened Envelope"
-          className="envelope-png-layer layer-opened"
-          style={{
-            opacity: (phase === 'CLOSED' || phase === 'CRACKING') ? 0 : 1
-          }}
-          onError={(e) => {
-            // Fallback border box styling if local file is missing initially
-            e.currentTarget.style.border = '2px dashed rgba(255,255,255,0.15)';
-            e.currentTarget.style.borderRadius = '8px';
-          }}
-        />
-
-        {/* Couple Photo sliding/fading layer inside pocket clipper */}
-        <div className="envelope-pocket-clipper">
-          <div className={`envelope-couple-photo ${(phase === 'OPENING' || phase === 'SLIDEOUT') ? 'state-active' : ''}`}>
-            <img
-              src={photoSrc}
-              alt="Couple photo"
-            />
+  return (
+    <>
+      {isEnvelopeVisible && (
+        <div className="envelope-png-wrapper">
+          {/* Header titles: fade in after seal cracking */}
+          <div style={{ minHeight: '80px', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', alignItems: 'center', width: '100%' }}>
+            <h2 className={`envelope-header-title ${(phase !== 'CLOSED' && phase !== 'CRACKING') ? 'state-active' : ''}`}>
+              {design.title || 'Marcos & Diana'}
+            </h2>
+            <div className="envelope-header-date">
+              {dateText}
+            </div>
           </div>
-        </div>
 
-        {/* Wax Seal Button centered */}
-        {(phase === 'CLOSED' || phase === 'CRACKING') && (
-          <div
-            className={`envelope-seal ${phase === 'CRACKING' ? 'cracking' : ''}`}
-            onClick={handleSealClick}
-            role="button"
-            aria-label="Break wax seal and open invitation"
-            style={{
-              ['--seal-scale' as any]: (design.sealSize ?? 75) / 75
-            }}
-          >
-            {design.stickerImage ? (
-              <img
-                src={design.stickerImage}
-                alt="Sticker seal"
-                className="envelope-sticker-image"
-              />
-            ) : (
-              <div className="wax-seal-btn">
-                <span>S</span>
-                {phase === 'CRACKING' && <div className="seal-crack-line" />}
+          <div className="envelope-png-container">
+            {/* Closed Envelope */}
+            <img
+              src="/ClosedEnvelope00.png"
+              alt="Closed Envelope"
+              className="envelope-png-layer layer-closed"
+              style={{
+                opacity: (phase === 'CLOSED' || phase === 'CRACKING') ? 1 : 0
+              }}
+            />
+
+            {/* Opened Envelope */}
+            <img
+              src="/OpenedEnvelope00.png"
+              alt="Opened Envelope"
+              className="envelope-png-layer layer-opened"
+              style={{
+                opacity: (phase === 'CLOSED' || phase === 'CRACKING') ? 0 : 1
+              }}
+            />
+
+            {/* Paper Letter inside envelope pocket */}
+            <div className="envelope-pocket-clipper">
+              <div 
+                className={`envelope-couple-photo ${isPocketLetterVisible ? 'state-active' : ''}`}
+                style={{
+                  opacity: isPocketLetterVisible ? 1 : 0
+                }}
+              >
+                {renderLetterContent()}
+              </div>
+            </div>
+
+            {/* Wax Seal Button centered */}
+            {(phase === 'CLOSED' || phase === 'CRACKING') && (
+              <div
+                className={`envelope-seal ${phase === 'CRACKING' ? 'cracking' : ''}`}
+                onClick={handleSealClick}
+                role="button"
+                aria-label="Break wax seal and open invitation"
+                style={{
+                  ['--seal-scale' as any]: (design.sealSize ?? 75) / 75
+                }}
+              >
+                {design.stickerImage ? (
+                  <img
+                    src={design.stickerImage}
+                    alt="Sticker seal"
+                    className="envelope-sticker-image"
+                  />
+                ) : (
+                  <div className="wax-seal-btn">
+                    <span>S</span>
+                    {phase === 'CRACKING' && <div className="seal-crack-line" />}
+                  </div>
+                )}
               </div>
             )}
           </div>
-        )}
-      </div>
 
-      {children}
-    </div>
+          {children}
+        </div>
+      )}
+
+      {/* Floating full-screen scale-up overlay copy */}
+      {isViewportOverlayVisible && (
+        <div 
+          className={`envelope-letter-viewport-overlay ${phase === 'LETTER_SCALING' ? 'state-scaled' : ''} ${phase === 'FADING_OUT' ? 'state-fade-out' : ''}`}
+        >
+          {renderLetterContent()}
+        </div>
+      )}
+    </>
   );
 }
+
 export type { EnvelopeWrapperProps };
