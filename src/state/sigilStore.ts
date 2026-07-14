@@ -88,6 +88,12 @@ export interface SigilState {
   apiStatus: ApiStatus;
   apiError: string | null;
 
+  // Auth state
+  user: { id: string; email: string; name: string | null } | null;
+  token: string | null;
+  authStatus: 'idle' | 'loading' | 'success' | 'error';
+  authError: string | null;
+
   // Actions
   setAppMode: (mode: AppMode) => void;
   focusInspector: (focus: InspectorFocus) => void;
@@ -114,6 +120,12 @@ export interface SigilState {
 
   // CSV Batch Ingest Action
   ingestGuestsBatch: (records: { name: string; email?: string }[]) => void;
+
+  // Auth actions
+  login: (email: string, password: string) => Promise<boolean>;
+  register: (email: string, password: string, name?: string) => Promise<boolean>;
+  logout: () => Promise<void>;
+  checkAuth: () => void;
 }
 
 function loadRoster(): GuestRoster {
@@ -126,6 +138,16 @@ function loadRoster(): GuestRoster {
   return { invitees: [] };
 }
 
+const initialToken = localStorage.getItem('sigil_auth_token');
+const initialUser = (() => {
+  try {
+    const u = localStorage.getItem('sigil_auth_user');
+    return u ? JSON.parse(u) : null;
+  } catch {
+    return null;
+  }
+})();
+
 export const useSigilStore = create<SigilState>((set, get) => ({
   appMode: 'CREATOR',
   design: DEFAULT_DESIGN,
@@ -136,6 +158,10 @@ export const useSigilStore = create<SigilState>((set, get) => ({
   guestRoster: loadRoster(),
   apiStatus: 'idle',
   apiError: null,
+  user: initialUser,
+  token: initialToken,
+  authStatus: 'idle',
+  authError: null,
 
   setAppMode: (mode) =>
     set({
@@ -454,6 +480,65 @@ export const useSigilStore = create<SigilState>((set, get) => ({
     } catch (error: any) {
       console.error('Failed to delete configuration:', error);
       throw error;
+    }
+  },
+
+  login: async (email, password) => {
+    set({ authStatus: 'loading', authError: null });
+    try {
+      const data = await apiFetch('/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({ email, password }),
+      });
+      localStorage.setItem('sigil_auth_token', data.token);
+      localStorage.setItem('sigil_auth_user', JSON.stringify(data.user));
+      set({ token: data.token, user: data.user, authStatus: 'success' });
+      return true;
+    } catch (e: any) {
+      set({ authStatus: 'error', authError: e.message || 'Login failed' });
+      return false;
+    }
+  },
+
+  register: async (email, password, name) => {
+    set({ authStatus: 'loading', authError: null });
+    try {
+      await apiFetch('/auth/register', {
+        method: 'POST',
+        body: JSON.stringify({ email, password, name }),
+      });
+      return await get().login(email, password);
+    } catch (e: any) {
+      set({ authStatus: 'error', authError: e.message || 'Registration failed' });
+      return false;
+    }
+  },
+
+  logout: async () => {
+    const token = get().token;
+    if (token) {
+      try {
+        await apiFetch('/auth/logout', { method: 'POST' });
+      } catch {
+        // fail silently
+      }
+    }
+    localStorage.removeItem('sigil_auth_token');
+    localStorage.removeItem('sigil_auth_user');
+    set({ token: null, user: null, authStatus: 'idle', authError: null });
+  },
+
+  checkAuth: () => {
+    const token = localStorage.getItem('sigil_auth_token');
+    const u = localStorage.getItem('sigil_auth_user');
+    if (token && u) {
+      try {
+        set({ token, user: JSON.parse(u) });
+      } catch {
+        localStorage.removeItem('sigil_auth_token');
+        localStorage.removeItem('sigil_auth_user');
+        set({ token: null, user: null });
+      }
     }
   },
 }));

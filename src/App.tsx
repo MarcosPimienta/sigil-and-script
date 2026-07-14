@@ -1,18 +1,26 @@
-// ─────────────────────────────────────────────────────────────────────────────
-// Sigil — Application Root
-// ─────────────────────────────────────────────────────────────────────────────
-
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { SigilProvider, useSigil } from './context/SigilContext';
 import { CreatorCanvas } from './components/creator/CreatorCanvas';
 import { DashboardView } from './components/dashboard/DashboardView';
 import { Toolbar } from './components/creator/Toolbar';
+import { LoginView } from './components/auth/LoginView';
+import { RegisterView } from './components/auth/RegisterView';
+import { useSigilStore } from './state/sigilStore';
 import './index.css';
+import './styles/auth.css';
 
 // ── Inner shell — has access to SigilContext ──────────────────────────────────
 
 function AppShell() {
   const { state, markInvitationOpened, setGuest, setAppMode, fetchInvitationDetails } = useSigil();
+  const user = useSigilStore((s) => s.user);
+  const checkAuth = useSigilStore((s) => s.checkAuth);
+  const [authView, setAuthView] = useState<'login' | 'register'>('login');
+
+  // Check authentication on mount
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
 
   // Read /invite/:token or ?guest=<id> on first mount only
   useEffect(() => {
@@ -97,6 +105,14 @@ function AppShell() {
   }
 
   const { appMode } = state;
+
+  // Gate creator and dashboard tools behind user login
+  if (appMode !== 'RECIPIENT' && !user) {
+    if (authView === 'login') {
+      return <LoginView onToggleToRegister={() => setAuthView('register')} />;
+    }
+    return <RegisterView onToggleToLogin={() => setAuthView('login')} />;
+  }
 
   if (appMode === 'DASHBOARD') {
     return (

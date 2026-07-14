@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import inviteRouter from './routes/invite';
+import authRouter from './routes/auth';
 
 const app = express();
 const PORT = process.env.PORT || 5001;
@@ -22,6 +23,7 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+app.use('/auth', authRouter);
 app.use('/', inviteRouter);
 
 // Start server only if not in testing environment

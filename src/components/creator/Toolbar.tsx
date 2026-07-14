@@ -19,6 +19,8 @@ export function Toolbar() {
   const loadDesign = useSigilStore((s) => s.loadDesign);
   const fetchSavedDesigns = useSigilStore((s) => s.fetchSavedDesigns);
   const deleteSavedDesign = useSigilStore((s) => s.deleteSavedDesign);
+  const user = useSigilStore((s) => s.user);
+  const logout = useSigilStore((s) => s.logout);
 
   // Local state
   const [isLoadModalOpen, setIsLoadModalOpen] = useState(false);
@@ -140,14 +142,33 @@ export function Toolbar() {
           </>
         )}
 
-        <button
-          id="btn-log-in"
-          className="toolbar-btn-ghost"
-          type="button"
-          aria-label="Log in"
-        >
-          Log In
-        </button>
+        {!isRecipient && (
+          user ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+              <span style={{ color: '#a08e7c', fontSize: '0.9rem', fontWeight: 500 }}>
+                {user.name || user.email}
+              </span>
+              <button
+                id="btn-log-out"
+                className="toolbar-btn-ghost"
+                type="button"
+                onClick={() => logout()}
+                aria-label="Log out"
+              >
+                Log Out
+              </button>
+            </div>
+          ) : (
+            <button
+              id="btn-log-in"
+              className="toolbar-btn-ghost"
+              type="button"
+              aria-label="Log in"
+            >
+              Log In
+            </button>
+          )
+        )}
 
         {/* Dashboard toggle — hidden in recipient mode */}
         {!isRecipient && (

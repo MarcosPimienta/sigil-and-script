@@ -10,6 +10,11 @@ export async function apiFetch<T = any>(path: string, options: RequestInit = {})
     headers.set('Content-Type', 'application/json');
   }
 
+  const token = localStorage.getItem('sigil_auth_token');
+  if (token && !headers.has('Authorization')) {
+    headers.set('Authorization', `Bearer ${token}`);
+  }
+
   if (!headers.has('X-Role')) {
     const method = options.method ? options.method.toUpperCase() : 'GET';
     if (method !== 'GET') {

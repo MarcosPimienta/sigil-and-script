@@ -50,7 +50,10 @@ export async function getInviteByToken(req: Request, res: Response): Promise<voi
 
 export async function getCanvases(req: Request, res: Response): Promise<void> {
   try {
-    const canvases = await prisma.invitationCanvas.findMany();
+    const userId = req.user!.id;
+    const canvases = await prisma.invitationCanvas.findMany({
+      where: { userId },
+    });
     const strippedCanvases = canvases.map(canvas => {
       let designObj: any = {};
       try {
@@ -84,8 +87,8 @@ export async function getCanvasById(req: Request, res: Response): Promise<void> 
   }
 
   try {
-    const canvas = await prisma.invitationCanvas.findUnique({
-      where: { id },
+    const canvas = await prisma.invitationCanvas.findFirst({
+      where: { id, userId: req.user!.id },
     });
     if (!canvas) {
       res.status(404).json({ error: 'Configuration not found' });
@@ -112,12 +115,19 @@ export async function saveCanvas(req: Request, res: Response): Promise<void> {
   } = req.body;
 
   try {
+    const userId = req.user!.id;
+
     if (id) {
       const existing = await prisma.invitationCanvas.findUnique({
         where: { id },
       });
 
       if (existing) {
+        if (existing.userId !== userId) {
+          res.status(403).json({ error: 'Access denied: You do not own this canvas' });
+          return;
+        }
+
         const updated = await prisma.invitationCanvas.update({
           where: { id },
           data: {
@@ -147,6 +157,7 @@ export async function saveCanvas(req: Request, res: Response): Promise<void> {
         itinerary: itinerary || JSON.stringify([]),
         hostId: hostId || 'host-default',
         designData: designData || '{}',
+        userId,
       },
     });
     res.json(created);
@@ -164,6 +175,20 @@ export async function deleteCanvas(req: Request, res: Response): Promise<void> {
   }
 
   try {
+    const existing = await prisma.invitationCanvas.findUnique({
+      where: { id },
+    });
+
+    if (!existing) {
+      res.status(404).json({ error: 'Canvas not found' });
+      return;
+    }
+
+    if (existing.userId !== req.user!.id) {
+      res.status(403).json({ error: 'Access denied: You do not own this canvas' });
+      return;
+    }
+
     await prisma.guest.deleteMany({
       where: { canvasId: id },
     });
