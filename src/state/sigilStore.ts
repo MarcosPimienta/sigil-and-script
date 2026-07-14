@@ -149,7 +149,7 @@ const initialUser = (() => {
 })();
 
 export const useSigilStore = create<SigilState>((set, get) => ({
-  appMode: 'CREATOR',
+  appMode: initialToken ? 'EVENTS_HUB' : 'CREATOR',
   design: DEFAULT_DESIGN,
   guest: DEFAULT_GUEST,
   inspectorFocus: { type: 'NONE' },
@@ -492,7 +492,7 @@ export const useSigilStore = create<SigilState>((set, get) => ({
       });
       localStorage.setItem('sigil_auth_token', data.token);
       localStorage.setItem('sigil_auth_user', JSON.stringify(data.user));
-      set({ token: data.token, user: data.user, authStatus: 'success' });
+      set({ token: data.token, user: data.user, authStatus: 'success', appMode: 'EVENTS_HUB' });
       return true;
     } catch (e: any) {
       set({ authStatus: 'error', authError: e.message || 'Login failed' });

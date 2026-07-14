@@ -83,9 +83,32 @@ export function Toolbar() {
   return (
     <header className="site-toolbar" role="banner">
       {/* ── Logo ──────────────────────────────────────────────────────────── */}
-      <div className="toolbar-logo">
-        <span className="toolbar-logo-badge" aria-hidden="true">S&amp;S</span>
-        <span className="toolbar-logo-wordmark">Sigil &amp; Script</span>
+      <div className="toolbar-logo" style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <span className="toolbar-logo-badge" aria-hidden="true">S&amp;S</span>
+          <span className="toolbar-logo-wordmark">Sigil &amp; Script</span>
+        </div>
+        {!isRecipient && appMode !== 'EVENTS_HUB' && (
+          <button
+            id="btn-back-to-hub"
+            className="toolbar-btn-ghost"
+            type="button"
+            onClick={() => setAppMode('EVENTS_HUB')}
+            style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '0.4rem', 
+              borderLeft: '1px solid rgba(255,255,255,0.15)',
+              paddingLeft: '1.5rem',
+              borderRadius: 0,
+              fontSize: '0.9rem',
+              color: '#dfb88e'
+            }}
+            aria-label="Back to My Events"
+          >
+            ← My Events
+          </button>
+        )}
       </div>
 
       {/* ── Nav ───────────────────────────────────────────────────────────── */}
@@ -105,8 +128,8 @@ export function Toolbar() {
 
       {/* ── Actions ───────────────────────────────────────────────────────── */}
       <div className="toolbar-actions">
-        {/* Save/Load Layout buttons — hidden in recipient/guest mode */}
-        {!isRecipient && !isDashboard && (
+        {/* Save/Load Layout buttons — hidden in recipient/guest/events-hub modes */}
+        {!isRecipient && !isDashboard && appMode !== 'EVENTS_HUB' && (
           <>
             <button
               id="btn-save-layout"
@@ -170,8 +193,8 @@ export function Toolbar() {
           )
         )}
 
-        {/* Dashboard toggle — hidden in recipient mode */}
-        {!isRecipient && (
+        {/* Dashboard toggle — hidden in recipient and events-hub modes */}
+        {!isRecipient && appMode !== 'EVENTS_HUB' && (
           <button
             id="btn-dashboard"
             className={`toolbar-btn-ghost${isDashboard ? ' toolbar-btn-ghost--active' : ''}`}
@@ -185,7 +208,7 @@ export function Toolbar() {
         )}
 
         {/* Preview toggle — swaps between Creator and Recipient preview */}
-        {!isDashboard && (
+        {!isDashboard && appMode !== 'EVENTS_HUB' && (
           <button
             id="btn-mode-toggle"
             className={`toolbar-btn-primary${isRecipient ? ' toolbar-btn-primary--exit' : ''}`}

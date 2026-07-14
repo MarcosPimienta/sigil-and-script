@@ -5,7 +5,7 @@
 // ── App Mode ─────────────────────────────────────────────────────────────────
 
 /** Top-level mode: who is currently using the canvas */
-export type AppMode = 'CREATOR' | 'RECIPIENT' | 'DASHBOARD';
+export type AppMode = 'CREATOR' | 'RECIPIENT' | 'DASHBOARD' | 'EVENTS_HUB';
 
 // ── Envelope / Container Styles ───────────────────────────────────────────────
 

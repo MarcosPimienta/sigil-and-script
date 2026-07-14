@@ -5,6 +5,7 @@ import { DashboardView } from './components/dashboard/DashboardView';
 import { Toolbar } from './components/creator/Toolbar';
 import { LoginView } from './components/auth/LoginView';
 import { RegisterView } from './components/auth/RegisterView';
+import { EventsHubView } from './components/events/EventsHubView';
 import { useSigilStore } from './state/sigilStore';
 import './index.css';
 import './styles/auth.css';
@@ -112,6 +113,15 @@ function AppShell() {
       return <LoginView onToggleToRegister={() => setAuthView('register')} />;
     }
     return <RegisterView onToggleToLogin={() => setAuthView('login')} />;
+  }
+
+  if (appMode === 'EVENTS_HUB') {
+    return (
+      <>
+        <Toolbar />
+        <EventsHubView />
+      </>
+    );
   }
 
   if (appMode === 'DASHBOARD') {
