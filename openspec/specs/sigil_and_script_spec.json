@@ -56,6 +56,18 @@
         "status": "PENDING | OPENED | CONFIRMED | DECLINED",
         "openedTimestamp": "string (ISO-8601 | Null)",
         "formResponses": "record<string, any>"
+      },
+      "User": {
+        "id": "uuid-v4",
+        "email": "string",
+        "password": "string (hashed)",
+        "name": "string (optional)"
+      },
+      "Session": {
+        "id": "uuid-v4",
+        "token": "string (64-byte hex)",
+        "userId": "uuid-v4",
+        "expiresAt": "string (ISO-8601)"
       }
     },
     "state_transitions": {
@@ -119,6 +131,15 @@
         "name": "Telemetry Ingestion Auditing & Verification",
         "tasks": [
           "Run end-to-end telemetry simulations for seamless status switches from PENDING to OPENED via headless test scripts"
+        ]
+      },
+      {
+        "id": "M6_USER_AUTHENTICATION_AND_OWNER_ISOLATION",
+        "name": "Secure Host Auth and Canvas Scoping",
+        "tasks": [
+          "Establish User registration and Session models in PostgreSQL",
+          "Implement zero-dependency password hashing with PBKDF2 salt vectors",
+          "Scope API fetch listing, detail load, and mutations to active user sessions"
         ]
       }
     ]
