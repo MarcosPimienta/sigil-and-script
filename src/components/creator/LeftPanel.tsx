@@ -19,6 +19,46 @@ import { SectionEditor } from './SectionEditor';
 const ACCEPTED_IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/gif'];
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024; // 8MB
 
+function compressImage(base64Str: string, maxWidth = 1000, maxHeight = 1000, quality = 0.75): Promise<string> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.src = base64Str;
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      let width = img.width;
+      let height = img.height;
+
+      if (width > height) {
+        if (width > maxWidth) {
+          height = Math.round((height * maxWidth) / width);
+          width = maxWidth;
+        }
+      } else {
+        if (height > maxHeight) {
+          width = Math.round((width * maxHeight) / height);
+          height = maxHeight;
+        }
+      }
+
+      canvas.width = width;
+      canvas.height = height;
+
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        resolve(base64Str);
+        return;
+      }
+
+      ctx.drawImage(img, 0, 0, width, height);
+      const compressed = canvas.toDataURL('image/jpeg', quality);
+      resolve(compressed);
+    };
+    img.onerror = () => {
+      resolve(base64Str);
+    };
+  });
+}
+
 type ImageField = keyof Pick<
   InvitationDesign,
   'headerImage' | 'frameImage' | 'paperImage' | 'closedEnvelopeImage' | 'openedEnvelopeImage' | 'stickerImage'
@@ -111,9 +151,15 @@ export function LeftPanel() {
       if (file.size > MAX_IMAGE_BYTES) return;
 
       const reader = new FileReader();
-      reader.onload = () => {
+      reader.onload = async () => {
         if (typeof reader.result === 'string') {
-          updateDesign({ [field]: reader.result });
+          try {
+            const compressed = await compressImage(reader.result);
+            updateDesign({ [field]: compressed });
+          } catch (err) {
+            console.error('Failed to compress image, using original', err);
+            updateDesign({ [field]: reader.result });
+          }
         }
       };
       reader.readAsDataURL(file);
