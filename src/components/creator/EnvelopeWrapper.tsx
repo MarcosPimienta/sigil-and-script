@@ -10,6 +10,7 @@ interface EnvelopeWrapperProps {
       | 'CRACKING'
       | 'OPENING'
       | 'LETTER_SLIDING'
+      | 'LETTER_CENTERING'
       | 'LETTER_SCALING'
       | 'FADING_OUT'
       | 'COMPLETED'
@@ -27,6 +28,7 @@ export function EnvelopeWrapper({ children, onPhaseChange, alwaysOpen }: Envelop
     | 'CRACKING'
     | 'OPENING'
     | 'LETTER_SLIDING'
+    | 'LETTER_CENTERING'
     | 'LETTER_SCALING'
     | 'FADING_OUT'
     | 'COMPLETED'
@@ -53,23 +55,23 @@ export function EnvelopeWrapper({ children, onPhaseChange, alwaysOpen }: Envelop
         onPhaseChange?.('LETTER_SLIDING');
         audioEngine.playAmbient();
 
-        // 3. Letter completes slide-up (1500ms) -> Letter starts full viewport scaling (LETTER_SCALING)
+        // 3. Letter completes slide-up (1000ms) -> Letter starts centering in front (LETTER_CENTERING)
         setTimeout(() => {
-          setPhase('LETTER_SCALING');
-          onPhaseChange?.('LETTER_SCALING');
+          setPhase('LETTER_CENTERING');
+          onPhaseChange?.('LETTER_CENTERING');
 
-          // 4. Letter covers viewport (1200ms) -> Fading out letter, details fading in (FADING_OUT)
+          // 4. Letter centers (600ms) -> Letter starts full viewport scaling (LETTER_SCALING)
           setTimeout(() => {
-            setPhase('FADING_OUT');
-            onPhaseChange?.('FADING_OUT');
+            setPhase('LETTER_SCALING');
+            onPhaseChange?.('LETTER_SCALING');
 
-            // 5. Letter fully invisible (1000ms) -> Animation finished (COMPLETED)
+            // 5. Scaling completes (800ms) -> Transition directly to COMPLETED
             setTimeout(() => {
               setPhase('COMPLETED');
               onPhaseChange?.('COMPLETED');
-            }, 1000);
-          }, 1200);
-        }, 1500);
+            }, 800);
+          }, 600);
+        }, 1000);
       }, 800);
     }, 600);
   };
@@ -95,7 +97,7 @@ export function EnvelopeWrapper({ children, onPhaseChange, alwaysOpen }: Envelop
 
   const isEnvelopeVisible = phase !== 'COMPLETED';
   const isPocketLetterVisible = phase === 'OPENING' || phase === 'LETTER_SLIDING';
-  const isViewportOverlayVisible = phase === 'LETTER_SCALING' || phase === 'FADING_OUT';
+  const isViewportOverlayVisible = phase === 'LETTER_CENTERING' || phase === 'LETTER_SCALING' || phase === 'FADING_OUT' || phase === 'COMPLETED';
 
   // Paper letter internal content card layout
   const renderLetterContent = () => (
@@ -188,16 +190,23 @@ export function EnvelopeWrapper({ children, onPhaseChange, alwaysOpen }: Envelop
             )}
           </div>
 
-          {children}
+          {alwaysOpen && children}
         </div>
       )}
 
       {/* Floating full-screen scale-up overlay copy */}
       {isViewportOverlayVisible && (
         <div 
-          className={`envelope-letter-viewport-overlay ${phase === 'LETTER_SCALING' ? 'state-scaled' : ''} ${phase === 'FADING_OUT' ? 'state-fade-out' : ''}`}
+          className={`envelope-letter-viewport-overlay ${phase === 'LETTER_CENTERING' ? 'state-centering' : ''} ${phase === 'LETTER_SCALING' ? 'state-scaled' : ''} ${phase === 'FADING_OUT' ? 'state-fade-out' : ''} ${phase === 'COMPLETED' ? 'state-completed' : ''}`}
         >
-          {renderLetterContent()}
+          <div className="envelope-letter-header">
+            {renderLetterContent()}
+          </div>
+          {(phase === 'LETTER_SCALING' || phase === 'COMPLETED') && (
+            <div className="envelope-letter-details-content">
+              {children}
+            </div>
+          )}
         </div>
       )}
     </>

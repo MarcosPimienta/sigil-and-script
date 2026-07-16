@@ -14,12 +14,13 @@ export function CreatorCanvas() {
   const { state } = useSigil();
   const isRecipient = state.appMode === 'RECIPIENT';
 
-  // State phases: 'CLOSED' | 'CRACKING' | 'OPENING' | 'LETTER_SLIDING' | 'LETTER_SCALING' | 'FADING_OUT' | 'COMPLETED'
+  // State phases: 'CLOSED' | 'CRACKING' | 'OPENING' | 'LETTER_SLIDING' | 'LETTER_CENTERING' | 'LETTER_SCALING' | 'FADING_OUT' | 'COMPLETED'
   const [envelopePhase, setEnvelopePhase] = useState<
     | 'CLOSED'
     | 'CRACKING'
     | 'OPENING'
     | 'LETTER_SLIDING'
+    | 'LETTER_CENTERING'
     | 'LETTER_SCALING'
     | 'FADING_OUT'
     | 'COMPLETED'
@@ -65,13 +66,76 @@ export function CreatorCanvas() {
               
               {isRecipient ? (
                 /* ── Recipient/Guest View ── */
+                /* ── Recipient/Guest View ── */
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', alignItems: 'center', width: '100%' }}>
-                  {envelopePhase !== 'COMPLETED' && (
-                    <EnvelopeWrapper
-                      onPhaseChange={setEnvelopePhase}
-                      alwaysOpen={false}
-                    />
-                  )}
+                  <EnvelopeWrapper
+                    onPhaseChange={setEnvelopePhase}
+                    alwaysOpen={false}
+                  >
+                    <div className="recipient-invite-details state-visible" style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '2rem', alignItems: 'center' }}>
+                      {/* Play song prompt (moves inside the parchment paper) */}
+                      {envelopePhase === 'COMPLETED' && (
+                        <p style={{
+                          fontSize: '0.85rem',
+                          color: '#a08e7c',
+                          textAlign: 'center',
+                          margin: '0.5rem 0 1rem 0',
+                          letterSpacing: '0.08em',
+                          textTransform: 'uppercase',
+                          fontFamily: "'Cormorant Garamond', serif",
+                          fontWeight: 600,
+                          animation: 'stage-enter 0.5s ease-out'
+                        }}>
+                          Dale play para escuchar nuestra canción
+                        </p>
+                      )}
+
+                      {/* Event Logo Medallion */}
+                      {state.design.openedEnvelopeImage && (
+                        <div style={{ 
+                          display: 'flex', 
+                          justifyContent: 'center', 
+                          margin: '1.5rem 0 0.5rem 0',
+                          animation: 'stage-enter 0.8s ease-out'
+                        }}>
+                          <img 
+                            src={state.design.openedEnvelopeImage} 
+                            alt="Event Logo" 
+                            style={{
+                              maxWidth: '150px',
+                              maxHeight: '150px',
+                              objectFit: 'contain',
+                              borderRadius: '50%',
+                              border: '2px solid rgba(223, 184, 142, 0.4)',
+                              padding: '6px',
+                              background: 'rgba(255, 255, 255, 0.05)',
+                              boxShadow: '0 8px 24px rgba(0, 0, 0, 0.25)'
+                            }}
+                          />
+                        </div>
+                      )}
+
+                      <CountdownTimer />
+                      <ItineraryTimeline />
+                      <DressCodePanel />
+                      <GiftsRegistryPanel />
+
+                      {/* RSVP at the bottom */}
+                      <div style={{ marginTop: '1.5rem', width: '100%' }}>
+                        <h3 style={{
+                          fontSize: '1.8rem',
+                          fontStyle: 'italic',
+                          textAlign: 'center',
+                          margin: '0 0 1rem 0',
+                          fontFamily: "'Cormorant Garamond', serif",
+                          color: '#4c4844',
+                        }}>
+                          Confirmar Asistencia
+                        </h3>
+                        <RecipientRsvpPanel />
+                      </div>
+                    </div>
+                  </EnvelopeWrapper>
                   
                   {(envelopePhase === 'CLOSED' || envelopePhase === 'CRACKING') ? (
                     <div style={{
@@ -108,20 +172,6 @@ export function CreatorCanvas() {
                         Da clic para abrir la invitación
                       </p>
                     </div>
-                  ) : envelopePhase === 'COMPLETED' ? (
-                    <p style={{
-                      fontSize: '0.85rem',
-                      color: 'rgba(255, 255, 255, 0.7)',
-                      textAlign: 'center',
-                      margin: '0.5rem 0 0 0',
-                      letterSpacing: '0.08em',
-                      textTransform: 'uppercase',
-                      fontFamily: "'Cormorant Garamond', serif",
-                      fontWeight: 500,
-                      animation: 'stage-enter 0.5s ease-out'
-                    }}>
-                      Dale play para escuchar nuestra canción
-                    </p>
                   ) : null}
                 </div>
               ) : (
@@ -206,9 +256,9 @@ export function CreatorCanvas() {
                 </>
               )}
 
-              {/* Additional wedding sections, only visible after envelope slideout or during host editing */}
-              {(showRosterDetails || !isRecipient) && (
-                <div className={`recipient-invite-details ${(showRosterDetails || !isRecipient) ? 'state-visible' : ''}`}>
+              {/* Additional wedding sections, only visible during host editing */}
+              {!isRecipient && (
+                <div className="recipient-invite-details state-visible">
                   {/* Event Logo Medallion */}
                   {state.design.openedEnvelopeImage && (
                     <div style={{ 

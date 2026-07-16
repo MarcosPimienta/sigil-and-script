@@ -26,11 +26,11 @@ export function RecipientRsvpPanel() {
 
   if (submitted) {
     return (
-      <aside className="left-panel" style={{ padding: '2rem', color: '#ffffff', display: 'flex', flexDirection: 'column', gap: '1rem', justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>
+      <aside className="left-panel" style={{ padding: '2rem', color: 'var(--rsvp-input-color, #ffffff)', display: 'flex', flexDirection: 'column', gap: '1rem', justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>
         <h2 style={{ fontSize: '1.8rem', fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic' }}>
           Thank You!
         </h2>
-        <p style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '0.9rem' }}>
+        <p style={{ color: 'var(--rsvp-text-secondary, rgba(255, 255, 255, 0.7))', fontSize: '0.9rem' }}>
           Your response has been recorded successfully.
         </p>
         <div style={{
@@ -59,10 +59,10 @@ export function RecipientRsvpPanel() {
     <aside className="left-panel" style={{ overflowY: 'auto' }}>
       <div className="lp-inner" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
         <div className="lp-header">
-          <h1 className="lp-title" style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: '1.8rem' }}>
+          <h1 className="lp-title" style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: '1.8rem', color: 'var(--rsvp-input-color, #ffffff)' }}>
             RSVP Response
           </h1>
-          <p style={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: '0.8rem' }}>
+          <p style={{ color: 'var(--rsvp-text-secondary, rgba(255, 255, 255, 0.5))', fontSize: '0.8rem' }}>
             For: {guest.guestName}
           </p>
         </div>
@@ -80,9 +80,9 @@ export function RecipientRsvpPanel() {
                   padding: '10px',
                   borderRadius: '4px',
                   border: '1px solid',
-                  borderColor: rsvpStatus === 'YES' ? '#28c76f' : 'rgba(255,255,255,0.1)',
-                  background: rsvpStatus === 'YES' ? 'rgba(40,199,111,0.2)' : 'rgba(255,255,255,0.02)',
-                  color: rsvpStatus === 'YES' ? '#28c76f' : 'rgba(255,255,255,0.7)',
+                  borderColor: rsvpStatus === 'YES' ? '#28c76f' : 'var(--rsvp-btn-border, rgba(255,255,255,0.1))',
+                  background: rsvpStatus === 'YES' ? 'var(--rsvp-btn-yes-bg, rgba(40,199,111,0.2))' : 'var(--rsvp-btn-bg, rgba(255,255,255,0.02))',
+                  color: rsvpStatus === 'YES' ? '#28c76f' : 'var(--rsvp-btn-color, rgba(255,255,255,0.7))',
                   cursor: 'pointer',
                   fontWeight: 600,
                   transition: 'all 0.2s',
@@ -99,9 +99,9 @@ export function RecipientRsvpPanel() {
                   padding: '10px',
                   borderRadius: '4px',
                   border: '1px solid',
-                  borderColor: rsvpStatus === 'NO' ? '#ea5455' : 'rgba(255,255,255,0.1)',
-                  background: rsvpStatus === 'NO' ? 'rgba(234,84,85,0.2)' : 'rgba(255,255,255,0.02)',
-                  color: rsvpStatus === 'NO' ? '#ea5455' : 'rgba(255,255,255,0.7)',
+                  borderColor: rsvpStatus === 'NO' ? '#ea5455' : 'var(--rsvp-btn-border, rgba(255,255,255,0.1))',
+                  background: rsvpStatus === 'NO' ? 'var(--rsvp-btn-no-bg, rgba(234,84,85,0.2))' : 'var(--rsvp-btn-bg, rgba(255,255,255,0.02))',
+                  color: rsvpStatus === 'NO' ? '#ea5455' : 'var(--rsvp-btn-color, rgba(255,255,255,0.7))',
                   cursor: 'pointer',
                   fontWeight: 600,
                   transition: 'all 0.2s',
@@ -126,18 +126,18 @@ export function RecipientRsvpPanel() {
                     required
                     style={{
                       width: '100%',
-                      background: 'rgba(255,255,255,0.05)',
-                      border: '1px solid rgba(255,255,255,0.15)',
-                      color: '#ffffff',
+                      background: 'var(--rsvp-input-bg, rgba(255,255,255,0.05))',
+                      border: '1px solid var(--rsvp-input-border, rgba(255,255,255,0.15))',
+                      color: 'var(--rsvp-input-color, #ffffff)',
                       padding: '8px',
                       borderRadius: '4px',
                       outline: 'none',
                     }}
                   >
-                    <option value="" disabled style={{ background: '#222' }}>Choose a meal</option>
-                    <option value="Beef" style={{ background: '#222' }}>Prime Beef Tenderloin</option>
-                    <option value="Fish" style={{ background: '#222' }}>Atlantic Salmon</option>
-                    <option value="Vegetarian" style={{ background: '#222' }}>Truffle Wild Mushroom Risotto</option>
+                    <option value="" disabled style={{ background: 'var(--rsvp-select-option-bg, #222)' }}>Choose a meal</option>
+                    <option value="Beef" style={{ background: 'var(--rsvp-select-option-bg, #222)' }}>Prime Beef Tenderloin</option>
+                    <option value="Fish" style={{ background: 'var(--rsvp-select-option-bg, #222)' }}>Atlantic Salmon</option>
+                    <option value="Vegetarian" style={{ background: 'var(--rsvp-select-option-bg, #222)' }}>Truffle Wild Mushroom Risotto</option>
                   </select>
                 </div>
               )}
@@ -203,10 +203,10 @@ export function RecipientRsvpPanel() {
             disabled={!rsvpStatus}
             style={{
               padding: '12px',
-              background: rsvpStatus ? 'var(--status-pending)' : 'rgba(255,255,255,0.05)',
+              background: rsvpStatus ? 'var(--rsvp-submit-active-bg, var(--status-pending))' : 'var(--rsvp-submit-inactive-bg, rgba(255,255,255,0.05))',
               border: 'none',
               borderRadius: '4px',
-              color: rsvpStatus ? '#ffffff' : 'rgba(255,255,255,0.3)',
+              color: rsvpStatus ? 'var(--rsvp-submit-active-color, #ffffff)' : 'var(--rsvp-submit-inactive-color, rgba(255,255,255,0.3))',
               cursor: rsvpStatus ? 'pointer' : 'not-allowed',
               fontWeight: 600,
               marginTop: '1rem',
