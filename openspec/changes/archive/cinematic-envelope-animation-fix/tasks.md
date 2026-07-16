@@ -18,4 +18,4 @@
 
 ## 4. Verification & Testing
 - [x] 4.1 Run unit tests with `npm test` and check for any regressions.
-- [ ] 4.2 Validate the animation visually in the browser via local server dev build.
+- [x] 4.2 Validate the animation visually in the browser via local server dev build.
