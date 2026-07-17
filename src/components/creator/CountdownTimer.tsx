@@ -74,10 +74,10 @@ export function CountdownTimer() {
         viewBox="0 0 160 220" 
         style={{
           position: 'absolute',
-          right: '5%',
-          top: '-10%',
-          width: '180px',
-          height: '240px',
+          right: '8%',
+          top: '-5%',
+          width: '150px',
+          height: '200px',
           pointerEvents: 'none',
           zIndex: 1,
         }}
@@ -102,8 +102,8 @@ export function CountdownTimer() {
         className="countdown-scallop-badge"
         style={{
           position: 'relative',
-          width: '240px',
-          height: '240px',
+          width: '190px',
+          height: '190px',
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'center',
@@ -138,32 +138,32 @@ export function CountdownTimer() {
         </svg>
 
         {/* Content Container (absolutely centered inside the scallop badge) */}
-        <div style={{ position: 'relative', zIndex: 3, textAlign: 'center', marginTop: '-8px' }}>
+        <div style={{ position: 'relative', zIndex: 3, textAlign: 'center', marginTop: '-4px' }}>
           <h4 style={{ 
-            fontSize: '2.5rem', 
+            fontSize: '1.9rem', 
             fontFamily: "'Pinyon Script', cursive", 
-            margin: '0 0 0.2rem 0', 
+            margin: '0 0 0.1rem 0', 
             color: '#4c4844',
             fontWeight: 400,
             textShadow: '0 1px 1px rgba(255,255,255,0.8)'
           }}>
             Faltan
           </h4>
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', margin: '0.2rem 0' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '0.7rem', margin: '0.1rem 0' }}>
             {[
               { label: 'DIAS', val: timeLeft.days },
               { label: 'HORAS', val: timeLeft.hours },
               { label: 'MINUTOS', val: timeLeft.minutes },
             ].map((unit, idx) => (
               <div key={idx} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <span style={{ fontSize: '1.8rem', fontWeight: 500, color: '#333333', minWidth: '40px', letterSpacing: '-0.02em' }}>
+                <span style={{ fontSize: '1.3rem', fontWeight: 500, color: '#333333', minWidth: '30px', letterSpacing: '-0.02em' }}>
                   {pad(unit.val)}
                 </span>
                 <span style={{ 
-                  fontSize: '0.62rem', 
-                  letterSpacing: '0.12em', 
+                  fontSize: '0.52rem', 
+                  letterSpacing: '0.1em', 
                   color: '#8c7d6b', 
-                  marginTop: '0.15rem',
+                  marginTop: '0.1rem',
                   fontWeight: 600,
                   textTransform: 'uppercase'
                 }}>

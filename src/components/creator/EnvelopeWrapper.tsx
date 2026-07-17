@@ -77,8 +77,36 @@ export function EnvelopeWrapper({ children, onPhaseChange, alwaysOpen }: Envelop
   };
 
   const headlineBlock = design.textBlocks?.find((b) => b.id === 'tb-headline');
-  const titleText = headlineBlock ? headlineBlock.content : 'You Are Cordially Invited';
   const hostNames = headlineBlock ? headlineBlock.content : 'Marcos & Diana';
+
+  const getFormattedDateFields = (targetDateStr?: string) => {
+    const defaultFields = {
+      dayOfWeek: 'Jueves',
+      dayOfMonth: '17',
+      monthName: 'SEPTIEMBRE',
+      year: '2026'
+    };
+    if (!targetDateStr) return defaultFields;
+    try {
+      const d = new Date(targetDateStr);
+      if (isNaN(d.getTime())) return defaultFields;
+      
+      const weekdaysSpanish = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+      const monthsSpanish = [
+        'ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO', 
+        'JULIO', 'AGOSTO', 'SEPTIEMBRE', 'OCTUBRE', 'NOVIEMBRE', 'DICIEMBRE'
+      ];
+      
+      return {
+        dayOfWeek: weekdaysSpanish[d.getDay()],
+        dayOfMonth: String(d.getDate()),
+        monthName: monthsSpanish[d.getMonth()],
+        year: String(d.getFullYear())
+      };
+    } catch {
+      return defaultFields;
+    }
+  };
 
   const formatEventDate = (target?: string) => {
     if (!target) return '17 / 09 / 2026';
@@ -101,21 +129,126 @@ export function EnvelopeWrapper({ children, onPhaseChange, alwaysOpen }: Envelop
   const isViewportOverlayVisible = phase === 'LETTER_CENTERING' || phase === 'LETTER_SCALING' || phase === 'FADING_OUT' || phase === 'COMPLETED';
 
   // Paper letter internal content card layout
-  const renderLetterContent = () => (
-    <>
-      <div className="envelope-letter-title">{titleText}</div>
-      <div className="envelope-letter-names">{design.title || 'Marcos & Diana'}</div>
-      <div className="envelope-letter-body">
-        to share in our joy as we celebrate our wedding day.
-        <div style={{ marginTop: '1.5rem', fontWeight: 600, textTransform: 'uppercase', fontSize: '0.8rem', color: '#a08e7c', letterSpacing: '0.05em' }}>
-          Prepared for
+  const renderLetterContent = () => {
+    const { dayOfWeek, dayOfMonth, monthName, year } = getFormattedDateFields(design.countdownTarget);
+    return (
+      <div className="envelope-letter-content-wrapper" style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        textAlign: 'center',
+        padding: '0.8rem 1rem',
+        width: '100%',
+        boxSizing: 'border-box',
+        fontFamily: "'Cormorant Garamond', serif",
+        lineHeight: 1.2,
+        color: '#333333'
+      }}>
+        {/* Host Names */}
+        <h2 className="letter-host-names" style={{
+          fontSize: '1.45rem',
+          fontWeight: 400,
+          color: '#111111',
+          margin: '0 0 0.3rem 0',
+          letterSpacing: '0.04em',
+          fontFamily: "'Cormorant Garamond', serif",
+        }}>
+          {hostNames}
+        </h2>
+
+        <span className="letter-invite-prompt" style={{
+          fontSize: '0.58rem',
+          letterSpacing: '0.12em',
+          color: '#8c7d6b',
+          textTransform: 'uppercase',
+          fontWeight: 600,
+          marginBottom: '0.2rem',
+        }}>
+          tenemos el honor de invitarte a
+        </span>
+
+        <h3 className="letter-cursive-title" style={{
+          fontFamily: "'Pinyon Script', cursive",
+          fontSize: '2.8rem',
+          fontWeight: 400,
+          color: '#4c4844',
+          margin: '0 0 0.2rem 0',
+        }}>
+          {design.title || 'Nuestra Boda'}
+        </h3>
+
+        <span className="letter-month-name" style={{
+          fontSize: '0.62rem',
+          letterSpacing: '0.15em',
+          color: '#4c4844',
+          fontWeight: 600,
+          textTransform: 'uppercase',
+          marginBottom: '0.4rem',
+        }}>
+          {monthName}
+        </span>
+
+        {/* Structured Date Block */}
+        <div className="letter-date-block" style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '0.8rem',
+          margin: '0.2rem 0 0.6rem 0',
+          width: '100%'
+        }}>
+          <div className="letter-date-dayofweek" style={{
+            borderTop: '0.8px solid rgba(160, 142, 124, 0.4)',
+            borderBottom: '0.8px solid rgba(160, 142, 124, 0.4)',
+            padding: '2px 0',
+            fontSize: '0.72rem',
+            letterSpacing: '0.05em',
+            color: '#7a6b58',
+            minWidth: '55px',
+            textTransform: 'uppercase',
+            fontWeight: 500
+          }}>
+            {dayOfWeek}
+          </div>
+
+          <div className="letter-date-dayofmonth" style={{
+            fontSize: '2.2rem',
+            fontWeight: 300,
+            color: '#333333',
+            lineHeight: 1,
+            fontFamily: "'Cormorant Garamond', serif",
+          }}>
+            {dayOfMonth}
+          </div>
+
+          <div className="letter-date-year" style={{
+            borderTop: '0.8px solid rgba(160, 142, 124, 0.4)',
+            borderBottom: '0.8px solid rgba(160, 142, 124, 0.4)',
+            padding: '2px 0',
+            fontSize: '0.72rem',
+            letterSpacing: '0.05em',
+            color: '#7a6b58',
+            minWidth: '55px',
+            fontWeight: 500
+          }}>
+            {year}
+          </div>
         </div>
-        <div style={{ fontStyle: 'italic', fontSize: '1.1rem', marginTop: '0.2rem', color: '#333333' }}>
-          {guest?.guestName || 'Esteemed Guest'}
-        </div>
+
+        {/* Location */}
+        <span className="letter-location" style={{
+          fontSize: '0.58rem',
+          letterSpacing: '0.1em',
+          color: '#8c7d6b',
+          textTransform: 'uppercase',
+          fontWeight: 600,
+          marginTop: '0.1rem',
+        }}>
+          {guest?.eventLocation || 'Buenos Aires, Argentina'}
+        </span>
       </div>
-    </>
-  );
+    );
+  };
 
   return (
     <>

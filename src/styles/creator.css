@@ -1334,6 +1334,7 @@
     transform: translate(-50%, -108%) scale(1);
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
   }
+
   to {
     transform: translate(-50%, -50%) scale(1);
     box-shadow: 0 12px 48px rgba(0, 0, 0, 0.3);
@@ -1378,25 +1379,25 @@
   overflow-y: auto;
   pointer-events: auto;
   gap: 2.5rem;
-  
+
   /* Sleek custom scrollbars */
   scrollbar-width: thin;
   scrollbar-color: rgba(160, 142, 124, 0.3) transparent;
-  
+
   /* RSVP variables override for light paper style */
   --rsvp-btn-border: rgba(0, 0, 0, 0.12);
   --rsvp-btn-bg: rgba(0, 0, 0, 0.02);
   --rsvp-btn-color: rgba(0, 0, 0, 0.65);
   --rsvp-btn-yes-bg: rgba(40, 199, 111, 0.15);
   --rsvp-btn-no-bg: rgba(234, 84, 85, 0.15);
-  
+
   --rsvp-text-secondary: rgba(0, 0, 0, 0.55);
-  
+
   --rsvp-input-bg: #ffffff;
   --rsvp-input-border: rgba(160, 142, 124, 0.25);
   --rsvp-input-color: #333333;
   --rsvp-select-option-bg: #ffffff;
-  
+
   --rsvp-submit-active-bg: var(--envelope-color, #c8b998);
   --rsvp-submit-inactive-bg: rgba(0, 0, 0, 0.05);
   --rsvp-submit-active-color: #ffffff;
@@ -1406,13 +1407,16 @@
 .envelope-letter-viewport-overlay.state-completed::-webkit-scrollbar {
   width: 6px;
 }
+
 .envelope-letter-viewport-overlay.state-completed::-webkit-scrollbar-track {
   background: transparent;
 }
+
 .envelope-letter-viewport-overlay.state-completed::-webkit-scrollbar-thumb {
   background: rgba(160, 142, 124, 0.3);
   border-radius: 3px;
 }
+
 .envelope-letter-viewport-overlay.state-completed::-webkit-scrollbar-thumb:hover {
   background: rgba(160, 142, 124, 0.5);
 }
@@ -1441,7 +1445,8 @@
 }
 
 .envelope-letter-viewport-overlay.state-scaled .envelope-letter-header {
-  margin-top: calc(50vh - 180px); /* Centered vertically on screen when full size */
+  margin-top: calc(50vh - 180px);
+  /* Centered vertically on screen when full size */
 }
 
 .envelope-letter-viewport-overlay.state-completed .envelope-letter-header {
@@ -1629,16 +1634,85 @@
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes slideUp {
-  from { transform: translateY(20px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 @keyframes slideIn {
-  from { transform: translateX(50px); opacity: 0; }
-  to { transform: translateX(0); opacity: 1; }
+  from {
+    transform: translateX(50px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Upscaled fullscreen text styling for top section */
+.envelope-letter-viewport-overlay .envelope-letter-content-wrapper {
+  padding: 3rem 2rem !important;
+}
+
+.envelope-letter-viewport-overlay .letter-host-names {
+  font-size: 2.2rem !important;
+  margin-bottom: 0.8rem !important;
+  letter-spacing: 0.05em !important;
+}
+
+.envelope-letter-viewport-overlay .letter-invite-prompt {
+  font-size: 0.85rem !important;
+  margin-bottom: 0.5rem !important;
+  letter-spacing: 0.15em !important;
+}
+
+.envelope-letter-viewport-overlay .letter-cursive-title {
+  font-size: 4.2rem !important;
+  margin: 0.4rem 0 !important;
+}
+
+.envelope-letter-viewport-overlay .letter-month-name {
+  font-size: 0.9rem !important;
+  margin-bottom: 0.8rem !important;
+  letter-spacing: 0.18em !important;
+}
+
+.envelope-letter-viewport-overlay .letter-date-block {
+  gap: 1.5rem !important;
+  margin: 0.5rem 0 1.2rem 0 !important;
+}
+
+.envelope-letter-viewport-overlay .letter-date-dayofweek,
+.envelope-letter-viewport-overlay .letter-date-year {
+  font-size: 0.95rem !important;
+  padding: 4px 0 !important;
+  min-width: 80px !important;
+}
+
+.envelope-letter-viewport-overlay .letter-date-dayofmonth {
+  font-size: 3.5rem !important;
+}
+
+.envelope-letter-viewport-overlay .letter-location {
+  font-size: 0.85rem !important;
+  letter-spacing: 0.12em !important;
+  margin-top: 0.6rem !important;
 }
