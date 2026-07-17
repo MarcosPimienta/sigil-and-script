@@ -121,7 +121,7 @@ export function CreatorCanvas() {
                       <GiftsRegistryPanel />
 
                       {/* RSVP at the bottom */}
-                      <div style={{ marginTop: '1.5rem', width: '100%' }}>
+                      <div style={{ marginTop: '1.5rem', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                         <h3 style={{
                           fontSize: '1.8rem',
                           fontStyle: 'italic',
