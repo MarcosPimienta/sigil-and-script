@@ -78,6 +78,7 @@ export function EnvelopeWrapper({ children, onPhaseChange, alwaysOpen }: Envelop
 
   const headlineBlock = design.textBlocks?.find((b) => b.id === 'tb-headline');
   const titleText = headlineBlock ? headlineBlock.content : 'You Are Cordially Invited';
+  const hostNames = headlineBlock ? headlineBlock.content : 'Marcos & Diana';
 
   const formatEventDate = (target?: string) => {
     if (!target) return '17 / 09 / 2026';
@@ -122,8 +123,8 @@ export function EnvelopeWrapper({ children, onPhaseChange, alwaysOpen }: Envelop
         <div className="envelope-png-wrapper">
           {/* Header titles: fade in after seal cracking */}
           <div style={{ minHeight: '80px', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', alignItems: 'center', width: '100%' }}>
-            <h2 className={`envelope-header-title ${(phase !== 'CLOSED' && phase !== 'CRACKING') ? 'state-active' : ''}`}>
-              {design.title || 'Marcos & Diana'}
+            <h2 className="envelope-header-title">
+              {hostNames}
             </h2>
             <div className="envelope-header-date">
               {dateText}
