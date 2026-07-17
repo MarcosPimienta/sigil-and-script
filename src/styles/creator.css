@@ -1199,7 +1199,7 @@
 
 .envelope-pocket-clipper {
   position: absolute;
-  inset: -150px -50px 165px -50px;
+  inset: -250px -50px 165px -50px;
   overflow: hidden;
   z-index: 3;
   pointer-events: none;
@@ -1246,6 +1246,7 @@
   transition: transform 1s cubic-bezier(0.25, 1, 0.5, 1), opacity 1s ease-out;
   background: var(--paper-parchment, #f4ecd8);
   border: 1px solid rgba(0, 0, 0, 0.08);
+  overflow: hidden;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
   box-sizing: border-box;
   padding: 24px;
@@ -1316,28 +1317,32 @@
   justify-content: center;
   align-items: center;
   pointer-events: none;
-  animation: letter-move-down 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+  animation: letter-move-down 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+  transform-style: preserve-3d;
+  perspective: 1000px;
 }
 
-.envelope-letter-viewport-overlay.state-centering::after {
-  content: '';
-  position: absolute;
+.envelope-letter-viewport-overlay.state-centering .envelope-letter-header::after {
   inset: 8px;
   border: 1px double rgba(160, 142, 124, 0.3);
-  pointer-events: none;
   border-radius: 4px;
-  transition: all 0.8s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
 @keyframes letter-move-down {
   from {
-    transform: translate(-50%, -108%) scale(1);
+    transform: translate(-50%, -108%) scale(1) rotateY(0deg);
+    width: 260px;
+    height: 340px;
+    border-radius: 8px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
   }
 
   to {
-    transform: translate(-50%, -50%) scale(1);
-    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.3);
+    transform: translate(-50%, -50%) scale(1.05) rotateY(180deg);
+    width: 100vw;
+    height: 100vh;
+    border-radius: 0;
+    box-shadow: none;
   }
 }
 
@@ -1421,14 +1426,11 @@
   background: rgba(160, 142, 124, 0.5);
 }
 
-.envelope-letter-viewport-overlay.state-scaled::after,
-.envelope-letter-viewport-overlay.state-completed::after {
-  content: '';
-  position: absolute;
+.envelope-letter-viewport-overlay.state-scaled .envelope-letter-header::after,
+.envelope-letter-viewport-overlay.state-completed .envelope-letter-header::after {
   inset: 40px;
   border: 2px double rgba(160, 142, 124, 0.45);
   border-radius: 8px;
-  pointer-events: none;
 }
 
 /* Header slide and details fade transitions */
@@ -1438,10 +1440,20 @@
   flex-direction: column;
   align-items: center;
   transition: margin-top 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+  position: relative;
+}
+
+.envelope-letter-header::after {
+  content: '';
+  position: absolute;
+  pointer-events: none;
+  transition: all 0.8s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
 .envelope-letter-viewport-overlay.state-centering .envelope-letter-header {
   margin-top: 0;
+  height: 100%;
+  box-sizing: border-box;
 }
 
 .envelope-letter-viewport-overlay.state-scaled .envelope-letter-header {
@@ -1668,50 +1680,50 @@
 }
 
 /* Upscaled fullscreen text styling for top section */
-.envelope-letter-viewport-overlay .envelope-letter-content-wrapper {
+.envelope-letter-viewport-overlay:not(.state-centering) .envelope-letter-content-wrapper {
   padding: 3rem 2rem !important;
 }
 
-.envelope-letter-viewport-overlay .letter-host-names {
+.envelope-letter-viewport-overlay:not(.state-centering) .letter-host-names {
   font-size: 2.2rem !important;
   margin-bottom: 0.8rem !important;
   letter-spacing: 0.05em !important;
 }
 
-.envelope-letter-viewport-overlay .letter-invite-prompt {
+.envelope-letter-viewport-overlay:not(.state-centering) .letter-invite-prompt {
   font-size: 0.85rem !important;
   margin-bottom: 0.5rem !important;
   letter-spacing: 0.15em !important;
 }
 
-.envelope-letter-viewport-overlay .letter-cursive-title {
+.envelope-letter-viewport-overlay:not(.state-centering) .letter-cursive-title {
   font-size: 4.2rem !important;
   margin: 0.4rem 0 !important;
 }
 
-.envelope-letter-viewport-overlay .letter-month-name {
+.envelope-letter-viewport-overlay:not(.state-centering) .letter-month-name {
   font-size: 0.9rem !important;
   margin-bottom: 0.8rem !important;
   letter-spacing: 0.18em !important;
 }
 
-.envelope-letter-viewport-overlay .letter-date-block {
+.envelope-letter-viewport-overlay:not(.state-centering) .letter-date-block {
   gap: 1.5rem !important;
   margin: 0.5rem 0 1.2rem 0 !important;
 }
 
-.envelope-letter-viewport-overlay .letter-date-dayofweek,
-.envelope-letter-viewport-overlay .letter-date-year {
+.envelope-letter-viewport-overlay:not(.state-centering) .letter-date-dayofweek,
+.envelope-letter-viewport-overlay:not(.state-centering) .letter-date-year {
   font-size: 0.95rem !important;
   padding: 4px 0 !important;
   min-width: 80px !important;
 }
 
-.envelope-letter-viewport-overlay .letter-date-dayofmonth {
+.envelope-letter-viewport-overlay:not(.state-centering) .letter-date-dayofmonth {
   font-size: 3.5rem !important;
 }
 
-.envelope-letter-viewport-overlay .letter-location {
+.envelope-letter-viewport-overlay:not(.state-centering) .letter-location {
   font-size: 0.85rem !important;
   letter-spacing: 0.12em !important;
   margin-top: 0.6rem !important;

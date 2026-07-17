@@ -60,7 +60,7 @@ export function EnvelopeWrapper({ children, onPhaseChange, alwaysOpen }: Envelop
           setPhase('LETTER_CENTERING');
           onPhaseChange?.('LETTER_CENTERING');
 
-          // 4. Letter centers (600ms) -> Letter starts full viewport scaling (LETTER_SCALING)
+          // 4. Letter centers, flips and scales (800ms) -> Letter starts full viewport scaling (LETTER_SCALING)
           setTimeout(() => {
             setPhase('LETTER_SCALING');
             onPhaseChange?.('LETTER_SCALING');
@@ -70,7 +70,7 @@ export function EnvelopeWrapper({ children, onPhaseChange, alwaysOpen }: Envelop
               setPhase('COMPLETED');
               onPhaseChange?.('COMPLETED');
             }, 800);
-          }, 600);
+          }, 800);
         }, 1000);
       }, 800);
     }, 600);
@@ -127,6 +127,58 @@ export function EnvelopeWrapper({ children, onPhaseChange, alwaysOpen }: Envelop
   const isEnvelopeVisible = phase !== 'COMPLETED';
   const isPocketLetterVisible = phase === 'OPENING' || phase === 'LETTER_SLIDING';
   const isViewportOverlayVisible = phase === 'LETTER_CENTERING' || phase === 'LETTER_SCALING' || phase === 'FADING_OUT' || phase === 'COMPLETED';
+
+  // Front side event logo face layout
+  const renderLogoFace = () => {
+    return (
+      <div className="letter-logo-face" style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: '100%',
+        height: '100%',
+        boxSizing: 'border-box',
+        padding: '24px',
+        textAlign: 'center',
+      }}>
+        {design.openedEnvelopeImage ? (
+          <img 
+            src={design.openedEnvelopeImage} 
+            alt="Event Logo"
+            style={{
+              maxWidth: '220px',
+              maxHeight: '280px',
+              objectFit: 'contain',
+            }}
+          />
+        ) : (
+          <div style={{
+            width: '130px',
+            height: '130px',
+            borderRadius: '50%',
+            border: '2px double rgba(160, 142, 124, 0.6)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: 'rgba(160, 142, 124, 0.03)',
+            boxShadow: 'inset 0 0 15px rgba(160, 142, 124, 0.1)',
+          }}>
+            <span style={{
+              fontFamily: "'Cormorant Garamond', serif",
+              fontSize: '2.4rem',
+              color: '#a08e7c',
+              fontWeight: 300,
+              letterSpacing: '1px',
+              textTransform: 'uppercase',
+            }}>
+              {hostNames.split('&').map(n => n.trim().charAt(0)).join(' & ')}
+            </span>
+          </div>
+        )}
+      </div>
+    );
+  };
 
   // Paper letter internal content card layout
   const renderLetterContent = () => {
@@ -293,7 +345,7 @@ export function EnvelopeWrapper({ children, onPhaseChange, alwaysOpen }: Envelop
                   opacity: isPocketLetterVisible ? 1 : 0
                 }}
               >
-                {renderLetterContent()}
+                {renderLogoFace()}
               </div>
             </div>
 
@@ -334,7 +386,50 @@ export function EnvelopeWrapper({ children, onPhaseChange, alwaysOpen }: Envelop
           className={`envelope-letter-viewport-overlay ${phase === 'LETTER_CENTERING' ? 'state-centering' : ''} ${phase === 'LETTER_SCALING' ? 'state-scaled' : ''} ${phase === 'FADING_OUT' ? 'state-fade-out' : ''} ${phase === 'COMPLETED' ? 'state-completed' : ''}`}
         >
           <div className="envelope-letter-header">
-            {renderLetterContent()}
+            {phase === 'LETTER_CENTERING' ? (
+              <div className="letter-flip-card" style={{
+                position: 'relative',
+                width: '100%',
+                height: '100%',
+                transformStyle: 'preserve-3d',
+              }}>
+                {/* Front Face: Logo */}
+                <div style={{
+                  position: 'absolute',
+                  inset: 0,
+                  width: '100%',
+                  height: '100%',
+                  backfaceVisibility: 'hidden',
+                  WebkitBackfaceVisibility: 'hidden',
+                  transform: 'rotateY(0deg)',
+                  zIndex: 2,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}>
+                  {renderLogoFace()}
+                </div>
+
+                {/* Back Face: Invitation text */}
+                <div style={{
+                  position: 'absolute',
+                  inset: 0,
+                  width: '100%',
+                  height: '100%',
+                  backfaceVisibility: 'hidden',
+                  WebkitBackfaceVisibility: 'hidden',
+                  transform: 'rotateY(180deg)',
+                  zIndex: 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}>
+                  {renderLetterContent()}
+                </div>
+              </div>
+            ) : (
+              renderLetterContent()
+            )}
           </div>
           {(phase === 'LETTER_SCALING' || phase === 'COMPLETED') && (
             <div className="envelope-letter-details-content">

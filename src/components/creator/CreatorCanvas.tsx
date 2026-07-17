@@ -61,6 +61,7 @@ export function CreatorCanvas() {
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
+            justifyContent: (isRecipient && envelopePhase !== 'COMPLETED') ? 'center' : 'flex-start',
           }}>
             <div style={{ maxWidth: '480px', width: '100%', display: 'flex', flexDirection: 'column', gap: '2rem' }}>
               
@@ -90,30 +91,7 @@ export function CreatorCanvas() {
                         </p>
                       )}
 
-                      {/* Event Logo Medallion */}
-                      {state.design.openedEnvelopeImage && (
-                        <div style={{ 
-                          display: 'flex', 
-                          justifyContent: 'center', 
-                          margin: '1.5rem 0 0.5rem 0',
-                          animation: 'stage-enter 0.8s ease-out'
-                        }}>
-                          <img 
-                            src={state.design.openedEnvelopeImage} 
-                            alt="Event Logo" 
-                            style={{
-                              maxWidth: '150px',
-                              maxHeight: '150px',
-                              objectFit: 'contain',
-                              borderRadius: '50%',
-                              border: '2px solid rgba(223, 184, 142, 0.4)',
-                              padding: '6px',
-                              background: 'rgba(255, 255, 255, 0.05)',
-                              boxShadow: '0 8px 24px rgba(0, 0, 0, 0.25)'
-                            }}
-                          />
-                        </div>
-                      )}
+
 
                       <CountdownTimer />
                       <ItineraryTimeline />
@@ -259,30 +237,7 @@ export function CreatorCanvas() {
               {/* Additional wedding sections, only visible during host editing */}
               {!isRecipient && (
                 <div className="recipient-invite-details state-visible">
-                  {/* Event Logo Medallion */}
-                  {state.design.openedEnvelopeImage && (
-                    <div style={{ 
-                      display: 'flex', 
-                      justifyContent: 'center', 
-                      margin: '1.5rem 0 0.5rem 0',
-                      animation: 'stage-enter 0.8s ease-out'
-                    }}>
-                      <img 
-                        src={state.design.openedEnvelopeImage} 
-                        alt="Event Logo" 
-                        style={{
-                          maxWidth: '150px',
-                          maxHeight: '150px',
-                          objectFit: 'contain',
-                          borderRadius: '50%',
-                          border: '2px solid rgba(223, 184, 142, 0.4)',
-                          padding: '6px',
-                          background: 'rgba(255, 255, 255, 0.05)',
-                          boxShadow: '0 8px 24px rgba(0, 0, 0, 0.25)'
-                        }}
-                      />
-                    </div>
-                  )}
+
 
                   <CountdownTimer />
                   <ItineraryTimeline />

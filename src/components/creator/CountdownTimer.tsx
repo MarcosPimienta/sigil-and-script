@@ -68,34 +68,6 @@ export function CountdownTimer() {
       padding: '1.5rem 0',
       marginTop: '1.5rem',
     }}>
-      {/* Decorative Botanical Branch SVG behind/next to the badge */}
-      <svg 
-        className="countdown-botanical-branch" 
-        viewBox="0 0 160 220" 
-        style={{
-          position: 'absolute',
-          right: '8%',
-          top: '-5%',
-          width: '150px',
-          height: '200px',
-          pointerEvents: 'none',
-          zIndex: 1,
-        }}
-      >
-        {/* Main Stem */}
-        <path d="M 60 220 Q 85 140 55 20" stroke="#7a6b58" strokeWidth="1.5" fill="none" opacity="0.5" />
-        
-        {/* Soft Olive/Sepia Leaves */}
-        <path d="M 66 180 C 85 175 90 160 80 152 C 70 152 66 168 66 180 Z" fill="#8f967a" opacity="0.65" />
-        <path d="M 65 150 C 42 142 35 125 48 118 C 60 118 64 132 65 150 Z" fill="#8f967a" opacity="0.65" />
-        <path d="M 60 120 C 82 112 88 95 76 88 C 65 88 60 102 60 120 Z" fill="#8f967a" opacity="0.65" />
-        <path d="M 55 90 C 32 82 28 65 40 58 C 50 58 54 72 55 90 Z" fill="#8f967a" opacity="0.65" />
-        <path d="M 50 60 C 72 52 75 35 65 28 C 55 28 50 42 50 60 Z" fill="#8f967a" opacity="0.65" />
-        
-        {/* Delicate white flower petals mapping to calla lily/orchid in reference */}
-        <path d="M 68 140 C 90 145 105 120 90 105 C 75 90 70 115 68 140 Z" fill="#faf8f2" stroke="#d5cdb8" strokeWidth="0.8" opacity="0.9" />
-        <path d="M 82 120 Q 95 110 88 95" stroke="#c8b998" strokeWidth="1.2" fill="none" opacity="0.8" />
-      </svg>
 
       {/* Scalloped Circle Badge */}
       <div 

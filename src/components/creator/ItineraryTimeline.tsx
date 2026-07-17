@@ -14,6 +14,32 @@ const CornerFlourish = () => (
   </svg>
 );
 
+const ChurchIcon = () => (
+  <svg
+    width="28"
+    height="28"
+    viewBox="0 0 24 24"
+    style={{ margin: '0.2rem 0 0.4rem 0' }}
+    aria-hidden="true"
+  >
+    <path fillRule="evenodd" clipRule="evenodd" d="
+      M 11.5 0.5 H 12.5 V 3.5 H 11.5 Z
+      M 10 1.5 H 14 V 2.5 H 10 Z
+      M 12 3.5 L 9 7 H 15 Z
+      M 9.5 7 H 14.5 V 13 H 9.5 Z
+      M 9.5 13 L 3 17.5 H 4 V 23.5 H 20 V 17.5 H 21 L 14.5 13 Z
+      
+      M 11.2 11.5 H 12.8 V 9.8 A 0.8 0.8 0 0 0 11.2 9.8 Z
+      M 6.2 21.5 H 7.8 V 19.8 A 0.8 0.8 0 0 0 6.2 19.8 Z
+      M 16.2 21.5 H 17.8 V 19.8 A 0.8 0.8 0 0 0 16.2 19.8 Z
+      M 10 23.5 H 14 V 17.5 H 10 Z
+    " fill="currentColor" />
+    <path d="M 11.95 17.5 H 12.05 V 23.5 H 11.95 Z" fill="currentColor" />
+    <path d="M 11.5 20 H 11.7 V 21 H 11.5 Z" fill="currentColor" />
+    <path d="M 12.3 20 H 12.5 V 21 H 12.3 Z" fill="currentColor" />
+  </svg>
+);
+
 export function ItineraryTimeline() {
   const itinerary = useSigilSelector((s) => s.design.itinerary) || [];
 
@@ -91,6 +117,11 @@ export function ItineraryTimeline() {
               }}>
                 {item.title}
               </h4>
+
+              {/* Church Icon below Ceremonia Religiosa */}
+              {item.title.toLowerCase().includes('ceremonia') && item.title.toLowerCase().includes('religiosa') && (
+                <ChurchIcon />
+              )}
               
               {/* Address / Location details */}
               <p style={{ 
