@@ -80,6 +80,8 @@ export interface GuestPayload {
   eventDate?: string;
   /** Optional event location */
   eventLocation?: string;
+  /** Optional dependents list for RSVP checkboxes */
+  dependents?: Dependent[];
 }
 
 // ── Invitation Design ─────────────────────────────────────────────────────────

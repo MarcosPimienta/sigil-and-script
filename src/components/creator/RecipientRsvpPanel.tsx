@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSigil } from '../../context/SigilContext';
 
 export function RecipientRsvpPanel() {
@@ -17,6 +17,25 @@ export function RecipientRsvpPanel() {
   const [plusOne, setPlusOne] = useState('');
   const [notes, setNotes] = useState('');
   const [submitted, setSubmitted] = useState(false);
+
+  const [selectedDependents, setSelectedDependents] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    if (guest.dependents) {
+      const initial: Record<string, boolean> = {};
+      guest.dependents.forEach((dep) => {
+        initial[dep.id] = dep.included;
+      });
+      setSelectedDependents(initial);
+    }
+  }, [guest.dependents]);
+
+  const handleDependentToggle = (id: string) => {
+    setSelectedDependents((prev) => ({
+      ...prev,
+      [id]: !prev[id],
+    }));
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,6 +66,11 @@ export function RecipientRsvpPanel() {
               {config.requireMealPreference && mealPref && <div>🍽️ Meal: {mealPref}</div>}
               {config.requireDietaryRestrictions && dietary && <div>⚠️ Dietary: {dietary}</div>}
               {config.allowPlusOnes && plusOne && <div>👥 Guest: {plusOne}</div>}
+              {guest.dependents && guest.dependents.length > 0 && (
+                <div>
+                  👥 Family attending: {guest.dependents.filter((d) => selectedDependents[d.id]).map((d) => d.name).join(', ') || 'None'}
+                </div>
+              )}
               {config.customNotesLabel && notes && <div>📝 Note: {notes}</div>}
             </div>
           )}
@@ -175,6 +199,42 @@ export function RecipientRsvpPanel() {
                     autoComplete="off"
                     required
                   />
+                </div>
+              )}
+
+              {/* Dependents list checkboxes */}
+              {guest.dependents && guest.dependents.length > 0 && (
+                <div className="lp-field">
+                  <span className="lp-field-label">Additional Guests / Family</span>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', marginTop: '0.6rem' }}>
+                    {guest.dependents.map((dep) => (
+                      <label
+                        key={dep.id}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.6rem',
+                          fontSize: '0.85rem',
+                          color: 'var(--rsvp-input-color, #ffffff)',
+                          cursor: 'pointer',
+                          userSelect: 'none'
+                        }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={!!selectedDependents[dep.id]}
+                          onChange={() => handleDependentToggle(dep.id)}
+                          style={{
+                            width: '16px',
+                            height: '16px',
+                            cursor: 'pointer',
+                            accentColor: 'var(--status-rsvp-yes)'
+                          }}
+                        />
+                        {dep.name}
+                      </label>
+                    ))}
+                  </div>
                 </div>
               )}
 

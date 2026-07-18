@@ -46,6 +46,7 @@ function AppShell() {
         .filter((d) => d.included)
         .map((d) => d.name),
       routingToken: invitee.id,
+      dependents: invitee.dependents,
     });
     setAppMode('RECIPIENT');
 

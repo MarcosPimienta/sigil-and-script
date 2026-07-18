@@ -76,6 +76,10 @@ const DEFAULT_GUEST: GuestPayload = {
   rsvpBy: 'January 31st',
   eventDate: 'February 14th, 2027',
   eventLocation: 'The Grand Atelier',
+  dependents: [
+    { id: 'mock-dep-1', name: 'Sor Maria Montoya', included: true },
+    { id: 'mock-dep-2', name: 'Jose Montoya', included: false },
+  ],
 };
 
 export interface SigilState {
@@ -315,9 +319,11 @@ export const useSigilStore = create<SigilState>((set, get) => ({
       const data = await apiFetch(`/invite/${token}`);
       
       let additionalGuests: string[] = [];
+      let dependentsList: any[] = [];
       try {
         const parsed = JSON.parse(data.formResponses || '{}');
         if (parsed.dependents && Array.isArray(parsed.dependents)) {
+          dependentsList = parsed.dependents;
           additionalGuests = parsed.dependents
             .filter((d: any) => d.included)
             .map((d: any) => d.name);
@@ -333,6 +339,7 @@ export const useSigilStore = create<SigilState>((set, get) => ({
         rsvpBy: 'January 31st',
         eventDate: 'February 14th, 2027',
         eventLocation: 'The Grand Atelier',
+        dependents: dependentsList,
       };
 
       let design: InvitationDesign = {
