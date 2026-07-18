@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Toolbar } from './Toolbar';
 import { LeftPanel } from './LeftPanel';
 import { RecipientRsvpPanel } from './RecipientRsvpPanel';
@@ -10,10 +10,20 @@ import { GiftsRegistryPanel } from './GiftsRegistryPanel';
 import { AudioControls } from './AudioControls';
 import { AudioToggle } from '../shared/AudioToggle';
 import { useSigil } from '../../context/SigilContext';
+import { audioEngine } from '../../utils/audioEngine';
 
 export function CreatorCanvas() {
   const { state } = useSigil();
   const isRecipient = state.appMode === 'RECIPIENT';
+
+  // Sync background song url on load / update to prevent async browser play blocks
+  useEffect(() => {
+    if (state.design.musicUrl) {
+      audioEngine.setSongUrl(state.design.musicUrl);
+    } else {
+      audioEngine.setSongUrl(null);
+    }
+  }, [state.design.musicUrl]);
 
   // State phases: 'CLOSED' | 'CRACKING' | 'OPENING' | 'LETTER_SLIDING' | 'LETTER_CENTERING' | 'LETTER_SCALING' | 'FADING_OUT' | 'COMPLETED'
   const [envelopePhase, setEnvelopePhase] = useState<
