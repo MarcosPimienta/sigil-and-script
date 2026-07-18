@@ -5,6 +5,15 @@
   background: var(--dashboard-bg);
   min-height: 100vh;
   font-family: var(--font-body);
+  
+  /* Local overrides for high-contrast dark text on light parchment background */
+  --ui-text-primary: #2d2a26;
+  --ui-text-secondary: #5c534c;
+  --ui-text-muted: #8c7d73;
+  --ui-border: rgba(40, 30, 20, 0.2);
+  --ui-border-subtle: rgba(40, 30, 20, 0.1);
+  --roster-row-hover-bg: rgba(40, 30, 20, 0.04);
+  
   color: var(--ui-text-primary);
 }
 
