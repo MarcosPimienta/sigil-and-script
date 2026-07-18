@@ -19,6 +19,10 @@ class AudioEngine {
       this.audioEl.pause();
       this.audioEl = null;
     }
+    
+    // Stop any currently playing default synthesized ambient chords
+    this.stopAmbient();
+    
     if (url) {
       this.audioEl = new Audio(url);
       this.audioEl.loop = true;
@@ -105,8 +109,11 @@ class AudioEngine {
     this.init();
     if (this.isMuted) return;
 
-    if (this.audioEl) {
-      this.audioEl.play().catch(e => console.log("Failed to play custom ambient song:", e));
+    // If there is a custom song URL, only play that custom song
+    if (this.songUrl) {
+      if (this.audioEl) {
+        this.audioEl.play().catch(e => console.log("Failed to play custom ambient song:", e));
+      }
       return;
     }
 
