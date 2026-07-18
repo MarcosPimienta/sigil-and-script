@@ -1815,3 +1815,28 @@
   opacity: 1;
   transform: scale(1);
 }
+
+/* ── RSVP styling overrides for light parchment overlay ── */
+.envelope-letter-viewport-overlay.state-completed .left-panel {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  margin: 0 auto !important;
+}
+
+.envelope-letter-viewport-overlay.state-completed .left-panel .lp-field-label {
+  color: var(--rsvp-text-secondary, rgba(0, 0, 0, 0.7)) !important;
+}
+
+.envelope-letter-viewport-overlay.state-completed .left-panel input,
+.envelope-letter-viewport-overlay.state-completed .left-panel select,
+.envelope-letter-viewport-overlay.state-completed .left-panel textarea {
+  background: var(--rsvp-input-bg, #ffffff) !important;
+  border: 1px solid var(--rsvp-input-border, rgba(160, 142, 124, 0.25)) !important;
+  color: var(--rsvp-input-color, #333333) !important;
+}
+
+.envelope-letter-viewport-overlay.state-completed .left-panel input::placeholder {
+  color: rgba(0, 0, 0, 0.4) !important;
+}

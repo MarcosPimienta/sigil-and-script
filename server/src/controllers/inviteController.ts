@@ -112,10 +112,12 @@ export async function saveCanvas(req: Request, res: Response): Promise<void> {
     itinerary,
     hostId,
     designData,
+    invitees,
   } = req.body;
 
   try {
     const userId = req.user!.id;
+    let canvasObj;
 
     if (id) {
       const existing = await prisma.invitationCanvas.findUnique({
@@ -128,7 +130,7 @@ export async function saveCanvas(req: Request, res: Response): Promise<void> {
           return;
         }
 
-        const updated = await prisma.invitationCanvas.update({
+        canvasObj = await prisma.invitationCanvas.update({
           where: { id },
           data: {
             envelopeColor: envelopeColor ?? existing.envelopeColor,
@@ -141,26 +143,87 @@ export async function saveCanvas(req: Request, res: Response): Promise<void> {
             designData: designData ?? existing.designData,
           },
         });
-        res.json(updated);
-        return;
       }
     }
 
-    const created = await prisma.invitationCanvas.create({
-      data: {
-        id: id || undefined,
-        envelopeColor: envelopeColor || '#f6ebe2',
-        waxSealAsset: waxSealAsset || 'classic-red',
-        musicUrl: musicUrl || null,
-        countdownTarget: countdownTarget || new Date().toISOString(),
-        colorPalette: colorPalette || JSON.stringify([]),
-        itinerary: itinerary || JSON.stringify([]),
-        hostId: hostId || 'host-default',
-        designData: designData || '{}',
-        userId,
-      },
-    });
-    res.json(created);
+    if (!canvasObj) {
+      canvasObj = await prisma.invitationCanvas.create({
+        data: {
+          id: id || undefined,
+          envelopeColor: envelopeColor || '#f6ebe2',
+          waxSealAsset: waxSealAsset || 'classic-red',
+          musicUrl: musicUrl || null,
+          countdownTarget: countdownTarget || new Date().toISOString(),
+          colorPalette: colorPalette || JSON.stringify([]),
+          itinerary: itinerary || JSON.stringify([]),
+          hostId: hostId || 'host-default',
+          designData: designData || '{}',
+          userId,
+        },
+      });
+    }
+
+    const canvasId = canvasObj.id;
+
+    // Sync guest list roster to the database
+    if (Array.isArray(invitees)) {
+      const activeGuestIds = invitees
+        .map((g: any) => g.id)
+        .filter((gid: any) => typeof gid === 'string');
+
+      await prisma.$transaction(async (tx) => {
+        // Delete all guests associated with this canvas who are NOT in the incoming active list
+        await tx.guest.deleteMany({
+          where: {
+            canvasId,
+            id: { notIn: activeGuestIds },
+          },
+        });
+
+        // Upsert all guests in the incoming list
+        for (const guest of invitees) {
+          if (!guest.id || !guest.name) continue;
+
+          // Read existing guest if present to preserve their RSVP responses
+          const existingDbGuest = await tx.guest.findUnique({
+            where: { id: guest.id },
+          });
+
+          let mergedFormResponses = {};
+          if (existingDbGuest && existingDbGuest.formResponses) {
+            try {
+              mergedFormResponses = JSON.parse(existingDbGuest.formResponses);
+            } catch (e) {
+              console.error("Failed to parse existing formResponses", e);
+            }
+          }
+
+          const dependents = Array.isArray(guest.dependents) ? guest.dependents : [];
+          mergedFormResponses = {
+            ...mergedFormResponses,
+            dependents,
+          };
+
+          await tx.guest.upsert({
+            where: { id: guest.id },
+            update: {
+              name: guest.name,
+              status: guest.status || 'PENDING',
+              formResponses: JSON.stringify(mergedFormResponses),
+            },
+            create: {
+              id: guest.id,
+              name: guest.name,
+              status: guest.status || 'PENDING',
+              formResponses: JSON.stringify(mergedFormResponses),
+              canvasId,
+            },
+          });
+        }
+      });
+    }
+
+    res.json(canvasObj);
   } catch (error) {
     console.error('Error saving canvas:', error);
     res.status(500).json({ error: 'Internal server error' });

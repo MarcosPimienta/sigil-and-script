@@ -80,6 +80,10 @@ export function Toolbar() {
     }
   };
 
+  if (isRecipient && !user) {
+    return null;
+  }
+
   return (
     <header className="site-toolbar" role="banner">
       {/* ── Logo ──────────────────────────────────────────────────────────── */}

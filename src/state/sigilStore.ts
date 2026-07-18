@@ -313,19 +313,47 @@ export const useSigilStore = create<SigilState>((set, get) => ({
     set({ apiStatus: 'loading', apiError: null });
     try {
       const data = await apiFetch(`/invite/${token}`);
+      
+      let additionalGuests: string[] = [];
+      try {
+        const parsed = JSON.parse(data.formResponses || '{}');
+        if (parsed.dependents && Array.isArray(parsed.dependents)) {
+          additionalGuests = parsed.dependents
+            .filter((d: any) => d.included)
+            .map((d: any) => d.name);
+        }
+      } catch (e) {
+        console.error("Failed to parse dependents from formResponses", e);
+      }
+
       const guest: GuestPayload = {
         guestName: data.name,
-        additionalGuests: [],
+        additionalGuests,
         routingToken: data.id,
         rsvpBy: 'January 31st',
         eventDate: 'February 14th, 2027',
         eventLocation: 'The Grand Atelier',
       };
-      const design: InvitationDesign = {
+
+      let design: InvitationDesign = {
         ...DEFAULT_DESIGN,
         id: data.canvas.id,
         backgroundColor: data.canvas.envelopeColor,
       };
+
+      if (data.canvas && data.canvas.designData) {
+        try {
+          const parsedDesign = JSON.parse(data.canvas.designData);
+          design = {
+            ...design,
+            ...parsedDesign,
+            id: data.canvas.id,
+          };
+        } catch (e) {
+          console.error("Failed to parse designData", e);
+        }
+      }
+
       set({ apiStatus: 'success', guest, design });
     } catch (error: any) {
       set({
@@ -376,6 +404,7 @@ export const useSigilStore = create<SigilState>((set, get) => ({
         itinerary: JSON.stringify(design.itinerary || []),
         hostId: 'host-default',
         designData: JSON.stringify(design),
+        invitees: get().guestRoster.invitees,
       };
 
       const data = await apiFetch('/canvas', {

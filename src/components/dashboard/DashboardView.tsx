@@ -11,7 +11,7 @@ function CopyLinkCell({ invitee }: { invitee: InviteeRecord }) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = useCallback(async () => {
-    const url = `${window.location.origin}?guest=${invitee.id}`;
+    const url = `${window.location.origin}/invite/${invitee.id}`;
     try {
       await navigator.clipboard.writeText(url);
     } catch {
