@@ -339,6 +339,7 @@ export const useSigilStore = create<SigilState>((set, get) => ({
         ...DEFAULT_DESIGN,
         id: data.canvas.id,
         backgroundColor: data.canvas.envelopeColor,
+        musicUrl: data.canvas.musicUrl || '',
       };
 
       if (data.canvas && data.canvas.designData) {
@@ -348,6 +349,7 @@ export const useSigilStore = create<SigilState>((set, get) => ({
             ...design,
             ...parsedDesign,
             id: data.canvas.id,
+            musicUrl: data.canvas.musicUrl || parsedDesign.musicUrl || '',
           };
         } catch (e) {
           console.error("Failed to parse designData", e);
@@ -394,6 +396,7 @@ export const useSigilStore = create<SigilState>((set, get) => ({
     set({ apiStatus: 'loading', apiError: null });
     try {
       const isDefaultId = design.id === 'design-default';
+      const { musicUrl, ...designWithoutMusic } = design;
       const body = {
         id: isDefaultId ? undefined : design.id,
         envelopeColor: design.backgroundColor,
@@ -403,9 +406,15 @@ export const useSigilStore = create<SigilState>((set, get) => ({
         colorPalette: JSON.stringify([design.backgroundColor]),
         itinerary: JSON.stringify(design.itinerary || []),
         hostId: 'host-default',
-        designData: JSON.stringify(design),
+        designData: JSON.stringify(designWithoutMusic),
         invitees: get().guestRoster.invitees,
       };
+
+      console.log("Saving design body size report:");
+      console.log("- Total body size:", JSON.stringify(body).length, "characters");
+      console.log("- musicUrl size:", body.musicUrl ? body.musicUrl.length : 0, "chars");
+      console.log("- designData size:", body.designData.length, "chars");
+      console.log("- invitees list size:", JSON.stringify(body.invitees).length, "chars");
 
       const data = await apiFetch('/canvas', {
         method: 'POST',
@@ -453,6 +462,7 @@ export const useSigilStore = create<SigilState>((set, get) => ({
         stickerImage: canvas.waxSealAsset !== 'classic-red' ? canvas.waxSealAsset : (loadedDesign.stickerImage || DEFAULT_DESIGN.stickerImage),
         countdownTarget: canvas.countdownTarget || loadedDesign.countdownTarget || DEFAULT_DESIGN.countdownTarget,
         itinerary: canvas.itinerary ? JSON.parse(canvas.itinerary) : (loadedDesign.itinerary || DEFAULT_DESIGN.itinerary),
+        musicUrl: canvas.musicUrl || loadedDesign.musicUrl || '',
       };
 
       set({

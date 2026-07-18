@@ -19,7 +19,13 @@ import { SectionEditor } from './SectionEditor';
 const ACCEPTED_IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/gif'];
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024; // 8MB
 
-function compressImage(base64Str: string, maxWidth = 1000, maxHeight = 1000): Promise<string> {
+function compressImage(
+  base64Str: string,
+  format = 'image/jpeg',
+  quality = 0.8,
+  maxWidth = 1000,
+  maxHeight = 1000
+): Promise<string> {
   return new Promise((resolve) => {
     const img = new Image();
     img.src = base64Str;
@@ -51,7 +57,7 @@ function compressImage(base64Str: string, maxWidth = 1000, maxHeight = 1000): Pr
 
       ctx.clearRect(0, 0, width, height); // Ensure background is transparent
       ctx.drawImage(img, 0, 0, width, height);
-      const compressed = canvas.toDataURL('image/png');
+      const compressed = canvas.toDataURL(format, format === 'image/jpeg' ? quality : undefined);
       resolve(compressed);
     };
     img.onerror = () => {
@@ -223,7 +229,8 @@ export function LeftPanel() {
       reader.onload = async () => {
         if (typeof reader.result === 'string') {
           try {
-            const compressed = await compressImage(reader.result);
+            const format = field === 'stickerImage' ? 'image/png' : 'image/jpeg';
+            const compressed = await compressImage(reader.result, format, 0.85);
             updateDesign({ [field]: compressed });
           } catch (err) {
             console.error('Failed to compress image, using original', err);
