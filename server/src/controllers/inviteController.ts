@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { z } from 'zod';
+import crypto from 'crypto';
 
 const prisma = new PrismaClient();
 
@@ -268,5 +269,55 @@ export async function deleteCanvas(req: Request, res: Response): Promise<void> {
   } catch (error) {
     console.error('Error deleting canvas:', error);
     res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
+export async function uploadMedia(req: Request, res: Response): Promise<void> {
+  const { fileData, fileName, fileType, bucket } = req.body;
+
+  if (!fileData || !fileName || !fileType || !bucket) {
+    res.status(400).json({ error: 'Missing required parameters: fileData, fileName, fileType, bucket' });
+    return;
+  }
+
+  const supabaseUrl = process.env.SUPABASE_URL;
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!supabaseUrl || !supabaseKey) {
+    console.error('Supabase configuration missing (SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)');
+    res.status(500).json({ error: 'Storage configuration error: Please check server environment variables.' });
+    return;
+  }
+
+  try {
+    const base64Parts = fileData.split(';base64,');
+    const base64String = base64Parts.length > 1 ? base64Parts[1] : fileData;
+    const buffer = Buffer.from(base64String, 'base64');
+
+    const sanitizedName = fileName.replace(/[^a-zA-Z0-9.-]/g, '_');
+    const uniqueFileName = `${crypto.randomUUID()}-${sanitizedName}`;
+
+    const targetUrl = `${supabaseUrl}/storage/v1/object/${bucket}/${uniqueFileName}`;
+    const uploadRes = await fetch(targetUrl, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${supabaseKey}`,
+        'Content-Type': fileType,
+      },
+      body: buffer,
+    });
+
+    if (!uploadRes.ok) {
+      const errorText = await uploadRes.text();
+      console.error('Supabase upload request failed:', errorText);
+      res.status(uploadRes.status).json({ error: `Supabase upload failed: ${errorText}` });
+      return;
+    }
+
+    const publicUrl = `${supabaseUrl}/storage/v1/object/public/${bucket}/${uniqueFileName}`;
+    res.json({ publicUrl });
+  } catch (error) {
+    console.error('Error uploading media to Supabase:', error);
+    res.status(500).json({ error: 'Internal server error during media upload' });
   }
 }

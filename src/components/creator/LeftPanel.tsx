@@ -3,12 +3,13 @@
 // INVITATION STUDIO sidebar with all design controls.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { useCallback, type ChangeEvent } from 'react';
+import { useCallback, useState, type ChangeEvent } from 'react';
 import { useSigil } from '../../context/SigilContext';
 import type { InvitationDesign } from '../../types/sigil.types';
 import { GuestRosterPanel } from './GuestRosterPanel';
 import { FormConfiguratorPanel } from './FormConfiguratorPanel';
 import { SectionEditor } from './SectionEditor';
+import { apiFetch } from '../../utils/api';
 
 // ── Custom artwork uploads ───────────────────────────────────────────────────
 // Rendered exclusively via <img src> / CSS background-image (see
@@ -88,6 +89,7 @@ function ImageUploadSlot({
   value,
   onUpload,
   onClear,
+  isUploading,
 }: {
   id: string;
   label: string;
@@ -95,13 +97,20 @@ function ImageUploadSlot({
   value?: string;
   onUpload: (e: ChangeEvent<HTMLInputElement>) => void;
   onClear: () => void;
+  isUploading?: boolean;
 }) {
   return (
     <div className="lp-field">
       <label className="lp-field-label" htmlFor={id}>
         {label}
       </label>
-      {value ? (
+      {isUploading ? (
+        <div className="lp-upload-zone lp-upload-zone--wide" style={{ pointerEvents: 'none', opacity: 0.7, minHeight: '60px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <span style={{ fontSize: '0.85rem', color: 'var(--cr-text-secondary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span className="animate-pulse">Uploading image...</span>
+          </span>
+        </div>
+      ) : value ? (
         <div className="lp-image-slot">
           <img src={value} alt="" className="lp-image-slot-preview" />
           <button
@@ -143,6 +152,7 @@ function AudioUploadSlot({
   value,
   onUpload,
   onClear,
+  isUploading,
 }: {
   id: string;
   label: string;
@@ -150,6 +160,7 @@ function AudioUploadSlot({
   value?: string;
   onUpload: (e: ChangeEvent<HTMLInputElement>) => void;
   onClear: () => void;
+  isUploading?: boolean;
 }) {
   const isDataUrl = value?.startsWith('data:');
   const displayName = isDataUrl ? 'Local Audio File' : value;
@@ -159,7 +170,13 @@ function AudioUploadSlot({
       <label className="lp-field-label" htmlFor={id}>
         {label}
       </label>
-      {value ? (
+      {isUploading ? (
+        <div className="lp-upload-zone lp-upload-zone--wide" style={{ minHeight: '60px', padding: '12px', pointerEvents: 'none', opacity: 0.7, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <span style={{ fontSize: '0.85rem', color: 'var(--cr-text-secondary)' }}>
+            <span className="animate-pulse">Uploading audio...</span>
+          </span>
+        </div>
+      ) : value ? (
         <div className="lp-image-slot" style={{ height: 'auto', padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--cr-text)" strokeWidth="2">
@@ -214,7 +231,7 @@ export function LeftPanel() {
   const { state, updateDesign, setGuest } = useSigil();
   const { design, guest } = state;
 
-
+  const [uploadingFields, setUploadingFields] = useState<Record<string, boolean>>({});
 
   // ── Custom artwork uploads ─────────────────────────────────────────────────
   const handleImageUpload = useCallback(
@@ -229,12 +246,28 @@ export function LeftPanel() {
       reader.onload = async () => {
         if (typeof reader.result === 'string') {
           try {
+            setUploadingFields((prev) => ({ ...prev, [field]: true }));
             const format = field === 'stickerImage' ? 'image/png' : 'image/jpeg';
             const compressed = await compressImage(reader.result, format, 0.85);
-            updateDesign({ [field]: compressed });
-          } catch (err) {
-            console.error('Failed to compress image, using original', err);
+
+            // Upload compressed file to Supabase Storage via backend REST API
+            const response = await apiFetch('/upload/media', {
+              method: 'POST',
+              body: JSON.stringify({
+                fileData: compressed,
+                fileName: file.name,
+                fileType: format,
+                bucket: 'invitation-images',
+              }),
+            });
+
+            updateDesign({ [field]: response.publicUrl });
+          } catch (err: any) {
+            console.error('Failed to upload image, using original locally', err);
+            alert(err.message || 'Image upload failed. Storing locally for preview.');
             updateDesign({ [field]: reader.result });
+          } finally {
+            setUploadingFields((prev) => ({ ...prev, [field]: false }));
           }
         }
       };
@@ -267,9 +300,30 @@ export function LeftPanel() {
       }
 
       const reader = new FileReader();
-      reader.onload = () => {
+      reader.onload = async () => {
         if (typeof reader.result === 'string') {
-          updateDesign({ musicUrl: reader.result });
+          try {
+            setUploadingFields((prev) => ({ ...prev, musicUrl: true }));
+
+            // Upload file to Supabase Storage via backend REST API
+            const response = await apiFetch('/upload/media', {
+              method: 'POST',
+              body: JSON.stringify({
+                fileData: reader.result,
+                fileName: file.name,
+                fileType: file.type || 'audio/mpeg',
+                bucket: 'invitation-music',
+              }),
+            });
+
+            updateDesign({ musicUrl: response.publicUrl });
+          } catch (err: any) {
+            console.error('Failed to upload audio, using original locally', err);
+            alert(err.message || 'Audio upload failed. Storing locally for preview.');
+            updateDesign({ musicUrl: reader.result });
+          } finally {
+            setUploadingFields((prev) => ({ ...prev, musicUrl: false }));
+          }
         }
       };
       reader.readAsDataURL(file);
@@ -347,6 +401,7 @@ export function LeftPanel() {
             value={design.openedEnvelopeImage}
             onUpload={handleImageUpload('openedEnvelopeImage')}
             onClear={handleImageClear('openedEnvelopeImage')}
+            isUploading={uploadingFields['openedEnvelopeImage']}
           />
 
           <ImageUploadSlot
@@ -356,6 +411,7 @@ export function LeftPanel() {
             value={design.stickerImage}
             onUpload={handleImageUpload('stickerImage')}
             onClear={handleImageClear('stickerImage')}
+            isUploading={uploadingFields['stickerImage']}
           />
 
           <div className="lp-field" style={{ marginTop: '0.8rem' }}>
@@ -408,6 +464,7 @@ export function LeftPanel() {
             value={design.musicUrl}
             onUpload={handleAudioUpload}
             onClear={handleAudioClear}
+            isUploading={uploadingFields.musicUrl}
           />
         </section>
 

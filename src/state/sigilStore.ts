@@ -397,16 +397,30 @@ export const useSigilStore = create<SigilState>((set, get) => ({
     try {
       const isDefaultId = design.id === 'design-default';
       const { musicUrl, ...designWithoutMusic } = design;
+      
+      const isBase64Audio = design.musicUrl && design.musicUrl.startsWith('data:audio/');
+      const finalMusicUrl = isBase64Audio ? null : (design.musicUrl || null);
+
+      // Clean up base64 image fallbacks if they failed to upload to prevent 413 error
+      const cleanedDesign = { ...designWithoutMusic };
+      const imageFields: (keyof typeof cleanedDesign)[] = ['openedEnvelopeImage', 'stickerImage', 'closedEnvelopeImage', 'paperImage', 'headerImage', 'frameImage'];
+      imageFields.forEach((f) => {
+        const val = cleanedDesign[f];
+        if (typeof val === 'string' && val.startsWith('data:image/')) {
+          (cleanedDesign as any)[f] = undefined;
+        }
+      });
+
       const body = {
         id: isDefaultId ? undefined : design.id,
         envelopeColor: design.backgroundColor,
         waxSealAsset: design.stickerImage || 'classic-red',
-        musicUrl: design.musicUrl || null,
+        musicUrl: finalMusicUrl,
         countdownTarget: design.countdownTarget || new Date().toISOString(),
         colorPalette: JSON.stringify([design.backgroundColor]),
         itinerary: JSON.stringify(design.itinerary || []),
         hostId: 'host-default',
-        designData: designWithoutMusic,
+        designData: cleanedDesign,
         invitees: get().guestRoster.invitees,
       };
 
