@@ -76,10 +76,7 @@ const DEFAULT_GUEST: GuestPayload = {
   rsvpBy: 'January 31st',
   eventDate: 'February 14th, 2027',
   eventLocation: 'The Grand Atelier',
-  dependents: [
-    { id: 'mock-dep-1', name: 'Sor Maria Montoya', included: true },
-    { id: 'mock-dep-2', name: 'Jose Montoya', included: false },
-  ],
+  dependents: [],
 };
 
 export interface SigilState {
