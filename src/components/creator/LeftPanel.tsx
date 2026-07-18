@@ -248,14 +248,14 @@ export function LeftPanel() {
       if (!file) return;
 
       const ACCEPTED_AUDIO_TYPES = ['audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/ogg', 'audio/m4a', 'audio/x-m4a'];
-      const MAX_AUDIO_BYTES = 12 * 1024 * 1024; // 12MB
+      const MAX_AUDIO_BYTES = 3 * 1024 * 1024; // 3MB
 
       if (!ACCEPTED_AUDIO_TYPES.includes(file.type) && !file.name.endsWith('.mp3') && !file.name.endsWith('.m4a')) {
         alert('Unsupported file type. Please upload MP3, WAV, or M4A audio files.');
         return;
       }
       if (file.size > MAX_AUDIO_BYTES) {
-        alert('File size exceeds the 12MB limit.');
+        alert('File size exceeds the 3MB limit. Please upload a smaller or compressed audio file to satisfy deployment constraints.');
         return;
       }
 
