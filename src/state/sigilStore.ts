@@ -406,14 +406,14 @@ export const useSigilStore = create<SigilState>((set, get) => ({
         colorPalette: JSON.stringify([design.backgroundColor]),
         itinerary: JSON.stringify(design.itinerary || []),
         hostId: 'host-default',
-        designData: JSON.stringify(designWithoutMusic),
+        designData: designWithoutMusic,
         invitees: get().guestRoster.invitees,
       };
 
       console.log("Saving design body size report:");
       console.log("- Total body size:", JSON.stringify(body).length, "characters");
       console.log("- musicUrl size:", body.musicUrl ? body.musicUrl.length : 0, "chars");
-      console.log("- designData size:", body.designData.length, "chars");
+      console.log("- designData size:", JSON.stringify(body.designData).length, "chars");
       console.log("- invitees list size:", JSON.stringify(body.invitees).length, "chars");
 
       const data = await apiFetch('/canvas', {

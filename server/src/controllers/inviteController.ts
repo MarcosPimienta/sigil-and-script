@@ -119,6 +119,10 @@ export async function saveCanvas(req: Request, res: Response): Promise<void> {
     const userId = req.user!.id;
     let canvasObj;
 
+    const designDataStr = typeof designData === 'object'
+      ? JSON.stringify(designData)
+      : (designData ?? undefined);
+
     if (id) {
       const existing = await prisma.invitationCanvas.findUnique({
         where: { id },
@@ -140,7 +144,7 @@ export async function saveCanvas(req: Request, res: Response): Promise<void> {
             colorPalette: colorPalette ?? existing.colorPalette,
             itinerary: itinerary ?? existing.itinerary,
             hostId: hostId ?? existing.hostId,
-            designData: designData ?? existing.designData,
+            designData: designDataStr !== undefined ? designDataStr : existing.designData,
           },
         });
       }
@@ -157,7 +161,7 @@ export async function saveCanvas(req: Request, res: Response): Promise<void> {
           colorPalette: colorPalette || JSON.stringify([]),
           itinerary: itinerary || JSON.stringify([]),
           hostId: hostId || 'host-default',
-          designData: designData || '{}',
+          designData: designDataStr || '{}',
           userId,
         },
       });
