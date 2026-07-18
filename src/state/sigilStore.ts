@@ -66,6 +66,7 @@ const DEFAULT_DESIGN: InvitationDesign = {
   openedEnvelopeImage: '',
   stickerImage: '',
   sealSize: 75,
+  musicUrl: '',
 };
 
 const DEFAULT_GUEST: GuestPayload = {
@@ -369,7 +370,7 @@ export const useSigilStore = create<SigilState>((set, get) => ({
         id: isDefaultId ? undefined : design.id,
         envelopeColor: design.backgroundColor,
         waxSealAsset: design.stickerImage || 'classic-red',
-        musicUrl: null,
+        musicUrl: design.musicUrl || null,
         countdownTarget: design.countdownTarget || new Date().toISOString(),
         colorPalette: JSON.stringify([design.backgroundColor]),
         itinerary: JSON.stringify(design.itinerary || []),

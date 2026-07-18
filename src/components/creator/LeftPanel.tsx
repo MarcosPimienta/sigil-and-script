@@ -128,6 +128,74 @@ function ImageUploadSlot({
   );
 }
 
+// ── Background music upload slot ──────────────────────────────────────────────
+
+function AudioUploadSlot({
+  id,
+  label,
+  hint,
+  value,
+  onUpload,
+  onClear,
+}: {
+  id: string;
+  label: string;
+  hint: string;
+  value?: string;
+  onUpload: (e: ChangeEvent<HTMLInputElement>) => void;
+  onClear: () => void;
+}) {
+  const isDataUrl = value?.startsWith('data:');
+  const displayName = isDataUrl ? 'Local Audio File' : value;
+
+  return (
+    <div className="lp-field">
+      <label className="lp-field-label" htmlFor={id}>
+        {label}
+      </label>
+      {value ? (
+        <div className="lp-image-slot" style={{ height: 'auto', padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--cr-text)" strokeWidth="2">
+              <path d="M9 18V5l12-2v13"></path>
+              <circle cx="6" cy="18" r="3"></circle>
+              <circle cx="18" cy="16" r="3"></circle>
+            </svg>
+            <span style={{ fontSize: '0.85rem', color: 'var(--cr-text)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', maxWidth: '200px' }}>
+              {displayName}
+            </span>
+          </div>
+          <button
+            type="button"
+            className="lp-image-slot-remove"
+            onClick={onClear}
+            aria-label={`Remove ${label}`}
+            style={{ margin: 0 }}
+          >
+            Remove
+          </button>
+        </div>
+      ) : (
+        <label className="lp-upload-zone lp-upload-zone--wide" htmlFor={id} style={{ minHeight: '60px', padding: '12px' }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="17 8 12 3 7 8" />
+            <line x1="12" y1="3" x2="12" y2="15" />
+          </svg>
+          <span style={{ fontSize: '0.8rem' }}>{hint}</span>
+        </label>
+      )}
+      <input
+        id={id}
+        type="file"
+        accept="audio/*"
+        style={{ display: 'none' }}
+        onChange={onUpload}
+      />
+    </div>
+  );
+}
+
 // ── Divider ────────────────────────────────────────────────────────────────────
 
 function Divider() {
@@ -172,6 +240,39 @@ export function LeftPanel() {
     (field: ImageField) => () => updateDesign({ [field]: undefined }),
     [updateDesign],
   );
+
+  const handleAudioUpload = useCallback(
+    (e: ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      e.target.value = ''; // allow re-selecting the same file later
+      if (!file) return;
+
+      const ACCEPTED_AUDIO_TYPES = ['audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/ogg', 'audio/m4a', 'audio/x-m4a'];
+      const MAX_AUDIO_BYTES = 12 * 1024 * 1024; // 12MB
+
+      if (!ACCEPTED_AUDIO_TYPES.includes(file.type) && !file.name.endsWith('.mp3') && !file.name.endsWith('.m4a')) {
+        alert('Unsupported file type. Please upload MP3, WAV, or M4A audio files.');
+        return;
+      }
+      if (file.size > MAX_AUDIO_BYTES) {
+        alert('File size exceeds the 12MB limit.');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        if (typeof reader.result === 'string') {
+          updateDesign({ musicUrl: reader.result });
+        }
+      };
+      reader.readAsDataURL(file);
+    },
+    [updateDesign]
+  );
+
+  const handleAudioClear = useCallback(() => {
+    updateDesign({ musicUrl: '' });
+  }, [updateDesign]);
 
   // ── Guest name (message body token) ──────────────────────────────────────
   const handleGuestName = useCallback(
@@ -286,6 +387,21 @@ export function LeftPanel() {
         <section className="lp-section" aria-labelledby="section-responsive">
           <SectionLabel>Event Sections</SectionLabel>
           <SectionEditor />
+        </section>
+
+        <Divider />
+
+        {/* ══ BACKGROUND MUSIC ═════════════════════════════════════════════ */}
+        <section className="lp-section" aria-labelledby="section-music">
+          <SectionLabel>Background Music</SectionLabel>
+          <AudioUploadSlot
+            id="upload-music-url"
+            label="Background Song"
+            hint="Upload MP3, WAV or M4A audio file"
+            value={design.musicUrl}
+            onUpload={handleAudioUpload}
+            onClear={handleAudioClear}
+          />
         </section>
 
         <Divider />

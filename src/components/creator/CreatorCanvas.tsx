@@ -7,6 +7,7 @@ import { CountdownTimer } from './CountdownTimer';
 import { ItineraryTimeline } from './ItineraryTimeline';
 import { DressCodePanel } from './DressCodePanel';
 import { GiftsRegistryPanel } from './GiftsRegistryPanel';
+import { AudioControls } from './AudioControls';
 import { AudioToggle } from '../shared/AudioToggle';
 import { useSigil } from '../../context/SigilContext';
 
@@ -74,25 +75,7 @@ export function CreatorCanvas() {
                     alwaysOpen={false}
                   >
                     <div className="recipient-invite-details state-visible" style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '2rem', alignItems: 'center' }}>
-                      {/* Play song prompt (moves inside the parchment paper) */}
-                      {envelopePhase === 'COMPLETED' && (
-                        <p style={{
-                          fontSize: '0.85rem',
-                          color: '#a08e7c',
-                          textAlign: 'center',
-                          margin: '0.5rem 0 1rem 0',
-                          letterSpacing: '0.08em',
-                          textTransform: 'uppercase',
-                          fontFamily: "'Cormorant Garamond', serif",
-                          fontWeight: 600,
-                          animation: 'stage-enter 0.5s ease-out'
-                        }}>
-                          Dale play para escuchar nuestra canción
-                        </p>
-                      )}
-
-
-
+                      <AudioControls musicUrl={state.design.musicUrl} />
                       <CountdownTimer />
                       <ItineraryTimeline />
                       <DressCodePanel />
@@ -239,6 +222,7 @@ export function CreatorCanvas() {
                 <div className="recipient-invite-details state-visible">
 
 
+                  <AudioControls musicUrl={state.design.musicUrl} />
                   <CountdownTimer />
                   <ItineraryTimeline />
                   <DressCodePanel />

@@ -3,11 +3,33 @@ class AudioEngine {
   private isMuted: boolean = true;
   private activeOscillators: { osc: OscillatorNode; gain: GainNode }[] = [];
   private loopInterval: any = null;
+  private audioEl: HTMLAudioElement | null = null;
+  private songUrl: string | null = null;
 
   init() {
     if (this.ctx) return;
     const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
     this.ctx = new AudioContextClass();
+  }
+
+  setSongUrl(url: string | null) {
+    if (this.songUrl === url) return;
+    this.songUrl = url;
+    if (this.audioEl) {
+      this.audioEl.pause();
+      this.audioEl = null;
+    }
+    if (url) {
+      this.audioEl = new Audio(url);
+      this.audioEl.loop = true;
+      if (!this.isMuted) {
+        this.audioEl.play().catch(e => console.log("Autoplay blocked or invalid link:", e));
+      }
+    }
+  }
+
+  getAudioElement(): HTMLAudioElement | null {
+    return this.audioEl;
   }
 
   setMute(muted: boolean) {
@@ -81,8 +103,14 @@ class AudioEngine {
 
   playAmbient() {
     this.init();
-    if (this.isMuted || !this.ctx) return;
+    if (this.isMuted) return;
 
+    if (this.audioEl) {
+      this.audioEl.play().catch(e => console.log("Failed to play custom ambient song:", e));
+      return;
+    }
+
+    if (!this.ctx) return;
     const ctx = this.ctx;
     if (ctx.state === 'suspended') {
       ctx.resume();
@@ -135,6 +163,9 @@ class AudioEngine {
   }
 
   stopAmbient() {
+    if (this.audioEl) {
+      this.audioEl.pause();
+    }
     if (this.loopInterval) {
       clearInterval(this.loopInterval);
       this.loopInterval = null;
