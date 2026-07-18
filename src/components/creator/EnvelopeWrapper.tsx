@@ -40,6 +40,10 @@ export function EnvelopeWrapper({ children, onPhaseChange, alwaysOpen }: Envelop
 
   const handleSealClick = () => {
     if (phase !== 'CLOSED') return;
+    
+    // Auto-enable sound on user gesture (wax seal click) to bypass autoplay blocks
+    audioEngine.setMute(false);
+    
     setPhase('CRACKING');
     onPhaseChange?.('CRACKING');
     audioEngine.playCrack();

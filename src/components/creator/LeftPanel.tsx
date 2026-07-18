@@ -143,6 +143,14 @@ function ImageUploadSlot({
   );
 }
 
+function getCleanFileName(url: string): string {
+  if (!url) return '';
+  const lastSegment = url.split('/').pop() || url;
+  let decoded = decodeURIComponent(lastSegment);
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}-/i;
+  return decoded.replace(uuidRegex, '');
+}
+
 // ── Background music upload slot ──────────────────────────────────────────────
 
 function AudioUploadSlot({
@@ -163,7 +171,7 @@ function AudioUploadSlot({
   isUploading?: boolean;
 }) {
   const isDataUrl = value?.startsWith('data:');
-  const displayName = isDataUrl ? 'Local Audio File' : value;
+  const displayName = isDataUrl ? 'Local Audio File' : (value ? getCleanFileName(value) : '');
 
   return (
     <div className="lp-field">

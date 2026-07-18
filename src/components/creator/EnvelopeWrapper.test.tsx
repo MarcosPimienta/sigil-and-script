@@ -10,6 +10,7 @@ vi.mock('../../utils/audioEngine', () => ({
     playCrack: () => mockPlayCrack(),
     playAmbient: () => mockPlayAmbient(),
     getMuted: () => false,
+    setMute: () => {},
   },
 }));
 
