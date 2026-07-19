@@ -16,6 +16,8 @@ export function GiftsRegistryPanel() {
   const registryTitle = useSigilSelector((s) => s.design.registryTitle);
   const registryText = useSigilSelector((s) => s.design.registryText);
   const registryLink = useSigilSelector((s) => s.design.registryLink);
+  const registryImage = useSigilSelector((s) => s.design.registryImage);
+  const registrySymbol = useSigilSelector((s) => s.design.registrySymbol);
   const lang = useSigilSelector((s) => s.design.language);
   const t = getTranslation(lang);
 
@@ -63,11 +65,42 @@ export function GiftsRegistryPanel() {
             lineHeight: 1.5,
             maxWidth: '320px',
             margin: '0 auto 1.25rem',
-            fontStyle: 'italic'
+            fontStyle: 'italic',
+            textAlign: 'justify',
+            textAlignLast: 'center' // Make the last line centered for better aesthetics
           }}>
             {registryText}
           </p>
         )}
+        
+        {/* Render the optional registry image */}
+        {registryImage && (
+          <div style={{ marginBottom: registrySymbol ? '0.5rem' : '1.25rem' }}>
+            <img 
+              src={registryImage} 
+              alt="Registry decorative image" 
+              style={{
+                maxWidth: '120px',
+                maxHeight: '120px',
+                objectFit: 'contain'
+              }}
+            />
+          </div>
+        )}
+
+        {/* Decorative symbol at the bottom of the text */}
+        {registrySymbol && (
+          <div style={{
+            fontSize: '1.5rem',
+            color: 'rgba(120, 100, 80, 0.6)',
+            margin: '0 auto 1.25rem',
+            textAlign: 'center',
+            letterSpacing: '4px'
+          }}>
+            {registrySymbol}
+          </div>
+        )}
+
         {registryLink && (
           <a
             href={registryLink}

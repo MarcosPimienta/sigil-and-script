@@ -389,6 +389,20 @@ export function SectionEditor() {
       </div>
 
       <div className="lp-field">
+        <label className="lp-field-label" htmlFor="registry-symbol-input">
+          Símbolo / Decoración
+        </label>
+        <input
+          id="registry-symbol-input"
+          type="text"
+          className="lp-input"
+          placeholder="Ej. ༻ 🖂 ༺"
+          value={design.registrySymbol || ''}
+          onChange={(e) => handleFieldChange('registrySymbol', e.target.value)}
+        />
+      </div>
+
+      <div className="lp-field">
         <label className="lp-field-label" htmlFor="registry-link-input">
           Enlace a la Lista de Regalos (URL)
         </label>

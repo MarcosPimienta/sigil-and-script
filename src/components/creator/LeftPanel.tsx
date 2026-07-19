@@ -17,7 +17,7 @@ import { apiFetch } from '../../utils/api';
 // upload can't execute script; browsers don't run scripts embedded in an
 // SVG loaded that way. Raster-only allow-list closes the remaining gap
 // (an SVG can still reference external resources like a tracking pixel).
-const ACCEPTED_IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/gif'];
+const ACCEPTED_IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/gif', 'image/svg+xml'];
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024; // 8MB
 
 function compressImage(
@@ -69,7 +69,7 @@ function compressImage(
 
 type ImageField = keyof Pick<
   InvitationDesign,
-  'headerImage' | 'frameImage' | 'paperImage' | 'closedEnvelopeImage' | 'openedEnvelopeImage' | 'stickerImage'
+  'headerImage' | 'frameImage' | 'paperImage' | 'closedEnvelopeImage' | 'openedEnvelopeImage' | 'stickerImage' | 'registryImage'
 >;
 
 
@@ -255,7 +255,7 @@ export function LeftPanel() {
         if (typeof reader.result === 'string') {
           try {
             setUploadingFields((prev) => ({ ...prev, [field]: true }));
-            const format = field === 'stickerImage' ? 'image/png' : 'image/jpeg';
+            const format = (field === 'stickerImage' || field === 'openedEnvelopeImage' || field === 'registryImage') ? 'image/png' : 'image/jpeg';
             const compressed = await compressImage(reader.result, format, 0.85);
 
             // Upload compressed file to Supabase Storage via backend REST API
@@ -420,6 +420,16 @@ export function LeftPanel() {
             onUpload={handleImageUpload('stickerImage')}
             onClear={handleImageClear('stickerImage')}
             isUploading={uploadingFields['stickerImage']}
+          />
+
+          <ImageUploadSlot
+            id="upload-registry-image"
+            label="Gifts Registry Image"
+            hint="Optional SVG or PNG image displayed below the registry text"
+            value={design.registryImage}
+            onUpload={handleImageUpload('registryImage')}
+            onClear={handleImageClear('registryImage')}
+            isUploading={uploadingFields['registryImage']}
           />
 
           <div className="lp-field" style={{ marginTop: '0.8rem' }}>

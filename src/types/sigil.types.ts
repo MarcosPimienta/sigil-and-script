@@ -120,6 +120,8 @@ export interface InvitationDesign {
   registryLink?: string;
   registryTitle?: string;
   registryText?: string;
+  registrySymbol?: string;
+  registryImage?: string;
   closedEnvelopeImage?: string;
   openedEnvelopeImage?: string;
   stickerImage?: string;
