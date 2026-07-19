@@ -26,18 +26,20 @@ const AvoidColorCircle = ({ color }: { color: string }) => (
 
 // Minimalist suit icon
 const SuitIcon = () => (
-  <svg width="70" height="90" viewBox="0 0 24 32" fill="none" style={{ filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.1))' }}>
-    <path d="M 12 4 L 15 11 L 21 9 L 19 28 L 13 28 L 13 18 L 12 22 L 11 18 L 11 28 L 5 28 L 3 9 L 9 11 Z" fill="#2c2c2c"/>
-    <path d="M 10 4 L 12 9 L 14 4 Z" fill="#f5f5f5" stroke="none"/>
-    <path d="M 12 9 L 12 22" stroke="#4a4a4a" strokeWidth="0.5"/>
-  </svg>
+  <img 
+    src="/icons/suit.svg" 
+    alt="Traje" 
+    style={{ height: '90px', width: 'auto', filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.1))' }} 
+  />
 );
 
 // Minimalist dress icon
 const DressIcon = () => (
-  <svg width="70" height="90" viewBox="0 0 24 32" fill="none" style={{ filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.1))' }}>
-    <path d="M 8.5 4 C 10.5 8, 13.5 8, 15.5 4 C 17 7, 16.5 12, 16.5 12 L 23 30 L 1 30 L 7.5 12 C 7.5 12, 7 7, 8.5 4 Z" fill="#364942"/>
-  </svg>
+  <img 
+    src="/icons/longdress.svg" 
+    alt="Vestido" 
+    style={{ height: '90px', width: 'auto', filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.1))' }} 
+  />
 );
 
 export function DressCodePanel() {
