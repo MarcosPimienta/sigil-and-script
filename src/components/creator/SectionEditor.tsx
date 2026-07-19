@@ -362,6 +362,20 @@ export function SectionEditor() {
 
       {/* ── Registry ── */}
       <div className="lp-field">
+        <label className="lp-field-label" htmlFor="registry-title-input">
+          Título de Regalos
+        </label>
+        <input
+          id="registry-title-input"
+          type="text"
+          className="lp-input"
+          placeholder="Mesa de Regalos"
+          value={design.registryTitle || ''}
+          onChange={(e) => handleFieldChange('registryTitle', e.target.value)}
+        />
+      </div>
+
+      <div className="lp-field">
         <label className="lp-field-label" htmlFor="registry-text-input">
           Mensaje de Regalos
         </label>

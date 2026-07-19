@@ -118,6 +118,7 @@ export interface InvitationDesign {
   dressCodeFemaleSubtext?: string;
   dressCodeFemaleAvoidColors?: string[];
   registryLink?: string;
+  registryTitle?: string;
   registryText?: string;
   closedEnvelopeImage?: string;
   openedEnvelopeImage?: string;
