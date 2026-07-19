@@ -352,17 +352,22 @@ export function EnvelopeWrapper({ children, onPhaseChange, alwaysOpen }: Envelop
             <div className="envelope-pocket-clipper">
               <div 
                 className={`envelope-couple-photo ${isPocketLetterVisible ? 'state-active' : ''}`}
-                style={{
-                  opacity: isPocketLetterVisible ? 1 : 0,
-                  ...(design.paperImage ? {
+                style={{ opacity: isPocketLetterVisible ? 1 : 0 }}
+              >
+                {design.paperImage && (
+                  <div style={{
+                    position: 'absolute', inset: 0,
                     backgroundImage: `url(${design.paperImage})`,
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
                     backgroundRepeat: 'no-repeat',
-                    backgroundBlendMode: 'multiply'
-                  } : {})
-                }}
-              >
+                    mixBlendMode: 'multiply',
+                    filter: `brightness(${design.paperBrightness ?? 1.0}) contrast(${design.paperContrast ?? 1.0})`,
+                    pointerEvents: 'none',
+                    zIndex: 0,
+                    borderRadius: 'inherit'
+                  }} />
+                )}
                 {renderLogoFace()}
               </div>
             </div>
@@ -402,14 +407,33 @@ export function EnvelopeWrapper({ children, onPhaseChange, alwaysOpen }: Envelop
       {isViewportOverlayVisible && (
         <div 
           className={`envelope-letter-viewport-overlay ${phase === 'LETTER_CENTERING' ? 'state-centering' : ''} ${phase === 'LETTER_SCALING' ? 'state-scaled' : ''} ${phase === 'FADING_OUT' ? 'state-fade-out' : ''} ${phase === 'COMPLETED' ? 'state-completed' : ''}`}
-          style={design.paperImage ? {
-            backgroundImage: `url(${design.paperImage})`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            backgroundRepeat: 'no-repeat',
-            backgroundBlendMode: 'multiply'
-          } : undefined}
         >
+          {design.paperImage && (
+            <div style={{
+              position: phase === 'COMPLETED' ? 'sticky' : 'absolute',
+              top: phase === 'COMPLETED' ? '-60px' : 0, 
+              left: 0, right: 0,
+              bottom: phase === 'COMPLETED' ? 'auto' : 0,
+              height: phase === 'COMPLETED' ? 0 : 'auto',
+              alignSelf: phase === 'COMPLETED' ? 'stretch' : 'auto',
+              margin: phase === 'COMPLETED' ? '-60px -24px 0 -24px' : 0,
+              pointerEvents: 'none', zIndex: 0,
+            }}>
+              <div style={{
+                position: 'absolute',
+                top: 0, left: 0, right: 0,
+                bottom: phase === 'COMPLETED' ? 'auto' : 0,
+                height: phase === 'COMPLETED' ? '100vh' : 'auto',
+                backgroundImage: `url(${design.paperImage})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                backgroundRepeat: 'no-repeat',
+                mixBlendMode: 'multiply',
+                filter: `brightness(${design.paperBrightness ?? 1.0}) contrast(${design.paperContrast ?? 1.0})`,
+                borderRadius: 'inherit'
+              }} />
+            </div>
+          )}
           <div className="envelope-letter-header" style={{ position: 'relative', zIndex: 1 }}>
             {phase === 'LETTER_CENTERING' ? (
               <div className="letter-flip-card" style={{

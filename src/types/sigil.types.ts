@@ -104,6 +104,10 @@ export interface InvitationDesign {
   frameImage?: string;
   /** Tiled/cover background texture for the paper itself */
   paperImage?: string;
+  /** Filter brightness applied to the custom paper image (default: 1.0) */
+  paperBrightness?: number;
+  /** Filter contrast applied to the custom paper image (default: 1.0) */
+  paperContrast?: number;
   rsvpFormConfig?: RsvpFormConfig;
   countdownTarget?: string;
   itinerary?: ItineraryItem[];

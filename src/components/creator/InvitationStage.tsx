@@ -296,6 +296,7 @@ export function InvitationStage({
               backgroundPosition: 'center',
               backgroundRepeat: 'no-repeat',
               mixBlendMode: 'multiply',
+              filter: `brightness(${design.paperBrightness ?? 1.0}) contrast(${design.paperContrast ?? 1.0})`,
               opacity: 0.85
             } : undefined}
           />

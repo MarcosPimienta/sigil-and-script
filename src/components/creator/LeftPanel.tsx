@@ -442,6 +442,52 @@ export function LeftPanel() {
             isUploading={uploadingFields['paperImage']}
           />
 
+          {design.paperImage && (
+            <>
+              <div className="lp-field" style={{ marginTop: '0.8rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <label className="lp-field-label" htmlFor="slider-paper-brightness">
+                    Brillo de Textura (Brightness)
+                  </label>
+                  <span style={{ fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.5)' }}>
+                    {design.paperBrightness ?? 1.0}
+                  </span>
+                </div>
+                <input
+                  id="slider-paper-brightness"
+                  type="range"
+                  min="0"
+                  max="2"
+                  step="0.05"
+                  value={design.paperBrightness ?? 1.0}
+                  onChange={(e) => updateDesign({ paperBrightness: parseFloat(e.target.value) })}
+                  style={{ width: '100%', accentColor: 'var(--color-sepia-600)' }}
+                />
+              </div>
+
+              <div className="lp-field" style={{ marginTop: '0.8rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <label className="lp-field-label" htmlFor="slider-paper-contrast">
+                    Contraste de Textura (Contrast)
+                  </label>
+                  <span style={{ fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.5)' }}>
+                    {design.paperContrast ?? 1.0}
+                  </span>
+                </div>
+                <input
+                  id="slider-paper-contrast"
+                  type="range"
+                  min="0"
+                  max="2"
+                  step="0.05"
+                  value={design.paperContrast ?? 1.0}
+                  onChange={(e) => updateDesign({ paperContrast: parseFloat(e.target.value) })}
+                  style={{ width: '100%', accentColor: 'var(--color-sepia-600)' }}
+                />
+              </div>
+            </>
+          )}
+
           <div className="lp-field" style={{ marginTop: '0.8rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <label className="lp-field-label" htmlFor="slider-seal-size">
