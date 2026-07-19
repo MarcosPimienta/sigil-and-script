@@ -89,11 +89,10 @@ export function DressCodePanel() {
           display: 'grid',
           gridTemplateColumns: '1fr 1fr',
           gap: '2rem',
-          alignItems: 'start',
         }}>
           {/* Male Column */}
           {hasMale && (
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100%' }}>
               <h4 style={{ fontSize: '1.5rem', margin: '0 0 1rem 0', fontStyle: 'italic', fontWeight: 400, color: '#4c4844' }}>
                 {design.dressCodeMaleHeading}
               </h4>
@@ -105,7 +104,7 @@ export function DressCodePanel() {
                 {design.dressCodeMaleSubtext}
               </p>
               {design.dressCodeMaleAvoidColors && design.dressCodeMaleAvoidColors.length > 0 && (
-                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', justifyContent: 'center' }}>
+                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', justifyContent: 'center', marginTop: 'auto' }}>
                   {design.dressCodeMaleAvoidColors.map((color, idx) => (
                     <AvoidColorCircle key={idx} color={color} />
                   ))}
@@ -116,7 +115,7 @@ export function DressCodePanel() {
 
           {/* Female Column */}
           {hasFemale && (
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100%' }}>
               <h4 style={{ fontSize: '1.5rem', margin: '0 0 1rem 0', fontStyle: 'italic', fontWeight: 400, color: '#4c4844' }}>
                 {design.dressCodeFemaleHeading}
               </h4>
@@ -128,7 +127,7 @@ export function DressCodePanel() {
                 {design.dressCodeFemaleSubtext}
               </p>
               {design.dressCodeFemaleAvoidColors && design.dressCodeFemaleAvoidColors.length > 0 && (
-                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', justifyContent: 'center' }}>
+                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', justifyContent: 'center', marginTop: 'auto' }}>
                   {design.dressCodeFemaleAvoidColors.map((color, idx) => (
                     <AvoidColorCircle key={idx} color={color} />
                   ))}
