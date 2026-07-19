@@ -11,6 +11,6 @@
     "forceConsistentCasingInFileNames": true,
     "moduleResolution": "node"
   },
-  "include": ["src/**/*", "tests/**/*", "prisma/**/*"],
+  "include": ["src/**/*", "api/**/*", "tests/**/*", "prisma/**/*"],
   "exclude": ["node_modules", "dist"]
 }
