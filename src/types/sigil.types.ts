@@ -116,6 +116,7 @@ export interface InvitationDesign {
   stickerImage?: string;
   sealSize?: number;
   musicUrl?: string;
+  language?: 'EN' | 'ES';
 }
 
 // ── Itinerary Schema ──────────────────────────────────────────────────────────

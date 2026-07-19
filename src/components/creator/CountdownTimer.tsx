@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useSigilSelector } from '../../context/SigilContext';
+import { getTranslation } from '../../utils/i18n';
 
 const getScallopPath = (radius: number, numScallops: number, scallopDepth: number) => {
   const points: string[] = [];
@@ -30,6 +31,8 @@ const getScallopPath = (radius: number, numScallops: number, scallopDepth: numbe
 
 export function CountdownTimer() {
   const target = useSigilSelector((s) => s.design.countdownTarget);
+  const lang = useSigilSelector((s) => s.design.language);
+  const t = getTranslation(lang);
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
 
   useEffect(() => {
@@ -112,20 +115,21 @@ export function CountdownTimer() {
         {/* Content Container (absolutely centered inside the scallop badge) */}
         <div style={{ position: 'relative', zIndex: 3, textAlign: 'center', marginTop: '-4px' }}>
           <h4 style={{ 
-            fontSize: '1.9rem', 
-            fontFamily: "'Pinyon Script', cursive", 
+            fontSize: '1.3rem', 
+            fontFamily: "'Cormorant Garamond', serif", 
+            fontStyle: 'italic',
             margin: '0 0 0.1rem 0', 
             color: '#4c4844',
             fontWeight: 400,
             textShadow: '0 1px 1px rgba(255,255,255,0.8)'
           }}>
-            Faltan
+            {t.countdownTitle}
           </h4>
           <div style={{ display: 'flex', justifyContent: 'center', gap: '0.7rem', margin: '0.1rem 0' }}>
             {[
-              { label: 'DIAS', val: timeLeft.days },
-              { label: 'HORAS', val: timeLeft.hours },
-              { label: 'MINUTOS', val: timeLeft.minutes },
+              { label: t.days, val: timeLeft.days },
+              { label: t.hours, val: timeLeft.hours },
+              { label: t.minutes, val: timeLeft.minutes },
             ].map((unit, idx) => (
               <div key={idx} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                 <span style={{ fontSize: '1.3rem', fontWeight: 500, color: '#333333', minWidth: '30px', letterSpacing: '-0.02em' }}>

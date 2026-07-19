@@ -67,6 +67,7 @@ const DEFAULT_DESIGN: InvitationDesign = {
   stickerImage: '',
   sealSize: 75,
   musicUrl: '',
+  language: 'ES',
 };
 
 const DEFAULT_GUEST: GuestPayload = {

@@ -44,6 +44,47 @@ export function SectionEditor() {
 
   return (
     <div className="section-editor-panel" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      {/* ── Language Switch ── */}
+      <div className="lp-field">
+        <label className="lp-field-label">
+          Idioma de la Invitación (Language)
+        </label>
+        <div style={{ display: 'flex', gap: '10px', marginTop: '6px' }}>
+          <button
+            type="button"
+            id="editor-lang-es-btn"
+            className="lp-add-invitee-btn"
+            style={{
+              flex: 1,
+              padding: '6px',
+              background: (design.language || 'ES') === 'ES' ? 'var(--status-pending)' : 'transparent',
+              color: (design.language || 'ES') === 'ES' ? '#ffffff' : 'var(--cr-panel-text-secondary)',
+              border: '1px solid var(--cr-panel-border)',
+              fontWeight: 600,
+            }}
+            onClick={() => handleFieldChange('language', 'ES')}
+          >
+            Español (SPA)
+          </button>
+          <button
+            type="button"
+            id="editor-lang-en-btn"
+            className="lp-add-invitee-btn"
+            style={{
+              flex: 1,
+              padding: '6px',
+              background: design.language === 'EN' ? 'var(--status-pending)' : 'transparent',
+              color: design.language === 'EN' ? '#ffffff' : 'var(--cr-panel-text-secondary)',
+              border: '1px solid var(--cr-panel-border)',
+              fontWeight: 600,
+            }}
+            onClick={() => handleFieldChange('language', 'EN')}
+          >
+            English (EN)
+          </button>
+        </div>
+      </div>
+
       {/* ── Host Names ── */}
       <div className="lp-field">
         <label className="lp-field-label" htmlFor="host-names-input">

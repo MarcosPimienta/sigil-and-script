@@ -1,8 +1,11 @@
 import { useSigilSelector } from '../../context/SigilContext';
+import { getTranslation } from '../../utils/i18n';
 
 export function GiftsRegistryPanel() {
   const registryText = useSigilSelector((s) => s.design.registryText);
   const registryLink = useSigilSelector((s) => s.design.registryLink);
+  const lang = useSigilSelector((s) => s.design.language);
+  const t = getTranslation(lang);
 
   if (!registryText && !registryLink) return null;
 
@@ -23,7 +26,7 @@ export function GiftsRegistryPanel() {
         fontWeight: 400,
         color: '#4c4844',
       }}>
-        Regalos
+        {t.registryTitle}
       </h3>
       {registryText && (
         <p style={{
@@ -61,7 +64,7 @@ export function GiftsRegistryPanel() {
             e.currentTarget.style.color = '#4c4844';
           }}
         >
-          Lista de regalos
+          {t.viewRegistry}
         </a>
       )}
     </div>

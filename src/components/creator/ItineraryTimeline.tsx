@@ -1,4 +1,5 @@
 import { useSigilSelector } from '../../context/SigilContext';
+import { getTranslation } from '../../utils/i18n';
 
 const CornerFlourish = () => (
   <svg width="45" height="45" viewBox="0 0 45 45" style={{ pointerEvents: 'none' }}>
@@ -42,6 +43,8 @@ const ChurchIcon = () => (
 
 export function ItineraryTimeline() {
   const itinerary = useSigilSelector((s) => s.design.itinerary) || [];
+  const lang = useSigilSelector((s) => s.design.language);
+  const t = getTranslation(lang);
 
   if (itinerary.length === 0) return null;
 
@@ -88,7 +91,7 @@ export function ItineraryTimeline() {
           color: '#ffffff',
           textShadow: '0 1px 2px rgba(0,0,0,0.15)'
         }}>
-          Itinerario
+          {t.itineraryTitle}
         </h3>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.8rem', width: '100%', alignItems: 'center' }}>
@@ -164,7 +167,7 @@ export function ItineraryTimeline() {
                     e.currentTarget.style.background = 'rgba(255, 255, 255, 0.03)';
                   }}
                 >
-                  Ver ubicación
+                  {t.viewMap}
                 </a>
               )}
 

@@ -1,8 +1,11 @@
 import { useSigilSelector } from '../../context/SigilContext';
+import { getTranslation } from '../../utils/i18n';
 
 export function DressCodePanel() {
   const dressCodeText = useSigilSelector((s) => s.design.dressCodeText);
   const colorPalette = useSigilSelector((s) => s.design.colorPalette) || [];
+  const lang = useSigilSelector((s) => s.design.language);
+  const t = getTranslation(lang);
 
   if (!dressCodeText && colorPalette.length === 0) return null;
 
@@ -25,7 +28,7 @@ export function DressCodePanel() {
             fontWeight: 400,
             color: '#4c4844',
           }}>
-            Dress Code
+            {t.dressCodeTitle}
           </h3>
           <p style={{
             fontSize: '1.4rem',

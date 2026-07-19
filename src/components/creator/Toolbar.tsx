@@ -9,8 +9,9 @@ import { useSigilStore } from '../../state/sigilStore';
 const NAV_LINKS = ['Create', 'Templates', 'Features', 'Inspiration'] as const;
 
 export function Toolbar() {
-  const { state, setAppMode } = useSigil();
-  const { appMode } = state;
+  const { state, setAppMode, updateDesign } = useSigil();
+  const { appMode, design } = state;
+  const currentLang = design.language || 'ES';
   const isRecipient = appMode === 'RECIPIENT';
   const isDashboard = appMode === 'DASHBOARD';
 
@@ -132,6 +133,60 @@ export function Toolbar() {
 
       {/* ── Actions ───────────────────────────────────────────────────────── */}
       <div className="toolbar-actions">
+        {/* EN / SPA language toggle switch */}
+        {!isRecipient && !isDashboard && appMode !== 'EVENTS_HUB' && (
+          <div
+            className="toolbar-lang-toggle"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              background: 'rgba(255, 255, 255, 0.05)',
+              borderRadius: '20px',
+              padding: '2px',
+              border: '1px solid rgba(255, 255, 255, 0.15)',
+              marginRight: '0.5rem',
+            }}
+          >
+            <button
+              type="button"
+              id="lang-en-btn"
+              onClick={() => updateDesign({ language: 'EN' })}
+              style={{
+                padding: '3px 10px',
+                borderRadius: '16px',
+                border: 'none',
+                fontSize: '0.75rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+                background: currentLang === 'EN' ? '#dfb88e' : 'transparent',
+                color: currentLang === 'EN' ? '#111' : 'rgba(255,255,255,0.7)',
+                transition: 'all 0.2s ease',
+              }}
+              aria-label="Switch language to English"
+            >
+              EN
+            </button>
+            <button
+              type="button"
+              id="lang-spa-btn"
+              onClick={() => updateDesign({ language: 'ES' })}
+              style={{
+                padding: '3px 10px',
+                borderRadius: '16px',
+                border: 'none',
+                fontSize: '0.75rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+                background: currentLang === 'ES' ? '#dfb88e' : 'transparent',
+                color: currentLang === 'ES' ? '#111' : 'rgba(255,255,255,0.7)',
+                transition: 'all 0.2s ease',
+              }}
+              aria-label="Switch language to Spanish"
+            >
+              SPA
+            </button>
+          </div>
+        )}
         {/* Save/Load Layout buttons — hidden in recipient/guest/events-hub modes */}
         {!isRecipient && !isDashboard && appMode !== 'EVENTS_HUB' && (
           <>

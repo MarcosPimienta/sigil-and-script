@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useSigil } from '../../context/SigilContext';
+import { getTranslation } from '../../utils/i18n';
 
 export function RecipientRsvpPanel() {
   const { state, submitRsvp } = useSigil();
   const { design, guest } = state;
+  const t = getTranslation(design.language);
   const config = design.rsvpFormConfig || {
     requireMealPreference: false,
     requireDietaryRestrictions: false,
@@ -65,10 +67,10 @@ export function RecipientRsvpPanel() {
     return (
       <aside className="left-panel" style={{ padding: '2rem', color: 'var(--rsvp-input-color, #ffffff)', display: 'flex', flexDirection: 'column', gap: '1rem', justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>
         <h2 style={{ fontSize: '1.8rem', fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic' }}>
-          Thank You!
+          {t.thankYou}
         </h2>
         <p style={{ color: 'var(--rsvp-text-secondary, rgba(255, 255, 255, 0.7))', fontSize: '0.9rem' }}>
-          Your response has been recorded successfully.
+          {t.responseRecorded}
         </p>
         <div style={{
           marginTop: '1rem',
@@ -78,18 +80,18 @@ export function RecipientRsvpPanel() {
           border: `1px solid ${rsvpStatus === 'YES' ? '#28c76f' : '#ea5455'}`,
           width: '100%',
         }}>
-          <strong>RSVP: {rsvpStatus === 'YES' ? 'Attending' : 'Not Attending'}</strong>
+          <strong>RSVP: {rsvpStatus === 'YES' ? t.attendingStatus : t.notAttendingStatus}</strong>
           {rsvpStatus === 'YES' && (
             <div style={{ textAlign: 'left', marginTop: '0.5rem', fontSize: '0.8rem', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-              {config.requireMealPreference && mealPref && <div>🍽️ Meal: {mealPref}</div>}
-              {config.requireDietaryRestrictions && dietary && <div>⚠️ Dietary: {dietary}</div>}
-              {config.allowPlusOnes && plusOne && <div>👥 Guest: {plusOne}</div>}
+              {config.requireMealPreference && mealPref && <div>🍽️ {t.mealLabel}: {mealPref}</div>}
+              {config.requireDietaryRestrictions && dietary && <div>⚠️ {t.dietaryLabel}: {dietary}</div>}
+              {config.allowPlusOnes && plusOne && <div>👥 {t.guestLabel}: {plusOne}</div>}
               {guest.dependents && guest.dependents.length > 0 && (
                 <div>
-                  👥 Family attending: {guest.dependents.filter((d) => selectedDependents[d.id]).map((d) => d.name).join(', ') || 'None'}
+                  👥 {t.familyAttendingLabel}: {guest.dependents.filter((d) => selectedDependents[d.id]).map((d) => d.name).join(', ') || t.noneText}
                 </div>
               )}
-              {config.customNotesLabel && notes && <div>📝 Note: {notes}</div>}
+              {config.customNotesLabel && notes && <div>📝 {t.noteLabel}: {notes}</div>}
             </div>
           )}
         </div>
@@ -102,7 +104,7 @@ export function RecipientRsvpPanel() {
       <div className="lp-inner" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
         <div className="lp-header">
           <h1 className="lp-title" style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: '1.8rem', color: 'var(--rsvp-input-color, #ffffff)' }}>
-            RSVP Response
+            {t.rsvpTitle}
           </h1>
           <p style={{ color: 'var(--rsvp-text-secondary, rgba(255, 255, 255, 0.5))', fontSize: '0.8rem' }}>
             For: {guest.guestName}
@@ -111,7 +113,7 @@ export function RecipientRsvpPanel() {
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
           <div className="lp-field">
-            <span className="lp-field-label">Will you attend?</span>
+            <span className="lp-field-label">{t.willAttend}</span>
             <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
               <button
                 type="button"
@@ -130,7 +132,7 @@ export function RecipientRsvpPanel() {
                   transition: 'all 0.2s',
                 }}
               >
-                Yes, gladly
+                {t.yesGladly}
               </button>
               <button
                 type="button"
@@ -149,7 +151,7 @@ export function RecipientRsvpPanel() {
                   transition: 'all 0.2s',
                 }}
               >
-                No, regrettably
+                {t.noRegrettably}
               </button>
             </div>
           </div>
@@ -159,7 +161,7 @@ export function RecipientRsvpPanel() {
               {config.requireMealPreference && (
                 <div className="lp-field">
                   <label className="lp-field-label" htmlFor="meal-preference">
-                    Meal Preference
+                    {t.mealPreference}
                   </label>
                   <select
                     id="meal-preference"
@@ -176,10 +178,10 @@ export function RecipientRsvpPanel() {
                       outline: 'none',
                     }}
                   >
-                    <option value="" disabled style={{ background: 'var(--rsvp-select-option-bg, #222)' }}>Choose a meal</option>
-                    <option value="Beef" style={{ background: 'var(--rsvp-select-option-bg, #222)' }}>Prime Beef Tenderloin</option>
-                    <option value="Fish" style={{ background: 'var(--rsvp-select-option-bg, #222)' }}>Atlantic Salmon</option>
-                    <option value="Vegetarian" style={{ background: 'var(--rsvp-select-option-bg, #222)' }}>Truffle Wild Mushroom Risotto</option>
+                    <option value="" disabled style={{ background: 'var(--rsvp-select-option-bg, #222)' }}>{t.chooseMeal}</option>
+                    <option value="Beef" style={{ background: 'var(--rsvp-select-option-bg, #222)' }}>{t.beefMeal}</option>
+                    <option value="Fish" style={{ background: 'var(--rsvp-select-option-bg, #222)' }}>{t.salmonMeal}</option>
+                    <option value="Vegetarian" style={{ background: 'var(--rsvp-select-option-bg, #222)' }}>{t.vegMeal}</option>
                   </select>
                 </div>
               )}
@@ -187,7 +189,7 @@ export function RecipientRsvpPanel() {
               {config.requireDietaryRestrictions && (
                 <div className="lp-field">
                   <label className="lp-field-label" htmlFor="dietary-restrictions">
-                    Dietary Restrictions
+                    {t.dietaryRestrictions}
                   </label>
                   <input
                     id="dietary-restrictions"
@@ -195,7 +197,7 @@ export function RecipientRsvpPanel() {
                     type="text"
                     value={dietary}
                     onChange={(e) => setDietary(e.target.value)}
-                    placeholder="e.g. Gluten-free, nut allergies"
+                    placeholder={t.dietaryPlaceholder}
                     autoComplete="off"
                     required
                   />
@@ -205,7 +207,7 @@ export function RecipientRsvpPanel() {
               {config.allowPlusOnes && (
                 <div className="lp-field">
                   <label className="lp-field-label" htmlFor="plus-one-name">
-                    Plus-One Guest Name
+                    {t.plusOneName}
                   </label>
                   <input
                     id="plus-one-name"
@@ -213,7 +215,7 @@ export function RecipientRsvpPanel() {
                     type="text"
                     value={plusOne}
                     onChange={(e) => setPlusOne(e.target.value)}
-                    placeholder="First and last name"
+                    placeholder={t.plusOnePlaceholder}
                     autoComplete="off"
                     required
                   />
@@ -223,7 +225,7 @@ export function RecipientRsvpPanel() {
               {/* Dependents list checkboxes */}
               {guest.dependents && guest.dependents.length > 0 && (
                 <div className="lp-field">
-                  <span className="lp-field-label">Additional Guests / Family</span>
+                  <span className="lp-field-label">{t.familyGuests}</span>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', marginTop: '0.6rem' }}>
                     {guest.dependents.map((dep) => (
                       <label
@@ -267,7 +269,7 @@ export function RecipientRsvpPanel() {
                     type="text"
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
-                    placeholder="Type your response..."
+                    placeholder={t.customNotesPlaceholder}
                     autoComplete="off"
                   />
                 </div>
@@ -291,7 +293,7 @@ export function RecipientRsvpPanel() {
               transition: 'background 0.2s',
             }}
           >
-            Submit RSVP
+            {t.submitRsvp}
           </button>
         </form>
       </div>
