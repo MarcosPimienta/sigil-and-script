@@ -105,7 +105,7 @@ const DEFAULT_GUEST: GuestPayload = {
   routingToken: 'preview',
   rsvpBy: 'January 31st',
   eventDate: 'February 14th, 2027',
-  eventLocation: 'The Grand Atelier',
+  eventLocation: '',
 };
 
 // ── State Shape ───────────────────────────────────────────────────────────────

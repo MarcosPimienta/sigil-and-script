@@ -76,7 +76,7 @@ const DEFAULT_GUEST: GuestPayload = {
   routingToken: 'preview',
   rsvpBy: 'January 31st',
   eventDate: 'February 14th, 2027',
-  eventLocation: 'The Grand Atelier',
+  eventLocation: '',
   dependents: [],
 };
 
@@ -413,7 +413,7 @@ export const useSigilStore = create<SigilState>((set, get) => ({
         routingToken: data.id,
         rsvpBy: 'January 31st',
         eventDate: 'February 14th, 2027',
-        eventLocation: 'The Grand Atelier',
+        eventLocation: '',
         dependents: dependentsList,
       };
 

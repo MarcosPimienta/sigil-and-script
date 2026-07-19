@@ -2,32 +2,17 @@ import { useEffect, useState } from 'react';
 import { useSigilSelector } from '../../context/SigilContext';
 import { getTranslation } from '../../utils/i18n';
 
-const getScallopPath = (radius: number, numScallops: number, scallopDepth: number) => {
-  const points: string[] = [];
-  const cx = 100;
-  const cy = 100;
-  for (let i = 0; i < numScallops; i++) {
-    const angle1 = (i * 2 * Math.PI) / numScallops;
-    const angle2 = ((i + 1) * 2 * Math.PI) / numScallops;
-    const midAngle = (angle1 + angle2) / 2;
-    
-    const rxOuter = radius + scallopDepth;
-    const ryOuter = radius + scallopDepth;
-    
-    const x1 = cx + radius * Math.cos(angle1);
-    const y1 = cy + radius * Math.sin(angle1);
-    const x2 = cx + radius * Math.cos(angle2);
-    const y2 = cy + radius * Math.sin(angle2);
-    const xCtrl = cx + rxOuter * Math.cos(midAngle);
-    const yCtrl = cy + ryOuter * Math.sin(midAngle);
-    
-    if (i === 0) {
-      points.push(`M ${x1} ${y1}`);
-    }
-    points.push(`Q ${xCtrl} ${yCtrl} ${x2} ${y2}`);
-  }
-  return points.join(' ') + ' Z';
-};
+// Corner flourish matching the ItineraryTimeline style
+const CornerFlourish = ({ color = 'rgba(120, 100, 80, 0.55)' }: { color?: string }) => (
+  <svg width="40" height="40" viewBox="0 0 45 45" style={{ pointerEvents: 'none' }}>
+    <path d="M 12 45 L 12 12 L 45 12" stroke={color} fill="none" strokeWidth="1.2" />
+    <path d="M 12 30 C 12 20 20 12 30 12" stroke={color} fill="none" strokeWidth="0.8" />
+    <path d="M 12 38 C 12 24 24 12 38 12" stroke={color} fill="none" strokeWidth="0.6" />
+    <path d="M 18 18 C 22 14 26 18 22 22 C 18 26 14 22 18 18 Z" fill="none" stroke={color} strokeWidth="0.8" />
+    <circle cx="32" cy="18" r="1.5" fill={color} />
+    <circle cx="18" cy="32" r="1.5" fill={color} />
+  </svg>
+);
 
 export function CountdownTimer() {
   const target = useSigilSelector((s) => s.design.countdownTarget);
@@ -62,92 +47,96 @@ export function CountdownTimer() {
   const pad = (num: number) => String(num).padStart(2, '0');
 
   return (
-    <div className="section-countdown-container" style={{
-      position: 'relative',
-      width: '100%',
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      padding: '1.5rem 0',
-      marginTop: '1.5rem',
-    }}>
-
-      {/* Scalloped Circle Badge */}
-      <div 
-        className="countdown-scallop-badge"
+    <div
+      className="section-countdown-container"
+      style={{
+        position: 'relative',
+        width: '100%',
+        marginTop: '1.5rem',
+        padding: '2.5rem 1.75rem',
+        boxSizing: 'border-box',
+        fontFamily: "'Cormorant Garamond', serif",
+      }}
+    >
+      {/* Outer decorative border */}
+      <div
         style={{
-          position: 'relative',
-          width: '190px',
-          height: '190px',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-          alignItems: 'center',
-          zIndex: 2,
-          fontFamily: "'Cormorant Garamond', serif",
+          position: 'absolute',
+          inset: '3px',
+          border: '0.5px solid rgba(120, 100, 80, 0.18)',
+          borderRadius: '1px',
+          pointerEvents: 'none',
+        }}
+      />
+
+      {/* Inner ornamented border frame with corner flourishes */}
+      <div
+        style={{
+          position: 'absolute',
+          inset: '10px',
+          border: '1px solid rgba(120, 100, 80, 0.32)',
+          borderRadius: '2px',
+          pointerEvents: 'none',
         }}
       >
-        {/* Scalloped SVG Background */}
-        <svg 
-          viewBox="0 0 200 200" 
+        <div style={{ position: 'absolute', top: 0, left: 0 }}><CornerFlourish /></div>
+        <div style={{ position: 'absolute', top: 0, right: 0, transform: 'scaleX(-1)' }}><CornerFlourish /></div>
+        <div style={{ position: 'absolute', bottom: 0, left: 0, transform: 'scaleY(-1)' }}><CornerFlourish /></div>
+        <div style={{ position: 'absolute', bottom: 0, right: 0, transform: 'scale(-1)' }}><CornerFlourish /></div>
+      </div>
+
+      {/* Countdown content — no background, sits directly on invitation paper */}
+      <div style={{ position: 'relative', zIndex: 2, textAlign: 'center' }}>
+        {/* Title */}
+        <h4
           style={{
-            position: 'absolute',
-            inset: 0,
-            width: '100%',
-            height: '100%',
-            filter: 'drop-shadow(0 6px 16px rgba(0, 0, 0, 0.06))',
+            fontSize: '1.05rem',
+            fontFamily: "'Cormorant Garamond', serif",
+            fontStyle: 'italic',
+            margin: '0 0 1.4rem 0',
+            color: '#5a4a3a',
+            fontWeight: 400,
+            letterSpacing: '0.02em',
           }}
         >
-          <path 
-            d={getScallopPath(86, 16, 6)} 
-            fill="#faf8f2" 
-            stroke="rgba(160, 142, 124, 0.25)" 
-            strokeWidth="1.2" 
-          />
-          <path 
-            d={getScallopPath(80, 16, 5)} 
-            fill="none" 
-            stroke="rgba(160, 142, 124, 0.15)" 
-            strokeWidth="0.8" 
-          />
-        </svg>
+          {t.countdownTitle}
+        </h4>
 
-        {/* Content Container (absolutely centered inside the scallop badge) */}
-        <div style={{ position: 'relative', zIndex: 3, textAlign: 'center', marginTop: '-4px' }}>
-          <h4 style={{ 
-            fontSize: '1.3rem', 
-            fontFamily: "'Cormorant Garamond', serif", 
-            fontStyle: 'italic',
-            margin: '0 0 0.1rem 0', 
-            color: '#4c4844',
-            fontWeight: 400,
-            textShadow: '0 1px 1px rgba(255,255,255,0.8)'
-          }}>
-            {t.countdownTitle}
-          </h4>
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '0.7rem', margin: '0.1rem 0' }}>
-            {[
-              { label: t.days, val: timeLeft.days },
-              { label: t.hours, val: timeLeft.hours },
-              { label: t.minutes, val: timeLeft.minutes },
-            ].map((unit, idx) => (
-              <div key={idx} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <span style={{ fontSize: '1.3rem', fontWeight: 500, color: '#333333', minWidth: '30px', letterSpacing: '-0.02em' }}>
-                  {pad(unit.val)}
-                </span>
-                <span style={{ 
-                  fontSize: '0.52rem', 
-                  letterSpacing: '0.1em', 
-                  color: '#8c7d6b', 
-                  marginTop: '0.1rem',
+        {/* Numbers */}
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '2rem' }}>
+          {[
+            { label: t.days, val: timeLeft.days },
+            { label: t.hours, val: timeLeft.hours },
+            { label: t.minutes, val: timeLeft.minutes },
+          ].map((unit, idx) => (
+            <div key={idx} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <span
+                style={{
+                  fontSize: '2.6rem',
+                  fontWeight: 300,
+                  color: '#3a2e26',
+                  minWidth: '44px',
+                  letterSpacing: '-0.02em',
+                  lineHeight: 1,
+                  fontFamily: "'Cormorant Garamond', serif",
+                }}
+              >
+                {pad(unit.val)}
+              </span>
+              <span
+                style={{
+                  fontSize: '0.54rem',
+                  letterSpacing: '0.15em',
+                  color: '#8c7d6b',
+                  marginTop: '0.35rem',
                   fontWeight: 600,
-                  textTransform: 'uppercase'
-                }}>
-                  {unit.label}
-                </span>
-              </div>
-            ))}
-          </div>
+                  textTransform: 'uppercase',
+                }}
+              >
+                {unit.label}
+              </span>
+            </div>
+          ))}
         </div>
       </div>
     </div>

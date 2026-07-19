@@ -524,7 +524,7 @@ export function LeftPanel() {
               type="text"
               value={guest.eventLocation ?? ''}
               onChange={handleEventLocation}
-              placeholder="e.g. The Grand Atelier"
+              placeholder="Ej: Lugar o Dirección"
               autoComplete="off"
               maxLength={120}
             />
