@@ -1472,6 +1472,7 @@
   align-items: center;
   opacity: 0;
   transition: opacity 0.8s ease-out;
+  font-weight: bold;
 }
 
 .envelope-letter-viewport-overlay.state-completed .envelope-letter-details-content {
@@ -1487,6 +1488,13 @@
   gap: 2rem;
   align-items: center;
   transition: opacity 1.2s ease-out;
+  font-weight: bold;
+}
+
+.envelope-letter-details-content>*,
+.recipient-invite-details>* {
+  max-width: 30vw;
+  width: 100%;
 }
 
 .recipient-invite-details.state-visible {
@@ -1754,6 +1762,7 @@
   0% {
     transform: scaleY(0.4);
   }
+
   100% {
     transform: scaleY(1.2);
   }

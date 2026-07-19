@@ -61,9 +61,8 @@ export function CountdownTimer() {
       {/* Outer decorative border */}
       <div
         style={{
-          position: 'absolute',
           inset: '3px',
-          border: '0.5px solid rgba(120, 100, 80, 0.18)',
+          border: '3px solid rgba(120, 100, 80, 0.4)',
           borderRadius: '1px',
           pointerEvents: 'none',
         }}
@@ -74,7 +73,7 @@ export function CountdownTimer() {
         style={{
           position: 'absolute',
           inset: '10px',
-          border: '1px solid rgba(120, 100, 80, 0.32)',
+          border: '3px solid rgba(120, 100, 80, 0.6)',
           borderRadius: '2px',
           pointerEvents: 'none',
         }}

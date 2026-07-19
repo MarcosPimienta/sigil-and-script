@@ -120,7 +120,7 @@ export function RecipientRsvpPanel() {
   return (
     <aside className="left-panel" style={{ overflowY: 'auto' }}>
       <div className="lp-inner" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-        <div className="lp-header">
+        <div className="lp-header" style={{ textAlign: 'center' }}>
           <h1 className="lp-title" style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: '1.8rem', color: 'var(--rsvp-input-color, #ffffff)' }}>
             {t.rsvpTitle}
           </h1>
@@ -136,7 +136,7 @@ export function RecipientRsvpPanel() {
               style={{
                 position: 'absolute',
                 inset: '6px',
-                border: '0.5px solid var(--rsvp-border, rgba(255, 255, 255, 0.2))',
+                border: '2px solid var(--rsvp-border, rgba(255, 255, 255, 0.5))',
                 borderRadius: '1px',
                 pointerEvents: 'none',
               }}
@@ -147,7 +147,7 @@ export function RecipientRsvpPanel() {
               style={{
                 position: 'absolute',
                 inset: '12px',
-                border: '1px solid var(--rsvp-border, rgba(255, 255, 255, 0.3))',
+                border: '4px solid var(--rsvp-border, rgba(255, 255, 255, 0.6))',
                 borderRadius: '2px',
                 pointerEvents: 'none',
               }}

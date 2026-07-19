@@ -65,7 +65,7 @@ export function ItineraryTimeline() {
       <div style={{
         position: 'absolute',
         inset: '12px',
-        border: '0.8px solid rgba(255, 255, 255, 0.35)',
+        border: '4px solid rgba(255, 255, 255, 0.6)',
         borderRadius: '4px',
         pointerEvents: 'none',
         zIndex: 1,

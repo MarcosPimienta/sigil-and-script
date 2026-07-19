@@ -37,7 +37,7 @@ export function GiftsRegistryPanel() {
         style={{
           position: 'absolute',
           inset: '10px',
-          border: '1px solid rgba(120, 100, 80, 0.3)',
+          border: '4px solid rgba(120, 100, 80, 0.6)',
           borderRadius: '2px',
           pointerEvents: 'none',
         }}
@@ -108,8 +108,8 @@ export function GiftsRegistryPanel() {
             rel="noopener noreferrer"
             style={{
               display: 'inline-block',
-              border: '1px solid rgba(120, 100, 80, 0.5)',
-              borderRadius: '1px',
+              border: '2px solid rgba(120, 100, 80, 0.7)',
+              borderRadius: '2px',
               padding: '8px 24px',
               fontSize: '0.9rem',
               color: '#4c4844',
