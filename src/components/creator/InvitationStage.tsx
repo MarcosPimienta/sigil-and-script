@@ -286,7 +286,20 @@ export function InvitationStage({
         aria-label="Invitation canvas"
       >
         {/* ── Paper grain texture overlay ─── */}
-        {!transparent && <div className="stage-grain-overlay" aria-hidden="true" />}
+        {!transparent && (
+          <div 
+            className="stage-grain-overlay" 
+            aria-hidden="true" 
+            style={design.paperImage ? {
+              backgroundImage: `url(${design.paperImage})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              backgroundRepeat: 'no-repeat',
+              mixBlendMode: 'multiply',
+              opacity: 0.85
+            } : undefined}
+          />
+        )}
 
         {/* ── Ornamental border ─── */}
         {!transparent && (

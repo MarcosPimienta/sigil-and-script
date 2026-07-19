@@ -432,6 +432,16 @@ export function LeftPanel() {
             isUploading={uploadingFields['registryImage']}
           />
 
+          <ImageUploadSlot
+            id="upload-paper-image"
+            label="Textura de Fondo (Seamless Texture)"
+            hint="Sube una textura para el pergamino (JPG/PNG)"
+            value={design.paperImage}
+            onUpload={handleImageUpload('paperImage')}
+            onClear={handleImageClear('paperImage')}
+            isUploading={uploadingFields['paperImage']}
+          />
+
           <div className="lp-field" style={{ marginTop: '0.8rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <label className="lp-field-label" htmlFor="slider-seal-size">

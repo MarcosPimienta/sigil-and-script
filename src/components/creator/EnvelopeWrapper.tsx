@@ -132,10 +132,11 @@ export function EnvelopeWrapper({ children, onPhaseChange, alwaysOpen }: Envelop
   const isPocketLetterVisible = phase === 'OPENING' || phase === 'LETTER_SLIDING';
   const isViewportOverlayVisible = phase === 'LETTER_CENTERING' || phase === 'LETTER_SCALING' || phase === 'FADING_OUT' || phase === 'COMPLETED';
 
-  // Front side event logo face layout
   const renderLogoFace = () => {
     return (
       <div className="letter-logo-face" style={{
+        position: 'relative',
+        overflow: 'hidden',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
@@ -146,6 +147,7 @@ export function EnvelopeWrapper({ children, onPhaseChange, alwaysOpen }: Envelop
         padding: '24px',
         textAlign: 'center',
       }}>
+        <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
         {design.openedEnvelopeImage ? (
           <img 
             src={design.openedEnvelopeImage} 
@@ -180,6 +182,7 @@ export function EnvelopeWrapper({ children, onPhaseChange, alwaysOpen }: Envelop
             </span>
           </div>
         )}
+        </div>
       </div>
     );
   };
@@ -189,6 +192,8 @@ export function EnvelopeWrapper({ children, onPhaseChange, alwaysOpen }: Envelop
     const { dayOfWeek, dayOfMonth, monthName, year } = getFormattedDateFields(design.countdownTarget);
     return (
       <div className="envelope-letter-content-wrapper" style={{
+        position: 'relative',
+        overflow: 'hidden',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
@@ -200,6 +205,7 @@ export function EnvelopeWrapper({ children, onPhaseChange, alwaysOpen }: Envelop
         lineHeight: 1.2,
         color: '#333333'
       }}>
+        <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
         {/* Host Names */}
         <h2 className="letter-host-names" style={{
           fontSize: '1.45rem',
@@ -302,6 +308,7 @@ export function EnvelopeWrapper({ children, onPhaseChange, alwaysOpen }: Envelop
         }}>
           {guest?.eventLocation || 'Auspiciado por San Jose'}
         </span>
+        </div>
       </div>
     );
   };
@@ -346,7 +353,14 @@ export function EnvelopeWrapper({ children, onPhaseChange, alwaysOpen }: Envelop
               <div 
                 className={`envelope-couple-photo ${isPocketLetterVisible ? 'state-active' : ''}`}
                 style={{
-                  opacity: isPocketLetterVisible ? 1 : 0
+                  opacity: isPocketLetterVisible ? 1 : 0,
+                  ...(design.paperImage ? {
+                    backgroundImage: `url(${design.paperImage})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    backgroundRepeat: 'no-repeat',
+                    backgroundBlendMode: 'multiply'
+                  } : {})
                 }}
               >
                 {renderLogoFace()}
@@ -388,8 +402,15 @@ export function EnvelopeWrapper({ children, onPhaseChange, alwaysOpen }: Envelop
       {isViewportOverlayVisible && (
         <div 
           className={`envelope-letter-viewport-overlay ${phase === 'LETTER_CENTERING' ? 'state-centering' : ''} ${phase === 'LETTER_SCALING' ? 'state-scaled' : ''} ${phase === 'FADING_OUT' ? 'state-fade-out' : ''} ${phase === 'COMPLETED' ? 'state-completed' : ''}`}
+          style={design.paperImage ? {
+            backgroundImage: `url(${design.paperImage})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
+            backgroundBlendMode: 'multiply'
+          } : undefined}
         >
-          <div className="envelope-letter-header">
+          <div className="envelope-letter-header" style={{ position: 'relative', zIndex: 1 }}>
             {phase === 'LETTER_CENTERING' ? (
               <div className="letter-flip-card" style={{
                 position: 'relative',
@@ -436,7 +457,7 @@ export function EnvelopeWrapper({ children, onPhaseChange, alwaysOpen }: Envelop
             )}
           </div>
           {(phase === 'LETTER_SCALING' || phase === 'COMPLETED') && (
-            <div className="envelope-letter-details-content">
+            <div className="envelope-letter-details-content" style={{ position: 'relative', zIndex: 1, width: '100%' }}>
               {children}
             </div>
           )}
