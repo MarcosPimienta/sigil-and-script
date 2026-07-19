@@ -266,13 +266,16 @@ export async function saveCanvas(req: Request, res: Response): Promise<void> {
         .filter((gid: any) => typeof gid === 'string');
 
       await prisma.$transaction(async (tx) => {
-        // Delete all guests associated with this canvas who are NOT in the incoming active list
-        await tx.guest.deleteMany({
-          where: {
-            canvasId,
-            id: { notIn: activeGuestIds },
-          },
-        });
+        // Delete guests associated with this canvas who are NOT in the incoming active list
+        // Guard: only execute deleteMany if activeGuestIds is non-empty to protect against accidental wipes
+        if (activeGuestIds.length > 0) {
+          await tx.guest.deleteMany({
+            where: {
+              canvasId,
+              id: { notIn: activeGuestIds },
+            },
+          });
+        }
 
         // Upsert all guests in the incoming list
         for (const guest of invitees) {

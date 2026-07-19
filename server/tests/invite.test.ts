@@ -11,10 +11,10 @@ describe('Sigil & Script Backend API Tests', () => {
   let openedGuestId: string;
   const nonExistentGuestId = '00000000-0000-0000-0000-000000000000';
 
-  beforeAll(async () => {
-    await prisma.guest.deleteMany();
-    await prisma.invitationCanvas.deleteMany();
+  const createdGuestIds: string[] = [];
+  const createdCanvasIds: string[] = [];
 
+  beforeAll(async () => {
     const canvas = await prisma.invitationCanvas.create({
       data: {
         envelopeColor: '#e0cfa9',
@@ -26,6 +26,7 @@ describe('Sigil & Script Backend API Tests', () => {
       },
     });
     testCanvasId = canvas.id;
+    createdCanvasIds.push(canvas.id);
 
     const pendingGuest = await prisma.guest.create({
       data: {
@@ -35,6 +36,7 @@ describe('Sigil & Script Backend API Tests', () => {
       },
     });
     pendingGuestId = pendingGuest.id;
+    createdGuestIds.push(pendingGuest.id);
 
     const openedGuest = await prisma.guest.create({
       data: {
@@ -45,11 +47,20 @@ describe('Sigil & Script Backend API Tests', () => {
       },
     });
     openedGuestId = openedGuest.id;
+    createdGuestIds.push(openedGuest.id);
   });
 
   afterAll(async () => {
-    await prisma.guest.deleteMany();
-    await prisma.invitationCanvas.deleteMany();
+    if (createdGuestIds.length > 0) {
+      await prisma.guest.deleteMany({
+        where: { id: { in: createdGuestIds } },
+      });
+    }
+    if (createdCanvasIds.length > 0) {
+      await prisma.invitationCanvas.deleteMany({
+        where: { id: { in: createdCanvasIds } },
+      });
+    }
     await prisma.$disconnect();
   });
 
