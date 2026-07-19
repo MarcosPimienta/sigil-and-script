@@ -36,12 +36,6 @@ export function SectionEditor() {
     handleFieldChange('itinerary', list);
   };
 
-  const handleColorChange = (idx: number, hex: string) => {
-    const palette = [...(design.colorPalette || [])];
-    palette[idx] = hex;
-    handleFieldChange('colorPalette', palette);
-  };
-
   return (
     <div className="section-editor-panel" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       {/* ── Language Switch ── */}
@@ -365,38 +359,6 @@ export function SectionEditor() {
         </div>
       </div>
 
-      {/* ── Color Palette ── */}
-      <div className="lp-field">
-        <label className="lp-field-label">Paleta de Colores de la Boda</label>
-        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '6px' }}>
-          {(design.colorPalette || []).map((color, idx) => (
-            <div key={idx} style={{ position: 'relative', width: '32px', height: '32px' }}>
-              <input
-                type="color"
-                value={color}
-                onChange={(e) => handleColorChange(idx, e.target.value)}
-                style={{
-                  position: 'absolute',
-                  inset: 0,
-                  opacity: 0,
-                  cursor: 'pointer',
-                  width: '100%',
-                  height: '100%',
-                }}
-                aria-label={`Editar color ${idx + 1}`}
-              />
-              <div style={{
-                width: '100%',
-                height: '100%',
-                borderRadius: '50%',
-                backgroundColor: color,
-                border: '1.5px solid var(--cr-panel-border)',
-                pointerEvents: 'none',
-              }} />
-            </div>
-          ))}
-        </div>
-      </div>
 
       {/* ── Registry ── */}
       <div className="lp-field">
