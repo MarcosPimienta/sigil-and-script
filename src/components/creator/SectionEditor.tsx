@@ -129,6 +129,242 @@ export function SectionEditor() {
         />
       </div>
 
+      {/* ── Dress Code: Male ── */}
+      <div className="lp-field">
+        <label className="lp-field-label">Male Section</label>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '6px' }}>
+          <input
+            type="text"
+            className="lp-input"
+            placeholder="Heading (e.g. Ellos)"
+            value={design.dressCodeMaleHeading || ''}
+            onChange={(e) => handleFieldChange('dressCodeMaleHeading', e.target.value)}
+          />
+          <input
+            type="text"
+            className="lp-input"
+            placeholder="Text (e.g. Traje formal)"
+            value={design.dressCodeMaleText || ''}
+            onChange={(e) => handleFieldChange('dressCodeMaleText', e.target.value)}
+          />
+          <input
+            type="text"
+            className="lp-input"
+            placeholder="Subtext (e.g. Favor de evitar...)"
+            value={design.dressCodeMaleSubtext || ''}
+            onChange={(e) => handleFieldChange('dressCodeMaleSubtext', e.target.value)}
+          />
+          <div>
+            <span style={{ fontSize: '11px', color: '#666', display: 'block', marginBottom: '4px' }}>Avoid Colors</span>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              {(design.dressCodeMaleAvoidColors || []).map((color, idx) => (
+                <div key={idx} style={{ position: 'relative', width: '28px', height: '28px' }}>
+                  <input
+                    type="color"
+                    value={color}
+                    onChange={(e) => {
+                      const newColors = [...(design.dressCodeMaleAvoidColors || [])];
+                      newColors[idx] = e.target.value;
+                      handleFieldChange('dressCodeMaleAvoidColors', newColors);
+                    }}
+                    style={{
+                      position: 'absolute',
+                      inset: 0,
+                      opacity: 0,
+                      cursor: 'pointer',
+                      width: '100%',
+                      height: '100%',
+                    }}
+                  />
+                  <div style={{
+                    width: '100%',
+                    height: '100%',
+                    borderRadius: '50%',
+                    backgroundColor: color,
+                    border: '1px solid var(--cr-panel-border)',
+                    pointerEvents: 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}>
+                    {/* Tiny X icon */}
+                    <svg width="12" height="12" viewBox="0 0 24 24" stroke="rgba(0,0,0,0.5)" strokeWidth="2">
+                      <line x1="4" y1="4" x2="20" y2="20" />
+                      <line x1="20" y1="4" x2="4" y2="20" />
+                    </svg>
+                  </div>
+                  {/* Remove button */}
+                  <button
+                    onClick={() => {
+                      const newColors = [...(design.dressCodeMaleAvoidColors || [])];
+                      newColors.splice(idx, 1);
+                      handleFieldChange('dressCodeMaleAvoidColors', newColors);
+                    }}
+                    style={{
+                      position: 'absolute',
+                      top: '-6px',
+                      right: '-6px',
+                      width: '14px',
+                      height: '14px',
+                      borderRadius: '50%',
+                      background: '#ff4d4f',
+                      color: 'white',
+                      border: 'none',
+                      fontSize: '10px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                      padding: 0
+                    }}
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+              <button
+                onClick={() => {
+                  const newColors = [...(design.dressCodeMaleAvoidColors || []), '#000000'];
+                  handleFieldChange('dressCodeMaleAvoidColors', newColors);
+                }}
+                style={{
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  border: '1px dashed #ccc',
+                  background: 'none',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#666'
+                }}
+              >
+                +
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Dress Code: Female ── */}
+      <div className="lp-field">
+        <label className="lp-field-label">Female Section</label>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '6px' }}>
+          <input
+            type="text"
+            className="lp-input"
+            placeholder="Heading (e.g. Ellas)"
+            value={design.dressCodeFemaleHeading || ''}
+            onChange={(e) => handleFieldChange('dressCodeFemaleHeading', e.target.value)}
+          />
+          <input
+            type="text"
+            className="lp-input"
+            placeholder="Text (e.g. Vestido largo)"
+            value={design.dressCodeFemaleText || ''}
+            onChange={(e) => handleFieldChange('dressCodeFemaleText', e.target.value)}
+          />
+          <input
+            type="text"
+            className="lp-input"
+            placeholder="Subtext (e.g. Favor de evitar...)"
+            value={design.dressCodeFemaleSubtext || ''}
+            onChange={(e) => handleFieldChange('dressCodeFemaleSubtext', e.target.value)}
+          />
+          <div>
+            <span style={{ fontSize: '11px', color: '#666', display: 'block', marginBottom: '4px' }}>Avoid Colors</span>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              {(design.dressCodeFemaleAvoidColors || []).map((color, idx) => (
+                <div key={idx} style={{ position: 'relative', width: '28px', height: '28px' }}>
+                  <input
+                    type="color"
+                    value={color}
+                    onChange={(e) => {
+                      const newColors = [...(design.dressCodeFemaleAvoidColors || [])];
+                      newColors[idx] = e.target.value;
+                      handleFieldChange('dressCodeFemaleAvoidColors', newColors);
+                    }}
+                    style={{
+                      position: 'absolute',
+                      inset: 0,
+                      opacity: 0,
+                      cursor: 'pointer',
+                      width: '100%',
+                      height: '100%',
+                    }}
+                  />
+                  <div style={{
+                    width: '100%',
+                    height: '100%',
+                    borderRadius: '50%',
+                    backgroundColor: color,
+                    border: '1px solid var(--cr-panel-border)',
+                    pointerEvents: 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}>
+                    {/* Tiny X icon */}
+                    <svg width="12" height="12" viewBox="0 0 24 24" stroke="rgba(0,0,0,0.5)" strokeWidth="2">
+                      <line x1="4" y1="4" x2="20" y2="20" />
+                      <line x1="20" y1="4" x2="4" y2="20" />
+                    </svg>
+                  </div>
+                  {/* Remove button */}
+                  <button
+                    onClick={() => {
+                      const newColors = [...(design.dressCodeFemaleAvoidColors || [])];
+                      newColors.splice(idx, 1);
+                      handleFieldChange('dressCodeFemaleAvoidColors', newColors);
+                    }}
+                    style={{
+                      position: 'absolute',
+                      top: '-6px',
+                      right: '-6px',
+                      width: '14px',
+                      height: '14px',
+                      borderRadius: '50%',
+                      background: '#ff4d4f',
+                      color: 'white',
+                      border: 'none',
+                      fontSize: '10px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                      padding: 0
+                    }}
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+              <button
+                onClick={() => {
+                  const newColors = [...(design.dressCodeFemaleAvoidColors || []), '#000000'];
+                  handleFieldChange('dressCodeFemaleAvoidColors', newColors);
+                }}
+                style={{
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  border: '1px dashed #ccc',
+                  background: 'none',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#666'
+                }}
+              >
+                +
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* ── Color Palette ── */}
       <div className="lp-field">
         <label className="lp-field-label">Paleta de Colores de la Boda</label>

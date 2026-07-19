@@ -109,6 +109,14 @@ export interface InvitationDesign {
   itinerary?: ItineraryItem[];
   colorPalette?: string[];
   dressCodeText?: string;
+  dressCodeMaleHeading?: string;
+  dressCodeMaleText?: string;
+  dressCodeMaleSubtext?: string;
+  dressCodeMaleAvoidColors?: string[];
+  dressCodeFemaleHeading?: string;
+  dressCodeFemaleText?: string;
+  dressCodeFemaleSubtext?: string;
+  dressCodeFemaleAvoidColors?: string[];
   registryLink?: string;
   registryText?: string;
   closedEnvelopeImage?: string;

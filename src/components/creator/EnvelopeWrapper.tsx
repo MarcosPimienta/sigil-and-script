@@ -220,7 +220,7 @@ export function EnvelopeWrapper({ children, onPhaseChange, alwaysOpen }: Envelop
           fontWeight: 600,
           marginBottom: '0.2rem',
         }}>
-          tenemos el honor de invitarte a
+          tenemos el honor de invitarte al
         </span>
 
         <h3 className="letter-cursive-title" style={{
