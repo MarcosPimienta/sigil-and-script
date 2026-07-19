@@ -300,7 +300,7 @@ export function EnvelopeWrapper({ children, onPhaseChange, alwaysOpen }: Envelop
           fontWeight: 600,
           marginTop: '0.1rem',
         }}>
-          {guest?.eventLocation || 'Buenos Aires, Argentina'}
+          {guest?.eventLocation || 'Auspiciado por San Jose'}
         </span>
       </div>
     );
