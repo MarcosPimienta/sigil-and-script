@@ -1,7 +1,12 @@
 import { Request, Response, NextFunction } from 'express';
 import { PrismaClient } from '@prisma/client';
 
-const prisma = new PrismaClient();
+// Lazy singleton — avoids crashing the module on Vercel cold start
+let _prisma: PrismaClient | null = null;
+function getPrisma(): PrismaClient {
+  if (!_prisma) _prisma = new PrismaClient();
+  return _prisma;
+}
 
 declare global {
   namespace Express {
@@ -22,7 +27,7 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
       const userRole = req.headers['x-role'];
       if (userRole === 'HOST' || userRole === 'ADMIN') {
         const testUserId = 'test-user-id';
-        await prisma.user.upsert({
+        await getPrisma().user.upsert({
           where: { id: testUserId },
           update: {},
           create: {
@@ -59,7 +64,7 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
 
     const token = authHeader.split(' ')[1];
 
-    const session = await prisma.session.findUnique({
+    const session = await getPrisma().session.findUnique({
       where: { token },
       include: { user: true },
     });
@@ -71,7 +76,7 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
 
     if (session.expiresAt < new Date()) {
       // Clean up expired session asynchronously
-      prisma.session.delete({ where: { id: session.id } }).catch(() => {});
+      getPrisma().session.delete({ where: { id: session.id } }).catch(() => {});
       res.status(401).json({ error: 'Session expired, please log in' });
       return;
     }

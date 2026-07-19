@@ -3,7 +3,9 @@ import { PrismaClient } from '@prisma/client';
 import { z } from 'zod';
 import crypto from 'crypto';
 
-const prisma = new PrismaClient();
+// Lazy singleton — avoids crashing the module on Vercel cold start
+let _prisma: PrismaClient | null = null;
+const getPrisma = (): PrismaClient => { if (!_prisma) _prisma = new PrismaClient(); return _prisma; };
 
 const tokenParamSchema = z.string().uuid();
 
@@ -19,7 +21,7 @@ export async function getInviteByToken(req: Request, res: Response): Promise<voi
   const validatedToken = parsed.data;
 
   try {
-    const guest = await prisma.guest.findUnique({
+    const guest = await getPrisma().guest.findUnique({
       where: { id: validatedToken },
       include: { canvas: true },
     });
@@ -30,7 +32,7 @@ export async function getInviteByToken(req: Request, res: Response): Promise<voi
     }
 
     if (guest.status === 'PENDING') {
-      const updatedGuest = await prisma.guest.update({
+      const updatedGuest = await getPrisma().guest.update({
         where: { id: validatedToken },
         data: {
           status: 'OPENED',
@@ -81,7 +83,7 @@ export async function submitRsvp(req: Request, res: Response): Promise<void> {
   const { status, mealPref, dietary, plusOne, notes, dependents } = parsedBody.data;
 
   try {
-    const existingGuest = await prisma.guest.findUnique({
+    const existingGuest = await getPrisma().guest.findUnique({
       where: { id: validatedToken },
     });
 
@@ -121,7 +123,7 @@ export async function submitRsvp(req: Request, res: Response): Promise<void> {
       }
     }
 
-    const updatedGuest = await prisma.guest.update({
+    const updatedGuest = await getPrisma().guest.update({
       where: { id: validatedToken },
       data: {
         status,
@@ -140,7 +142,7 @@ export async function submitRsvp(req: Request, res: Response): Promise<void> {
 export async function getCanvases(req: Request, res: Response): Promise<void> {
   try {
     const userId = req.user!.id;
-    const canvases = await prisma.invitationCanvas.findMany({
+    const canvases = await getPrisma().invitationCanvas.findMany({
       where: { userId },
     });
     const strippedCanvases = canvases.map(canvas => {
@@ -176,7 +178,7 @@ export async function getCanvasById(req: Request, res: Response): Promise<void> 
   }
 
   try {
-    const canvas = await prisma.invitationCanvas.findFirst({
+    const canvas = await getPrisma().invitationCanvas.findFirst({
       where: { id, userId: req.user!.id },
       include: { invitees: true },
     });
@@ -214,7 +216,7 @@ export async function saveCanvas(req: Request, res: Response): Promise<void> {
       : (designData ?? undefined);
 
     if (id) {
-      const existing = await prisma.invitationCanvas.findUnique({
+      const existing = await getPrisma().invitationCanvas.findUnique({
         where: { id },
       });
 
@@ -224,7 +226,7 @@ export async function saveCanvas(req: Request, res: Response): Promise<void> {
           return;
         }
 
-        canvasObj = await prisma.invitationCanvas.update({
+        canvasObj = await getPrisma().invitationCanvas.update({
           where: { id },
           data: {
             envelopeColor: envelopeColor ?? existing.envelopeColor,
@@ -241,7 +243,7 @@ export async function saveCanvas(req: Request, res: Response): Promise<void> {
     }
 
     if (!canvasObj) {
-      canvasObj = await prisma.invitationCanvas.create({
+      canvasObj = await getPrisma().invitationCanvas.create({
         data: {
           id: id || undefined,
           envelopeColor: envelopeColor || '#f6ebe2',
@@ -265,7 +267,7 @@ export async function saveCanvas(req: Request, res: Response): Promise<void> {
         .map((g: any) => g.id)
         .filter((gid: any) => typeof gid === 'string');
 
-      await prisma.$transaction(async (tx) => {
+      await getPrisma().$transaction(async (tx) => {
         // Delete guests associated with this canvas who are NOT in the incoming active list
         // Guard: only execute deleteMany if activeGuestIds is non-empty to protect against accidental wipes
         if (activeGuestIds.length > 0) {
@@ -335,7 +337,7 @@ export async function deleteCanvas(req: Request, res: Response): Promise<void> {
   }
 
   try {
-    const existing = await prisma.invitationCanvas.findUnique({
+    const existing = await getPrisma().invitationCanvas.findUnique({
       where: { id },
     });
 
@@ -349,11 +351,11 @@ export async function deleteCanvas(req: Request, res: Response): Promise<void> {
       return;
     }
 
-    await prisma.guest.deleteMany({
+    await getPrisma().guest.deleteMany({
       where: { canvasId: id },
     });
 
-    await prisma.invitationCanvas.delete({
+    await getPrisma().invitationCanvas.delete({
       where: { id },
     });
 

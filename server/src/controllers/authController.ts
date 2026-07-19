@@ -3,7 +3,9 @@ import { PrismaClient } from '@prisma/client';
 import crypto from 'crypto';
 import { z } from 'zod';
 
-const prisma = new PrismaClient();
+// Lazy singleton — avoids crashing the module on Vercel cold start
+let _prisma: PrismaClient | null = null;
+const prisma = (): PrismaClient => { if (!_prisma) _prisma = new PrismaClient(); return _prisma; };
 
 const registerSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -30,7 +32,7 @@ export async function register(req: Request, res: Response): Promise<void> {
 
     const { email, password, name } = parsed.data;
 
-    const existingUser = await prisma.user.findUnique({
+    const existingUser = await prisma().user.findUnique({
       where: { email: email.toLowerCase() },
     });
 
@@ -43,7 +45,7 @@ export async function register(req: Request, res: Response): Promise<void> {
     const hashedPassword = hashPassword(password, salt);
     const combinedPassword = `${salt}:${hashedPassword}`;
 
-    const user = await prisma.user.create({
+    const user = await prisma().user.create({
       data: {
         email: email.toLowerCase(),
         password: combinedPassword,
@@ -75,7 +77,7 @@ export async function login(req: Request, res: Response): Promise<void> {
 
     const { email, password } = parsed.data;
 
-    const user = await prisma.user.findUnique({
+    const user = await prisma().user.findUnique({
       where: { email: email.toLowerCase() },
     });
 
@@ -100,7 +102,7 @@ export async function login(req: Request, res: Response): Promise<void> {
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 30); // 30 days expiry
 
-    await prisma.session.create({
+    await prisma().session.create({
       data: {
         token,
         userId: user.id,
@@ -132,7 +134,7 @@ export async function logout(req: Request, res: Response): Promise<void> {
 
     const token = authHeader.split(' ')[1];
 
-    await prisma.session.deleteMany({
+    await prisma().session.deleteMany({
       where: { token },
     });
 
