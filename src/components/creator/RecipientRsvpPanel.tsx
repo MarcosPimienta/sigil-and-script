@@ -2,6 +2,24 @@ import React, { useState, useEffect } from 'react';
 import { useSigil } from '../../context/SigilContext';
 import { getTranslation } from '../../utils/i18n';
 
+// Corner flourish
+const CornerFlourish = ({ color = 'var(--rsvp-border, rgba(255, 255, 255, 0.4))' }: { color?: string }) => (
+  <svg width="30" height="30" viewBox="0 0 45 45" style={{ pointerEvents: 'none' }}>
+    <path d="M 12 45 L 12 12 L 45 12" stroke={color} fill="none" strokeWidth="1.2" />
+    <path d="M 12 30 C 12 20 20 12 30 12" stroke={color} fill="none" strokeWidth="0.8" />
+    <path d="M 12 38 C 12 24 24 12 38 12" stroke={color} fill="none" strokeWidth="0.6" />
+    <path d="M 18 18 C 22 14 26 18 22 22 C 18 26 14 22 18 18 Z" fill="none" stroke={color} strokeWidth="0.8" />
+    <circle cx="32" cy="18" r="1.5" fill={color} />
+    <circle cx="18" cy="32" r="1.5" fill={color} />
+  </svg>
+);
+
+const InkUnderline = ({ color }: { color: string }) => (
+  <svg width="100%" height="8" viewBox="0 0 100 8" preserveAspectRatio="none" style={{ position: 'absolute', bottom: '-2px', left: 0, zIndex: 0, opacity: 0.8 }}>
+    <path d="M 2 5 Q 25 2 50 5 T 98 4" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" />
+  </svg>
+);
+
 export function RecipientRsvpPanel() {
   const { state, submitRsvp } = useSigil();
   const { design, guest } = state;
@@ -112,46 +130,80 @@ export function RecipientRsvpPanel() {
         </div>
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-          <div className="lp-field">
-            <span className="lp-field-label">{t.willAttend}</span>
-            <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
+          <div className="lp-field" style={{ position: 'relative', padding: '2rem 1.5rem', marginTop: '1rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            {/* Outer decorative border */}
+            <div
+              style={{
+                position: 'absolute',
+                inset: '6px',
+                border: '0.5px solid var(--rsvp-border, rgba(255, 255, 255, 0.2))',
+                borderRadius: '1px',
+                pointerEvents: 'none',
+              }}
+            />
+
+            {/* Inner ornamented border frame with corner flourishes */}
+            <div
+              style={{
+                position: 'absolute',
+                inset: '12px',
+                border: '1px solid var(--rsvp-border, rgba(255, 255, 255, 0.3))',
+                borderRadius: '2px',
+                pointerEvents: 'none',
+              }}
+            >
+              <div style={{ position: 'absolute', top: 0, left: 0 }}><CornerFlourish /></div>
+              <div style={{ position: 'absolute', top: 0, right: 0, transform: 'scaleX(-1)' }}><CornerFlourish /></div>
+              <div style={{ position: 'absolute', bottom: 0, left: 0, transform: 'scaleY(-1)' }}><CornerFlourish /></div>
+              <div style={{ position: 'absolute', bottom: 0, right: 0, transform: 'scale(-1)' }}><CornerFlourish /></div>
+            </div>
+
+            <span className="lp-field-label" style={{ position: 'relative', zIndex: 2, marginBottom: '1.5rem' }}>{t.willAttend}</span>
+            <div style={{ display: 'flex', gap: '2rem', marginTop: '0.5rem', position: 'relative', zIndex: 2 }}>
               <button
                 type="button"
                 id="rsvp-yes-btn"
                 onClick={() => setRsvpStatus('YES')}
                 style={{
-                  flex: 1,
-                  padding: '10px',
-                  borderRadius: '4px',
-                  border: '1px solid',
-                  borderColor: rsvpStatus === 'YES' ? '#28c76f' : 'var(--rsvp-btn-border, rgba(255,255,255,0.1))',
-                  background: rsvpStatus === 'YES' ? 'var(--rsvp-btn-yes-bg, rgba(40,199,111,0.2))' : 'var(--rsvp-btn-bg, rgba(255,255,255,0.02))',
-                  color: rsvpStatus === 'YES' ? '#28c76f' : 'var(--rsvp-btn-color, rgba(255,255,255,0.7))',
+                  position: 'relative',
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--rsvp-input-color, #ffffff)',
                   cursor: 'pointer',
-                  fontWeight: 600,
-                  transition: 'all 0.2s',
+                  fontWeight: 400,
+                  fontSize: '1.2rem',
+                  fontFamily: "'Cormorant Garamond', serif",
+                  fontStyle: 'italic',
+                  padding: '4px 8px',
+                  transition: 'opacity 0.2s',
+                  opacity: rsvpStatus === 'NO' ? 0.5 : 1,
                 }}
               >
-                {t.yesGladly}
+                <span style={{ position: 'relative', zIndex: 1 }}>{t.yesGladly}</span>
+                {rsvpStatus === 'YES' && <InkUnderline color="#1a1a1a" />}
               </button>
+              
               <button
                 type="button"
                 id="rsvp-no-btn"
                 onClick={() => setRsvpStatus('NO')}
                 style={{
-                  flex: 1,
-                  padding: '10px',
-                  borderRadius: '4px',
-                  border: '1px solid',
-                  borderColor: rsvpStatus === 'NO' ? '#ea5455' : 'var(--rsvp-btn-border, rgba(255,255,255,0.1))',
-                  background: rsvpStatus === 'NO' ? 'var(--rsvp-btn-no-bg, rgba(234,84,85,0.2))' : 'var(--rsvp-btn-bg, rgba(255,255,255,0.02))',
-                  color: rsvpStatus === 'NO' ? '#ea5455' : 'var(--rsvp-btn-color, rgba(255,255,255,0.7))',
+                  position: 'relative',
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--rsvp-input-color, #ffffff)',
                   cursor: 'pointer',
-                  fontWeight: 600,
-                  transition: 'all 0.2s',
+                  fontWeight: 400,
+                  fontSize: '1.2rem',
+                  fontFamily: "'Cormorant Garamond', serif",
+                  fontStyle: 'italic',
+                  padding: '4px 8px',
+                  transition: 'opacity 0.2s',
+                  opacity: rsvpStatus === 'YES' ? 0.5 : 1,
                 }}
               >
-                {t.noRegrettably}
+                <span style={{ position: 'relative', zIndex: 1 }}>{t.noRegrettably}</span>
+                {rsvpStatus === 'NO' && <InkUnderline color="#d32f2f" />}
               </button>
             </div>
           </div>
