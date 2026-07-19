@@ -178,6 +178,7 @@ export async function getCanvasById(req: Request, res: Response): Promise<void> 
   try {
     const canvas = await prisma.invitationCanvas.findFirst({
       where: { id, userId: req.user!.id },
+      include: { invitees: true },
     });
     if (!canvas) {
       res.status(404).json({ error: 'Configuration not found' });

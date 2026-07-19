@@ -227,6 +227,9 @@ export const useSigilStore = create<SigilState>((set, get) => ({
       localStorage.setItem('sigil-guest-roster', JSON.stringify(roster));
       return { guestRoster: roster };
     });
+    if (get().user) {
+      get().saveCurrentDesign().catch((e) => console.error('Auto-save roster error:', e));
+    }
   },
 
   removeInvitee: (inviteeId) => {
@@ -237,6 +240,9 @@ export const useSigilStore = create<SigilState>((set, get) => ({
       localStorage.setItem('sigil-guest-roster', JSON.stringify(roster));
       return { guestRoster: roster };
     });
+    if (get().user) {
+      get().saveCurrentDesign().catch((e) => console.error('Auto-save roster error:', e));
+    }
   },
 
   updateInvitee: (inviteeId, updates) => {
@@ -249,6 +255,9 @@ export const useSigilStore = create<SigilState>((set, get) => ({
       localStorage.setItem('sigil-guest-roster', JSON.stringify(roster));
       return { guestRoster: roster };
     });
+    if (get().user) {
+      get().saveCurrentDesign().catch((e) => console.error('Auto-save roster error:', e));
+    }
   },
 
   addDependent: (inviteeId, name) => {
@@ -270,6 +279,9 @@ export const useSigilStore = create<SigilState>((set, get) => ({
       localStorage.setItem('sigil-guest-roster', JSON.stringify(roster));
       return { guestRoster: roster };
     });
+    if (get().user) {
+      get().saveCurrentDesign().catch((e) => console.error('Auto-save roster error:', e));
+    }
   },
 
   removeDependent: (inviteeId, dependentId) => {
@@ -284,6 +296,9 @@ export const useSigilStore = create<SigilState>((set, get) => ({
       localStorage.setItem('sigil-guest-roster', JSON.stringify(roster));
       return { guestRoster: roster };
     });
+    if (get().user) {
+      get().saveCurrentDesign().catch((e) => console.error('Auto-save roster error:', e));
+    }
   },
 
   toggleDependent: (inviteeId, dependentId) => {
@@ -303,6 +318,9 @@ export const useSigilStore = create<SigilState>((set, get) => ({
       localStorage.setItem('sigil-guest-roster', JSON.stringify(roster));
       return { guestRoster: roster };
     });
+    if (get().user) {
+      get().saveCurrentDesign().catch((e) => console.error('Auto-save roster error:', e));
+    }
   },
 
   markInvitationOpened: (inviteeId) => {
@@ -452,6 +470,9 @@ export const useSigilStore = create<SigilState>((set, get) => ({
       localStorage.setItem('sigil-guest-roster', JSON.stringify(roster));
       return { guestRoster: roster };
     });
+    if (get().user) {
+      get().saveCurrentDesign().catch((e) => console.error('Auto-save batch roster error:', e));
+    }
   },
 
   saveCurrentDesign: async () => {
@@ -542,9 +563,38 @@ export const useSigilStore = create<SigilState>((set, get) => ({
         musicUrl: canvas.musicUrl || loadedDesign.musicUrl || '',
       };
 
+      let loadedInvitees: InviteeRecord[] = [];
+      if (Array.isArray(canvas.invitees)) {
+        loadedInvitees = canvas.invitees.map((inv: any) => {
+          let dependents: Dependent[] = [];
+          if (inv.formResponses) {
+            try {
+              const parsed = JSON.parse(inv.formResponses);
+              if (Array.isArray(parsed.dependents)) {
+                dependents = parsed.dependents;
+              }
+            } catch (e) {
+              console.error('Failed to parse guest formResponses in loadDesign', e);
+            }
+          }
+          return {
+            id: inv.id,
+            name: inv.name,
+            email: inv.email || undefined,
+            dependents,
+            status: (inv.status || 'PENDING') as import('../types/sigil.types').InvitationStatus,
+            openedAt: inv.openedTimestamp || undefined,
+          };
+        });
+      }
+
+      const roster: GuestRoster = { invitees: loadedInvitees };
+      localStorage.setItem('sigil-guest-roster', JSON.stringify(roster));
+
       set({
         apiStatus: 'success',
         design: mergedDesign,
+        guestRoster: roster,
       });
     } catch (error: any) {
       set({

@@ -62,12 +62,19 @@ export function EventsHubView() {
     }
   };
 
-  const handleCreateNew = () => {
+  const saveCurrentDesign = useSigilStore((s) => s.saveCurrentDesign);
+
+  const handleCreateNew = async () => {
     resetToDefaults();
     updateDesign({
       id: crypto.randomUUID(),
       title: 'My Celebration Invitation',
     });
+    try {
+      await saveCurrentDesign();
+    } catch (e: any) {
+      console.error('Failed to save new event to backend:', e);
+    }
     setAppMode('CREATOR');
   };
 
