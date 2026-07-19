@@ -1,10 +1,11 @@
 import { Router } from 'express';
-import { getInviteByToken, getCanvases, getCanvasById, saveCanvas, deleteCanvas, uploadMedia } from '../controllers/inviteController';
+import { getInviteByToken, submitRsvp, getCanvases, getCanvasById, saveCanvas, deleteCanvas, uploadMedia } from '../controllers/inviteController';
 import { requireAuth } from '../middleware/auth';
 
 const router = Router();
 
 router.get('/invite/:token', getInviteByToken);
+router.post('/invite/:token/rsvp', submitRsvp);
 
 router.get('/canvas', requireAuth, getCanvases);
 router.get('/canvas/:id', requireAuth, getCanvasById);

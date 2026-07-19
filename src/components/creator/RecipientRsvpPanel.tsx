@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSigil } from '../../context/SigilContext';
 
 export function RecipientRsvpPanel() {
-  const { state } = useSigil();
+  const { state, submitRsvp } = useSigil();
   const { design, guest } = state;
   const config = design.rsvpFormConfig || {
     requireMealPreference: false,
@@ -40,6 +40,24 @@ export function RecipientRsvpPanel() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!rsvpStatus) return;
+
+    const updatedDependents = guest.dependents
+      ? guest.dependents.map((dep) => ({
+          ...dep,
+          included: !!selectedDependents[dep.id],
+        }))
+      : [];
+
+    submitRsvp({
+      tokenOrId: guest.routingToken,
+      status: rsvpStatus === 'YES' ? 'RSVP_YES' : 'RSVP_NO',
+      mealPref: rsvpStatus === 'YES' ? mealPref : undefined,
+      dietary: rsvpStatus === 'YES' ? dietary : undefined,
+      plusOne: rsvpStatus === 'YES' ? plusOne : undefined,
+      notes: rsvpStatus === 'YES' ? notes : undefined,
+      dependents: updatedDependents,
+    });
+
     setSubmitted(true);
   };
 

@@ -8,7 +8,7 @@ function makeInvitee(id: string, status: InviteeRecord['status']): InviteeRecord
 
 describe('computeStats', () => {
   it('returns all zeros for empty array', () => {
-    expect(computeStats([])).toEqual({ total: 0, opened: 0, sent: 0, pending: 0 });
+    expect(computeStats([])).toEqual({ total: 0, attending: 0, declined: 0, opened: 0, sent: 0, pending: 0 });
   });
 
   it('returns correct counts for a mixed-status array', () => {
@@ -19,16 +19,18 @@ describe('computeStats', () => {
       makeInvitee('4', 'SENT'),
       makeInvitee('5', 'OPENED'),
     ];
-    expect(computeStats(invitees)).toEqual({ total: 5, opened: 1, sent: 2, pending: 2 });
+    expect(computeStats(invitees)).toEqual({ total: 5, attending: 0, declined: 0, opened: 1, sent: 2, pending: 2 });
   });
 
-  it('counts only known status categories', () => {
+  it('counts attending and declined status categories correctly', () => {
     const invitees = [
       makeInvitee('1', 'RSVP_YES'),
       makeInvitee('2', 'RSVP_NO'),
     ];
     const stats = computeStats(invitees);
     expect(stats.total).toBe(2);
+    expect(stats.attending).toBe(1);
+    expect(stats.declined).toBe(1);
     expect(stats.opened).toBe(0);
     expect(stats.sent).toBe(0);
     expect(stats.pending).toBe(0);

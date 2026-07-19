@@ -49,6 +49,94 @@ export async function getInviteByToken(req: Request, res: Response): Promise<voi
   }
 }
 
+const rsvpBodySchema = z.object({
+  status: z.enum(['RSVP_YES', 'RSVP_NO']),
+  mealPref: z.string().nullable().optional(),
+  dietary: z.string().nullable().optional(),
+  plusOne: z.string().nullable().optional(),
+  notes: z.string().nullable().optional(),
+  dependents: z.array(z.object({
+    id: z.string(),
+    name: z.string(),
+    included: z.boolean(),
+  })).optional(),
+});
+
+export async function submitRsvp(req: Request, res: Response): Promise<void> {
+  const { token } = req.params;
+
+  const parsedToken = tokenParamSchema.safeParse(token);
+  if (!parsedToken.success) {
+    res.status(400).json({ error: 'Invalid token format', issues: parsedToken.error.issues });
+    return;
+  }
+
+  const parsedBody = rsvpBodySchema.safeParse(req.body);
+  if (!parsedBody.success) {
+    res.status(400).json({ error: 'Invalid request body', issues: parsedBody.error.issues });
+    return;
+  }
+
+  const validatedToken = parsedToken.data;
+  const { status, mealPref, dietary, plusOne, notes, dependents } = parsedBody.data;
+
+  try {
+    const existingGuest = await prisma.guest.findUnique({
+      where: { id: validatedToken },
+    });
+
+    if (!existingGuest) {
+      res.status(404).json({ error: 'Invitation not found' });
+      return;
+    }
+
+    let existingResponses = {};
+    if (existingGuest.formResponses) {
+      try {
+        existingResponses = JSON.parse(existingGuest.formResponses);
+      } catch (e) {
+        console.error("Failed to parse existing formResponses", e);
+      }
+    }
+
+    const mergedResponses = {
+      ...existingResponses,
+      mealPref,
+      dietary,
+      plusOne,
+      notes,
+      dependents: dependents ?? [],
+      submittedAt: new Date().toISOString(),
+    };
+
+    // Calculate confirmed seats
+    let confirmedSeats = 0;
+    if (status === 'RSVP_YES') {
+      confirmedSeats = 1;
+      if (plusOne && plusOne.trim().length > 0) {
+        confirmedSeats += 1;
+      }
+      if (dependents && Array.isArray(dependents)) {
+        confirmedSeats += dependents.filter((d) => d.included).length;
+      }
+    }
+
+    const updatedGuest = await prisma.guest.update({
+      where: { id: validatedToken },
+      data: {
+        status,
+        confirmedSeats,
+        formResponses: JSON.stringify(mergedResponses),
+      },
+    });
+
+    res.json({ success: true, guest: updatedGuest });
+  } catch (error) {
+    console.error('Error submitting RSVP:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
 export async function getCanvases(req: Request, res: Response): Promise<void> {
   try {
     const userId = req.user!.id;

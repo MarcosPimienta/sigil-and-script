@@ -114,6 +114,15 @@ export interface SigilState {
   removeDependent: (inviteeId: string, dependentId: string) => void;
   toggleDependent: (inviteeId: string, dependentId: string) => void;
   markInvitationOpened: (inviteeId: string) => void;
+  submitRsvp: (payload: {
+    tokenOrId: string;
+    status: 'RSVP_YES' | 'RSVP_NO';
+    mealPref?: string;
+    dietary?: string;
+    plusOne?: string;
+    notes?: string;
+    dependents?: Dependent[];
+  }) => Promise<void>;
   fetchInvitationDetails: (token: string) => Promise<void>;
   saveCurrentDesign: () => Promise<void>;
   loadDesign: (designId: string) => Promise<void>;
@@ -308,6 +317,56 @@ export const useSigilStore = create<SigilState>((set, get) => ({
       localStorage.setItem('sigil-guest-roster', JSON.stringify(roster));
       return { guestRoster: roster };
     });
+  },
+
+  submitRsvp: async (payload) => {
+    const { tokenOrId, status, mealPref, dietary, plusOne, notes, dependents } = payload;
+
+    set((state) => {
+      const roster = {
+        invitees: state.guestRoster.invitees.map((i) =>
+          i.id === tokenOrId
+            ? {
+                ...i,
+                status,
+                dependents: dependents ?? i.dependents,
+              }
+            : i
+        ),
+      };
+      localStorage.setItem('sigil-guest-roster', JSON.stringify(roster));
+
+      const isCurrentGuest = state.guest.routingToken === tokenOrId;
+      const updatedGuest = isCurrentGuest
+        ? {
+            ...state.guest,
+            dependents: dependents ?? state.guest.dependents,
+          }
+        : state.guest;
+
+      return {
+        guestRoster: roster,
+        guest: updatedGuest,
+      };
+    });
+
+    if (tokenOrId && tokenOrId !== 'preview') {
+      try {
+        await apiFetch(`/invite/${tokenOrId}/rsvp`, {
+          method: 'POST',
+          body: JSON.stringify({
+            status,
+            mealPref: mealPref || null,
+            dietary: dietary || null,
+            plusOne: plusOne || null,
+            notes: notes || null,
+            dependents: dependents || [],
+          }),
+        });
+      } catch (err) {
+        console.error('Failed to sync RSVP response to backend:', err);
+      }
+    }
   },
 
   fetchInvitationDetails: async (token) => {

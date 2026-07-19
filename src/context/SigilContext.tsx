@@ -395,6 +395,15 @@ interface SigilContextValue {
   removeDependent: (inviteeId: string, dependentId: string) => void;
   toggleDependent: (inviteeId: string, dependentId: string) => void;
   markInvitationOpened: (inviteeId: string) => void;
+  submitRsvp: (payload: {
+    tokenOrId: string;
+    status: 'RSVP_YES' | 'RSVP_NO';
+    mealPref?: string;
+    dietary?: string;
+    plusOne?: string;
+    notes?: string;
+    dependents?: Dependent[];
+  }) => Promise<void>;
 }
 
 // ── Context Creation ──────────────────────────────────────────────────────────
@@ -446,6 +455,7 @@ export function useSigil(): SigilContextValue {
     removeDependent: store.removeDependent,
     toggleDependent: store.toggleDependent,
     markInvitationOpened: store.markInvitationOpened,
+    submitRsvp: store.submitRsvp,
     fetchInvitationDetails: store.fetchInvitationDetails,
   };
 }
