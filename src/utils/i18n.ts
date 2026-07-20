@@ -1,7 +1,7 @@
-// ─────────────────────────────────────────────────────────────────────────────
+// ────────────────────────────────────────────────────────────────────
 // Sigil — i18n Dictionary & Translation Helper
 // Supports English (EN) and Spanish (ES / SPA) invitation section localizations
-// ─────────────────────────────────────────────────────────────────────────────
+// ────────────────────────────────────────────────────────────────────
 
 export type Language = 'EN' | 'ES';
 
@@ -58,8 +58,8 @@ export const DICTIONARY: Record<Language, TranslationDictionary> = {
     viewRegistry: 'View Registry',
     rsvpTitle: 'RSVP Response',
     willAttend: 'Will you attend?',
-    yesGladly: 'Yes, gladly',
-    noRegrettably: 'No, regrettably',
+    yesGladly: 'Yes',
+    noRegrettably: 'No',
     mealPreference: 'Meal Preference',
     chooseMeal: 'Choose a meal',
     beefMeal: 'Prime Beef Tenderloin',
@@ -96,8 +96,8 @@ export const DICTIONARY: Record<Language, TranslationDictionary> = {
     viewRegistry: 'Ver Mesa de Regalos',
     rsvpTitle: 'Confirmación de Asistencia',
     willAttend: '¿Asistirás?',
-    yesGladly: 'Sí, con gusto',
-    noRegrettably: 'No, lamentablemente',
+    yesGladly: 'Sí',
+    noRegrettably: 'No',
     mealPreference: 'Preferencia de Menú',
     chooseMeal: 'Elige un menú',
     beefMeal: 'Lomo de Res a la Parrilla',
