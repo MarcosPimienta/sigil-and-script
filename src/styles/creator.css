@@ -1494,6 +1494,7 @@
 .envelope-letter-details-content>*,
 .recipient-invite-details>* {
   width: 100%;
+   max-width: clamp(300px, 60vw, 800px);
 }
 
 .recipient-invite-details.state-visible {
