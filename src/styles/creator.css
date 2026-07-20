@@ -1493,7 +1493,6 @@
 
 .envelope-letter-details-content>*,
 .recipient-invite-details>* {
-  max-width: 30vw;
   width: 100%;
 }
 
