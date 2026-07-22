@@ -346,7 +346,7 @@ export function EnvelopeWrapper({ children, onPhaseChange, alwaysOpen }: Envelop
                 <SvgColorImage
                   src={design.headerImage}
                   alt="Event Title Artwork"
-                  color="#ffffff"
+                  color="var(--paper-parchment, #f4ecd8)"
                   maxWidth={Math.round(200 * ((design.headerImageScale ?? 100) / 100))}
                   maxHeight={Math.round(100 * ((design.headerImageScale ?? 100) / 100))}
                 />
