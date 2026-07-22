@@ -25,7 +25,7 @@ export default async function handler(req, res) {
 
   let guestName = '';
   let eventTitle = '';
-  let ogImage = 'https://sigil-and-script-frontend.vercel.app/ClosedEnvelope00.png';
+  let ogImage = 'https://sigil-and-script-frontend.vercel.app/envelope-with-seal.png';
 
   if (token && token.length > 10) {
     try {

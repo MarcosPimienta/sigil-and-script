@@ -51,7 +51,7 @@ function getEventTitleFromCanvas(designDataStr?: string | null): string {
 }
 
 function getClosedEnvelopeImageUrl(designDataStr?: string | null): string {
-  const fallback = 'https://sigil-and-script-frontend.vercel.app/ClosedEnvelope00.png';
+  const fallback = 'https://sigil-and-script-frontend.vercel.app/envelope-with-seal.png';
   if (!designDataStr) return fallback;
   try {
     const data = typeof designDataStr === 'string' ? JSON.parse(designDataStr) : designDataStr;
