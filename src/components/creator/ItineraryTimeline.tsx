@@ -1,5 +1,6 @@
 import { useSigilSelector } from '../../context/SigilContext';
 import { getTranslation } from '../../utils/i18n';
+import { SvgColorImage } from '../common/SvgColorImage';
 
 const CornerFlourish = () => (
   <svg width="45" height="45" viewBox="0 0 45 45" style={{ pointerEvents: 'none' }}>
@@ -124,6 +125,18 @@ export function ItineraryTimeline() {
               {/* Church Icon below Ceremonia Religiosa */}
               {item.title.toLowerCase().includes('ceremonia') && item.title.toLowerCase().includes('religiosa') && (
                 <ChurchIcon />
+              )}
+
+              {/* Toast Glass Icon below Recepción / Fiesta / Brindis */}
+              {(item.title.toLowerCase().includes('recepción') || item.title.toLowerCase().includes('recepcion') || item.title.toLowerCase().includes('fiesta') || item.title.toLowerCase().includes('brindis')) && (
+                <SvgColorImage
+                  src="/icons/toast-glass.svg"
+                  alt="Recepción"
+                  color="#ffffff"
+                  maxWidth={36}
+                  maxHeight={36}
+                  style={{ margin: '0.2rem 0 0.4rem 0' }}
+                />
               )}
               
               {/* Address / Location details */}
