@@ -3,7 +3,7 @@ import { useSigil } from '../../context/SigilContext';
 import { getTranslation } from '../../utils/i18n';
 
 // Corner flourish
-const CornerFlourish = ({ color = 'var(--rsvp-border, rgba(255, 255, 255, 0.4))' }: { color?: string }) => (
+const CornerFlourish = ({ color = 'var(--rsvp-border, rgba(160, 142, 124, 0.65))' }: { color?: string }) => (
   <svg width="30" height="30" viewBox="0 0 45 45" style={{ pointerEvents: 'none' }}>
     <path d="M 12 45 L 12 12 L 45 12" stroke={color} fill="none" strokeWidth="1.2" />
     <path d="M 12 30 C 12 20 20 12 30 12" stroke={color} fill="none" strokeWidth="0.8" />
@@ -136,7 +136,7 @@ export function RecipientRsvpPanel() {
               style={{
                 position: 'absolute',
                 inset: '6px',
-                border: '2px solid var(--rsvp-border, rgba(255, 255, 255, 0.5))',
+                border: '2px solid var(--rsvp-border, rgba(160, 142, 124, 0.55))',
                 borderRadius: '1px',
                 pointerEvents: 'none',
               }}
@@ -147,7 +147,7 @@ export function RecipientRsvpPanel() {
               style={{
                 position: 'absolute',
                 inset: '12px',
-                border: '4px solid var(--rsvp-border, rgba(255, 255, 255, 0.6))',
+                border: '4px solid var(--rsvp-border, rgba(160, 142, 124, 0.65))',
                 borderRadius: '2px',
                 pointerEvents: 'none',
               }}
