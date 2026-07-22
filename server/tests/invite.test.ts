@@ -106,7 +106,7 @@ describe('Sigil & Script Backend API Tests', () => {
         .expect(200);
 
       expect(res.headers['content-type']).toContain('text/html');
-      expect(res.text).toContain('<meta property="og:title" content="Invitación para Jane Smith" />');
+      expect(res.text).toContain('<meta property="og:title" content="Invitación para Jane Smith');
       expect(res.text).toContain('<meta property="og:image"');
     });
 

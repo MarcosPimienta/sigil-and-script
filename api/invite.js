@@ -30,6 +30,7 @@ function formatGuestTitleName(guest, lang) {
     }
     if (Array.isArray(deps)) {
       dependentNames = deps
+        .filter((d) => d && (d.included === undefined || d.included === true))
         .map((d) => (typeof d === 'string' ? d : d.name))
         .filter((n) => typeof n === 'string' && n.trim().length > 0);
     }
@@ -42,6 +43,7 @@ function formatGuestTitleName(guest, lang) {
     }
     if (Array.isArray(add)) {
       dependentNames = add
+        .filter((d) => d && (d.included === undefined || d.included === true))
         .map((d) => (typeof d === 'string' ? d : d.name))
         .filter((n) => typeof n === 'string' && n.trim().length > 0);
     }
@@ -53,19 +55,34 @@ function formatGuestTitleName(guest, lang) {
 
   if (dependentNames.length === 1) {
     const connector = lang === 'ES' ? 'y' : '&';
-    return `${primaryName} ${connector} ${dependentNames[0]}`;
+    return `${primaryName} ${connector} ${dependentNames[0].trim()}`;
   }
 
   const familyTag = lang === 'ES' ? 'y Familia' : '& Family';
   return `${primaryName} ${familyTag}`;
 }
 
+function formatEventTitle(hostNames, lang) {
+  const clean = (hostNames || '').trim();
+  const isEs = lang === 'ES';
+
+  if (!clean) {
+    return isEs ? 'Matrimonio' : 'Wedding';
+  }
+
+  const lower = clean.toLowerCase();
+  if (lower.startsWith('matrimonio') || lower.startsWith('boda') || lower.startsWith('wedding')) {
+    return clean;
+  }
+
+  return isEs ? `Matrimonio de ${clean}` : `Wedding of ${clean}`;
+}
+
 export default async function handler(req, res) {
   const token = req.query.token || (req.url || '').split('/invite/')[1]?.split('?')[0];
-  const userAgent = req.headers['user-agent'] || '';
 
   let guestObj = null;
-  let eventTitle = '';
+  let rawHostNames = '';
   let lang = 'ES';
   let ogImage = 'https://sigil-and-script-frontend.vercel.app/envelope-with-seal.png';
 
@@ -80,11 +97,13 @@ export default async function handler(req, res) {
             lang = data.language.trim().toUpperCase();
           }
           if (data.hostNames && typeof data.hostNames === 'string' && data.hostNames.trim()) {
-            eventTitle = data.hostNames.trim();
+            rawHostNames = data.hostNames.trim();
+          } else if (data.title && typeof data.title === 'string' && data.title.trim()) {
+            rawHostNames = data.title.trim();
           } else if (Array.isArray(data.textBlocks)) {
             const headline = data.textBlocks.find((b) => b.id === 'tb-headline' || b.id === 'tb-title');
             if (headline && headline.content) {
-              eventTitle = headline.content.trim();
+              rawHostNames = headline.content.trim();
             }
           }
           if (data.closedEnvelopeImage && typeof data.closedEnvelopeImage === 'string' && data.closedEnvelopeImage.startsWith('http') && !data.closedEnvelopeImage.endsWith('.svg')) {
@@ -98,64 +117,56 @@ export default async function handler(req, res) {
   }
 
   const guestTitleName = formatGuestTitleName(guestObj, lang);
+  const eventTitle = formatEventTitle(rawHostNames, lang);
 
   let ogTitle = '';
   let ogDesc = '';
 
   if (lang === 'ES') {
-    if (guestTitleName && eventTitle) {
-      ogTitle = `Invitación para ${guestTitleName} a ${eventTitle}`;
-    } else if (guestTitleName) {
-      ogTitle = `Invitación para ${guestTitleName}`;
-    } else if (eventTitle) {
-      ogTitle = `Invitación a ${eventTitle}`;
-    } else {
-      ogTitle = `Invitación al Evento`;
-    }
+    const lowerEv = eventTitle.toLowerCase();
+    const connector = lowerEv.startsWith('matrimonio') || lowerEv.startsWith('boda') ? 'al' : 'a';
+    ogTitle = `Invitación para ${guestTitleName} ${connector} ${eventTitle}`;
     ogDesc = 'Toca para abrir tu invitación digital personalizada.';
   } else {
-    if (guestTitleName && eventTitle) {
-      ogTitle = `Invitation for ${guestTitleName} to ${eventTitle}`;
-    } else if (guestTitleName) {
-      ogTitle = `Invitation for ${guestTitleName}`;
-    } else if (eventTitle) {
-      ogTitle = `Invitation to ${eventTitle}`;
-    } else {
-      ogTitle = `Invitation to Event`;
-    }
-    ogDesc = 'Tap to unseal your personalized digital stationery invitation.';
+    ogTitle = `Invitation for ${guestTitleName} to ${eventTitle}`;
+    ogDesc = 'Tap to open your personalized digital invitation.';
   }
 
-  const frontendUrl = `https://sigil-and-script-frontend.vercel.app/invite/${token || ''}`;
+  const siteUrl = `https://sigil-and-script-frontend.vercel.app/invite/${token || ''}`;
 
-  if (isSocialCrawler(userAgent)) {
-    const html = `<!DOCTYPE html>
-<html lang="${lang === 'ES' ? 'es' : 'en'}">
+  const html = `<!DOCTYPE html>
+<html lang="${lang.toLowerCase()}">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="utf-8" />
   <title>${escapeHtml(ogTitle)}</title>
+  <meta name="description" content="${escapeHtml(ogDesc)}" />
+
+  <!-- Open Graph / WhatsApp / Facebook -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="${escapeHtml(siteUrl)}" />
   <meta property="og:title" content="${escapeHtml(ogTitle)}" />
   <meta property="og:description" content="${escapeHtml(ogDesc)}" />
   <meta property="og:image" content="${escapeHtml(ogImage)}" />
+  <meta property="og:image:type" content="image/png" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
-  <meta property="og:type" content="website" />
-  <meta property="og:url" content="${escapeHtml(frontendUrl)}" />
+  <meta property="og:site_name" content="Sigil &amp; Script" />
+
+  <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:url" content="${escapeHtml(siteUrl)}" />
   <meta name="twitter:title" content="${escapeHtml(ogTitle)}" />
   <meta name="twitter:description" content="${escapeHtml(ogDesc)}" />
   <meta name="twitter:image" content="${escapeHtml(ogImage)}" />
+
+  <meta http-equiv="refresh" content="0;url=${escapeHtml(siteUrl)}" />
 </head>
 <body>
-  <p>Redirecting to invitation...</p>
-  <script>window.location.href = "${escapeHtml(frontendUrl)}";</script>
+  <p>Redirecting to <a href="${escapeHtml(siteUrl)}">${escapeHtml(ogTitle)}</a>...</p>
 </body>
 </html>`;
 
-    res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    return res.status(200).send(html);
-  }
-
-  return res.redirect(302, frontendUrl);
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.setHeader('Cache-Control', 's-maxage=3600, stale-while-revalidate');
+  return res.status(200).send(html);
 }

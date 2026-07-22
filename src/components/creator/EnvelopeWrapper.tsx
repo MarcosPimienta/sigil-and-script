@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { audioEngine } from '../../utils/audioEngine';
 import { useSigilSelector } from '../../context/SigilContext';
 import { SvgColorImage } from '../common/SvgColorImage';
+import { formatFullInvitationTitle } from '../../utils/formatGuestTitle';
 
 interface EnvelopeWrapperProps {
   children?: React.ReactNode;
@@ -22,6 +23,20 @@ interface EnvelopeWrapperProps {
 export function EnvelopeWrapper({ children, onPhaseChange, alwaysOpen }: EnvelopeWrapperProps) {
   const design = useSigilSelector((s) => s.design);
   const guest = useSigilSelector((s) => s.guest);
+
+  // Dynamic document title update based on guest & event
+  useEffect(() => {
+    if (guest && guest.name) {
+      const fullTitle = formatFullInvitationTitle(
+        guest,
+        design.hostNames || design.title,
+        design.language || 'ES'
+      );
+      if (fullTitle) {
+        document.title = fullTitle;
+      }
+    }
+  }, [guest, design.hostNames, design.title, design.language]);
 
   // Expanded cinematic states
   const [phase, setPhase] = useState<

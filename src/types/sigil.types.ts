@@ -70,8 +70,9 @@ export interface GuestRoster {
 export interface GuestPayload {
   /** Primary name or family name. Supports "The Smith Family" */
   guestName: string;
+  name?: string;
   /** Optional array for multi-guest invitations */
-  additionalGuests?: string[];
+  additionalGuests?: (string | { name: string; included?: boolean })[];
   /** Unique token used for mock routing */
   routingToken: string;
   /** Optional RSVP deadline date string */
@@ -89,6 +90,8 @@ export interface GuestPayload {
 export interface InvitationDesign {
   id: string;
   title: string;
+  hostNames?: string;
+  language?: 'ES' | 'EN';
   paperTexture: PaperTexture;
   paperLuminance: PaperLuminance;
   envelopeStyle: EnvelopeStyle;
@@ -136,7 +139,6 @@ export interface InvitationDesign {
   stickerImage?: string;
   sealSize?: number;
   musicUrl?: string;
-  language?: 'EN' | 'ES';
 }
 
 // ── Itinerary Schema ──────────────────────────────────────────────────────────

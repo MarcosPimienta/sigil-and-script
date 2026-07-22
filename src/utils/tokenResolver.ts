@@ -79,9 +79,10 @@ function resolveToken(key: TokenKey, guest: GuestPayload): string {
  * Allows: printable Unicode, spaces, punctuation.
  * Strips: ASCII control characters (U+0000–U+001F, U+007F).
  */
-function sanitizeTokenValue(value: string): string {
+function sanitizeTokenValue(value: string | { name: string; included?: boolean }): string {
+  const str = typeof value === 'string' ? value : value?.name || '';
   // eslint-disable-next-line no-control-regex
-  return value.replace(/[\x00-\x1F\x7F]/g, '').trim();
+  return str.replace(/[\x00-\x1F\x7F]/g, '').trim();
 }
 
 // ── Public API ────────────────────────────────────────────────────────────────

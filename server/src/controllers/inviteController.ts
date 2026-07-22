@@ -28,26 +28,32 @@ function escapeHtml(str: string): string {
     .replace(/'/g, '&#039;');
 }
 
-function getEventTitleFromCanvas(designDataStr?: string | null): string {
-  if (!designDataStr) return 'Our Event';
-  try {
-    const data = typeof designDataStr === 'string' ? JSON.parse(designDataStr) : designDataStr;
-    if (data.hostNames && typeof data.hostNames === 'string' && data.hostNames.trim()) {
-      return data.hostNames.trim();
-    }
-    if (data.title && typeof data.title === 'string' && data.title.trim()) {
-      return data.title.trim();
-    }
-    if (Array.isArray(data.textBlocks)) {
-      const headline = data.textBlocks.find((b: any) => b.id === 'tb-headline' || b.id === 'tb-title');
-      if (headline && headline.content) {
-        return headline.content.trim();
+function getEventTitleFromCanvas(designDataStr?: string | null, lang: string = 'ES'): string {
+  let raw = '';
+  if (designDataStr) {
+    try {
+      const data = typeof designDataStr === 'string' ? JSON.parse(designDataStr) : designDataStr;
+      if (data.hostNames && typeof data.hostNames === 'string' && data.hostNames.trim()) {
+        raw = data.hostNames.trim();
+      } else if (data.title && typeof data.title === 'string' && data.title.trim()) {
+        raw = data.title.trim();
+      } else if (Array.isArray(data.textBlocks)) {
+        const headline = data.textBlocks.find((b: any) => b.id === 'tb-headline' || b.id === 'tb-title');
+        if (headline && headline.content) {
+          raw = headline.content.trim();
+        }
       }
+    } catch (e) {
+      // ignore json parse error
     }
-  } catch (e) {
-    // ignore json parse error
   }
-  return 'Our Event';
+  const isEs = lang.toUpperCase() === 'ES';
+  if (!raw) return isEs ? 'Matrimonio' : 'Wedding';
+  const lower = raw.toLowerCase();
+  if (lower.startsWith('matrimonio') || lower.startsWith('boda') || lower.startsWith('wedding')) {
+    return raw;
+  }
+  return isEs ? `Matrimonio de ${raw}` : `Wedding of ${raw}`;
 }
 
 function getClosedEnvelopeImageUrl(designDataStr?: string | null): string {
@@ -158,33 +164,19 @@ export async function getInviteByToken(req: Request, res: Response): Promise<voi
         }
       }
 
+      const eventTitle = getEventTitleFromCanvas(guest.canvas?.designData, lang);
       const guestName = formatGuestTitleName(guest, lang);
-      const eventTitle = getEventTitleFromCanvas(guest.canvas?.designData);
 
       let ogTitle = '';
       let ogDesc = '';
 
       if (lang === 'ES') {
-        if (guestName && eventTitle && eventTitle !== 'Our Event') {
-          ogTitle = `Invitación para ${guestName} a ${eventTitle}`;
-        } else if (guestName) {
-          ogTitle = `Invitación para ${guestName}`;
-        } else if (eventTitle && eventTitle !== 'Our Event') {
-          ogTitle = `Invitación a ${eventTitle}`;
-        } else {
-          ogTitle = `Invitación al Evento`;
-        }
+        const lowerEv = eventTitle.toLowerCase();
+        const connector = lowerEv.startsWith('matrimonio') || lowerEv.startsWith('boda') ? 'al' : 'a';
+        ogTitle = `Invitación para ${guestName} ${connector} ${eventTitle}`;
         ogDesc = 'Toca para abrir tu invitación digital personalizada.';
       } else {
-        if (guestName && eventTitle && eventTitle !== 'Our Event') {
-          ogTitle = `Invitation for ${guestName} to ${eventTitle}`;
-        } else if (guestName) {
-          ogTitle = `Invitation for ${guestName}`;
-        } else if (eventTitle && eventTitle !== 'Our Event') {
-          ogTitle = `Invitation to ${eventTitle}`;
-        } else {
-          ogTitle = `Invitation to Event`;
-        }
+        ogTitle = `Invitation for ${guestName} to ${eventTitle}`;
         ogDesc = 'Tap to unseal your personalized digital stationery invitation.';
       }
 
