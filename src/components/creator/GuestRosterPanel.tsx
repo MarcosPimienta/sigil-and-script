@@ -5,10 +5,17 @@ import { CsvIngestionButton } from './CsvIngestionButton';
 
 export function GuestRosterPanel() {
   const invitees = useSigilSelector((s) => s.guestRoster.invitees);
+  const totalDependents = invitees.reduce((acc, i) => acc + (i.dependents?.length || 0), 0);
+  const totalGuestCount = invitees.length + totalDependents;
 
   return (
     <section className="lp-roster-section">
-      <h3 className="lp-section-heading">Guests ({invitees.length})</h3>
+      <h3 className="lp-section-heading">
+        Guests ({totalGuestCount})
+        <span style={{ fontSize: '0.8em', fontWeight: 'normal', opacity: 0.8, marginLeft: '0.5rem' }}>
+          ({invitees.length} primary, {totalDependents} {totalDependents === 1 ? 'dependent' : 'dependents'})
+        </span>
+      </h3>
       <AddInviteeForm />
       <CsvIngestionButton />
       {invitees.length === 0 ? (

@@ -131,7 +131,7 @@ export function CreatorCanvas() {
                         margin: '0.5rem 0 0 0',
                         fontStyle: 'italic',
                       }}>
-                        Hemos reservado ({1 + (state.guest.additionalGuests?.length || 0)}) {1 + (state.guest.additionalGuests?.length || 0) === 1 ? 'cupo' : 'cupos'} para ti
+                        Hemos reservado ({1 + Math.max(state.guest.additionalGuests?.length || 0, state.guest.dependents?.length || 0)}) {1 + Math.max(state.guest.additionalGuests?.length || 0, state.guest.dependents?.length || 0) === 1 ? 'cupo' : 'cupos'} para ti
                       </p>
                       <p style={{
                         fontSize: '0.85rem',
@@ -187,7 +187,7 @@ export function CreatorCanvas() {
                         margin: '0.5rem 0 0 0',
                         fontStyle: 'italic',
                       }}>
-                        Hemos reservado ({1 + (state.guest.additionalGuests?.length || 0)}) {1 + (state.guest.additionalGuests?.length || 0) === 1 ? 'cupo' : 'cupos'} para ti
+                        Hemos reservado ({1 + Math.max(state.guest.additionalGuests?.length || 0, state.guest.dependents?.length || 0)}) {1 + Math.max(state.guest.additionalGuests?.length || 0, state.guest.dependents?.length || 0) === 1 ? 'cupo' : 'cupos'} para ti
                       </p>
                     </div>
                   </div>
