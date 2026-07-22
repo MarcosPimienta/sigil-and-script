@@ -403,17 +403,19 @@ export async function uploadMedia(req: Request, res: Response): Promise<void> {
       headers: {
         'Authorization': `Bearer ${supabaseKey}`,
         'Content-Type': fileType,
+        'x-upsert': 'true',
       },
       body: buffer,
     });
 
-    if (!uploadRes.ok && fileType === 'image/svg+xml') {
-      console.warn('Supabase rejected image/svg+xml, retrying with application/octet-stream...');
+    if (!uploadRes.ok && (fileType === 'image/svg+xml' || fileName.toLowerCase().endsWith('.svg'))) {
+      console.warn('Supabase rejected image/svg+xml, retrying with application/octet-stream fallback...');
       uploadRes = await fetch(targetUrl, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${supabaseKey}`,
           'Content-Type': 'application/octet-stream',
+          'x-upsert': 'true',
         },
         body: buffer,
       });
