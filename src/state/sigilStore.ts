@@ -498,12 +498,12 @@ export const useSigilStore = create<SigilState>((set, get) => ({
       const isBase64Audio = design.musicUrl && design.musicUrl.startsWith('data:audio/');
       const finalMusicUrl = isBase64Audio ? null : (design.musicUrl || null);
 
-      // Clean up base64 image fallbacks if they failed to upload to prevent 413 error
+      // Clean up base64 image fallbacks only if they exceed 2MB payload size to prevent 413 error
       const cleanedDesign = { ...designWithoutMusic };
-      const imageFields: (keyof typeof cleanedDesign)[] = ['openedEnvelopeImage', 'stickerImage', 'closedEnvelopeImage', 'paperImage', 'headerImage', 'frameImage'];
+      const imageFields: (keyof typeof cleanedDesign)[] = ['openedEnvelopeImage', 'stickerImage', 'closedEnvelopeImage', 'paperImage', 'headerImage', 'frameImage', 'registryImage'];
       imageFields.forEach((f) => {
         const val = cleanedDesign[f];
-        if (typeof val === 'string' && val.startsWith('data:image/')) {
+        if (typeof val === 'string' && val.startsWith('data:image/') && val.length > 2_000_000) {
           (cleanedDesign as any)[f] = undefined;
         }
       });

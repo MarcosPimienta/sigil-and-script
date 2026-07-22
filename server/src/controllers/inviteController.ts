@@ -398,7 +398,7 @@ export async function uploadMedia(req: Request, res: Response): Promise<void> {
     const uniqueFileName = `${crypto.randomUUID()}-${sanitizedName}`;
 
     const targetUrl = `${supabaseUrl}/storage/v1/object/${bucket}/${uniqueFileName}`;
-    const uploadRes = await fetch(targetUrl, {
+    let uploadRes = await fetch(targetUrl, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${supabaseKey}`,
@@ -406,6 +406,18 @@ export async function uploadMedia(req: Request, res: Response): Promise<void> {
       },
       body: buffer,
     });
+
+    if (!uploadRes.ok && fileType === 'image/svg+xml') {
+      console.warn('Supabase rejected image/svg+xml, retrying with application/octet-stream...');
+      uploadRes = await fetch(targetUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${supabaseKey}`,
+          'Content-Type': 'application/octet-stream',
+        },
+        body: buffer,
+      });
+    }
 
     if (!uploadRes.ok) {
       const errorText = await uploadRes.text();
