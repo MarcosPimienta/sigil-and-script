@@ -18,12 +18,53 @@ function escapeHtml(str) {
     .replace(/'/g, '&#039;');
 }
 
+function formatGuestTitleName(guest, lang) {
+  const primaryName = (guest && guest.name ? guest.name : '').trim();
+  if (!primaryName) return lang === 'ES' ? 'Invitado' : 'Guest';
+
+  let dependentNames = [];
+  if (guest && guest.dependents) {
+    let deps = guest.dependents;
+    if (typeof deps === 'string') {
+      try { deps = JSON.parse(deps); } catch (e) {}
+    }
+    if (Array.isArray(deps)) {
+      dependentNames = deps
+        .map((d) => (typeof d === 'string' ? d : d.name))
+        .filter((n) => typeof n === 'string' && n.trim().length > 0);
+    }
+  }
+
+  if (dependentNames.length === 0 && guest && guest.additionalGuests) {
+    let add = guest.additionalGuests;
+    if (typeof add === 'string') {
+      try { add = JSON.parse(add); } catch (e) {}
+    }
+    if (Array.isArray(add)) {
+      dependentNames = add
+        .map((d) => (typeof d === 'string' ? d : d.name))
+        .filter((n) => typeof n === 'string' && n.trim().length > 0);
+    }
+  }
+
+  if (dependentNames.length === 0) {
+    return primaryName;
+  }
+
+  if (dependentNames.length === 1) {
+    const connector = lang === 'ES' ? 'y' : '&';
+    return `${primaryName} ${connector} ${dependentNames[0]}`;
+  }
+
+  const familyTag = lang === 'ES' ? 'y Familia' : '& Family';
+  return `${primaryName} ${familyTag}`;
+}
+
 export default async function handler(req, res) {
   const token = req.query.token || (req.url || '').split('/invite/')[1]?.split('?')[0];
   const userAgent = req.headers['user-agent'] || '';
-  const acceptsHtml = (req.headers.accept || '').includes('text/html');
 
-  let guestName = '';
+  let guestObj = null;
   let eventTitle = '';
   let lang = 'ES';
   let ogImage = 'https://sigil-and-script-frontend.vercel.app/envelope-with-seal.png';
@@ -32,12 +73,9 @@ export default async function handler(req, res) {
     try {
       const apiRes = await fetch(`https://sigil-and-script-backend.vercel.app/invite/${token}`);
       if (apiRes.ok) {
-        const guest = await apiRes.json();
-        if (guest && guest.name) {
-          guestName = guest.name.trim();
-        }
-        if (guest && guest.canvas && guest.canvas.designData) {
-          const data = typeof guest.canvas.designData === 'string' ? JSON.parse(guest.canvas.designData) : guest.canvas.designData;
+        guestObj = await apiRes.json();
+        if (guestObj && guestObj.canvas && guestObj.canvas.designData) {
+          const data = typeof guestObj.canvas.designData === 'string' ? JSON.parse(guestObj.canvas.designData) : guestObj.canvas.designData;
           if (data.language && typeof data.language === 'string') {
             lang = data.language.trim().toUpperCase();
           }
@@ -59,14 +97,16 @@ export default async function handler(req, res) {
     }
   }
 
+  const guestTitleName = formatGuestTitleName(guestObj, lang);
+
   let ogTitle = '';
   let ogDesc = '';
 
   if (lang === 'ES') {
-    if (guestName && eventTitle) {
-      ogTitle = `Invitación para ${guestName} a ${eventTitle}`;
-    } else if (guestName) {
-      ogTitle = `Invitación para ${guestName}`;
+    if (guestTitleName && eventTitle) {
+      ogTitle = `Invitación para ${guestTitleName} a ${eventTitle}`;
+    } else if (guestTitleName) {
+      ogTitle = `Invitación para ${guestTitleName}`;
     } else if (eventTitle) {
       ogTitle = `Invitación a ${eventTitle}`;
     } else {
@@ -74,10 +114,10 @@ export default async function handler(req, res) {
     }
     ogDesc = 'Toca para abrir tu invitación digital personalizada.';
   } else {
-    if (guestName && eventTitle) {
-      ogTitle = `Invitation for ${guestName} to ${eventTitle}`;
-    } else if (guestName) {
-      ogTitle = `Invitation for ${guestName}`;
+    if (guestTitleName && eventTitle) {
+      ogTitle = `Invitation for ${guestTitleName} to ${eventTitle}`;
+    } else if (guestTitleName) {
+      ogTitle = `Invitation for ${guestTitleName}`;
     } else if (eventTitle) {
       ogTitle = `Invitation to ${eventTitle}`;
     } else {

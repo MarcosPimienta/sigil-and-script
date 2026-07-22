@@ -65,6 +65,48 @@ function getClosedEnvelopeImageUrl(designDataStr?: string | null): string {
   return fallback;
 }
 
+function formatGuestTitleName(guest: any, lang: 'ES' | 'EN' | string): string {
+  const primaryName = (guest?.name || '').trim();
+  if (!primaryName) return lang === 'ES' ? 'Invitado' : 'Guest';
+
+  let dependentNames: string[] = [];
+  if (guest?.dependents) {
+    let deps = guest.dependents;
+    if (typeof deps === 'string') {
+      try { deps = JSON.parse(deps); } catch (e) {}
+    }
+    if (Array.isArray(deps)) {
+      dependentNames = deps
+        .map((d: any) => (typeof d === 'string' ? d : d.name))
+        .filter((n: any) => typeof n === 'string' && n.trim().length > 0);
+    }
+  }
+
+  if (dependentNames.length === 0 && guest?.additionalGuests) {
+    let add = guest.additionalGuests;
+    if (typeof add === 'string') {
+      try { add = JSON.parse(add); } catch (e) {}
+    }
+    if (Array.isArray(add)) {
+      dependentNames = add
+        .map((d: any) => (typeof d === 'string' ? d : d.name))
+        .filter((n: any) => typeof n === 'string' && n.trim().length > 0);
+    }
+  }
+
+  if (dependentNames.length === 0) {
+    return primaryName;
+  }
+
+  if (dependentNames.length === 1) {
+    const connector = lang === 'ES' ? 'y' : '&';
+    return `${primaryName} ${connector} ${dependentNames[0]}`;
+  }
+
+  const familyTag = lang === 'ES' ? 'y Familia' : '& Family';
+  return `${primaryName} ${familyTag}`;
+}
+
 export async function getInviteByToken(req: Request, res: Response): Promise<void> {
   const { token } = req.params;
 
@@ -104,9 +146,6 @@ export async function getInviteByToken(req: Request, res: Response): Promise<voi
     const acceptsHtml = req.headers.accept?.includes('text/html');
 
     if (acceptsHtml || isSocialCrawler(userAgent)) {
-      const guestName = guest.name || '';
-      const eventTitle = getEventTitleFromCanvas(guest.canvas?.designData);
-      
       let lang = 'ES';
       if (guest.canvas?.designData) {
         try {
@@ -118,6 +157,9 @@ export async function getInviteByToken(req: Request, res: Response): Promise<voi
           // ignore
         }
       }
+
+      const guestName = formatGuestTitleName(guest, lang);
+      const eventTitle = getEventTitleFromCanvas(guest.canvas?.designData);
 
       let ogTitle = '';
       let ogDesc = '';
