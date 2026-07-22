@@ -395,7 +395,7 @@ export function EnvelopeWrapper({ children, onPhaseChange, alwaysOpen }: Envelop
                     backgroundPosition: 'center',
                     backgroundRepeat: 'no-repeat',
                     mixBlendMode: 'multiply',
-                    filter: `brightness(${design.paperBrightness ?? 1.0}) contrast(${design.paperContrast ?? 1.0})`,
+                    filter: `brightness(${design.paperBrightness ?? 1.0}) contrast(${design.paperContrast ?? 1.0}) saturate(${design.paperSaturate ?? 1.0})`,
                     pointerEvents: 'none',
                     zIndex: 0,
                     borderRadius: 'inherit'
@@ -462,7 +462,7 @@ export function EnvelopeWrapper({ children, onPhaseChange, alwaysOpen }: Envelop
                 backgroundPosition: 'center',
                 backgroundRepeat: 'no-repeat',
                 mixBlendMode: 'multiply',
-                filter: `brightness(${design.paperBrightness ?? 1.0}) contrast(${design.paperContrast ?? 1.0})`,
+                filter: `brightness(${design.paperBrightness ?? 1.0}) contrast(${design.paperContrast ?? 1.0}) saturate(${design.paperSaturate ?? 1.0})`,
                 borderRadius: 'inherit'
               }} />
             </div>

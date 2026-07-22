@@ -109,6 +109,8 @@ export interface InvitationDesign {
   paperBrightness?: number;
   /** Filter contrast applied to the custom paper image (default: 1.0) */
   paperContrast?: number;
+  /** Filter saturation applied to the custom paper image (default: 1.0) */
+  paperSaturate?: number;
   rsvpFormConfig?: RsvpFormConfig;
   countdownTarget?: string;
   itinerary?: ItineraryItem[];

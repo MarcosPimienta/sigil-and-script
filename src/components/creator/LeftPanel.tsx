@@ -546,6 +546,27 @@ export function LeftPanel() {
                   style={{ width: '100%', accentColor: 'var(--color-sepia-600)' }}
                 />
               </div>
+
+              <div className="lp-field" style={{ marginTop: '0.8rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <label className="lp-field-label" htmlFor="slider-paper-saturate">
+                    Saturación de Textura (Saturation)
+                  </label>
+                  <span style={{ fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.5)' }}>
+                    {design.paperSaturate ?? 1.0}
+                  </span>
+                </div>
+                <input
+                  id="slider-paper-saturate"
+                  type="range"
+                  min="0"
+                  max="3"
+                  step="0.05"
+                  value={design.paperSaturate ?? 1.0}
+                  onChange={(e) => updateDesign({ paperSaturate: parseFloat(e.target.value) })}
+                  style={{ width: '100%', accentColor: 'var(--color-sepia-600)' }}
+                />
+              </div>
             </>
           )}
 

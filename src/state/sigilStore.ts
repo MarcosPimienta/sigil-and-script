@@ -78,6 +78,7 @@ const DEFAULT_DESIGN: InvitationDesign = {
   stickerImage: '',
   sealSize: 75,
   musicUrl: '',
+  paperSaturate: 1.0,
   language: 'ES',
 };
 
