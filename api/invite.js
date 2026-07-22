@@ -88,7 +88,7 @@ export default async function handler(req, res) {
 
   const frontendUrl = `https://sigil-and-script-frontend.vercel.app/invite/${token || ''}`;
 
-  if (isSocialCrawler(userAgent) || acceptsHtml) {
+  if (isSocialCrawler(userAgent)) {
     const html = `<!DOCTYPE html>
 <html lang="${lang === 'ES' ? 'es' : 'en'}">
 <head>

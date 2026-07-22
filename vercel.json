@@ -2,6 +2,13 @@
   "rewrites": [
     {
       "source": "/invite/:token",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(whatsapp|facebookexternalhit|twitterbot|telegrambot|slackbot|linkedinbot|applebot|discordbot|bingbot|googlebot).*"
+        }
+      ],
       "destination": "/api/invite?token=:token"
     },
     { "source": "/(.*)", "destination": "/index.html" }
