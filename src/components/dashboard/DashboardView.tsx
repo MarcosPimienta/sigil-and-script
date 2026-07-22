@@ -7,6 +7,9 @@ import { AddInviteeForm } from '../creator/AddInviteeForm';
 import { CsvIngestionButton } from '../creator/CsvIngestionButton';
 import { DependentCheckbox } from '../creator/DependentCheckbox';
 
+export type SortColumn = 'name' | 'dependents' | 'status' | 'openedAt';
+export type SortDirection = 'asc' | 'desc';
+
 // ── Copy-link cell ────────────────────────────────────────────────────────────
 
 function CopyLinkCell({ invitee }: { invitee: InviteeRecord }) {
@@ -30,6 +33,51 @@ function CopyLinkCell({ invitee }: { invitee: InviteeRecord }) {
   );
 }
 
+// ── Sort Header Cell ──────────────────────────────────────────────────────────
+
+function SortHeader({
+  col,
+  label,
+  currentCol,
+  currentDir,
+  onSort,
+}: {
+  col: SortColumn;
+  label: string;
+  currentCol: SortColumn;
+  currentDir: SortDirection;
+  onSort: (col: SortColumn) => void;
+}) {
+  const active = currentCol === col;
+  const caret = active ? (currentDir === 'asc' ? '▲' : '▼') : '↕';
+
+  return (
+    <th
+      scope="col"
+      onClick={() => onSort(col)}
+      style={{
+        cursor: 'pointer',
+        userSelect: 'none',
+      }}
+      title={`Click to sort by ${label} (${active && currentDir === 'asc' ? 'Descending' : 'Ascending'})`}
+    >
+      <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+        <span>{label}</span>
+        <span
+          style={{
+            fontSize: '0.75rem',
+            opacity: active ? 1 : 0.4,
+            color: active ? '#4A5D23' : 'inherit',
+            fontWeight: active ? 'bold' : 'normal',
+          }}
+        >
+          {caret}
+        </span>
+      </div>
+    </th>
+  );
+}
+
 // ── Dashboard view ────────────────────────────────────────────────────────────
 
 export function DashboardView() {
@@ -41,6 +89,19 @@ export function DashboardView() {
   const [editingNameId, setEditingNameId] = useState<string | null>(null);
   const [editingNameValue, setEditingNameValue] = useState<string>('');
   const [depInputMap, setDepInputMap] = useState<Record<string, string>>({});
+
+  // ── Sorting state ──────────────────────────────────────────────────────────
+  const [sortColumn, setSortColumn] = useState<SortColumn>('name');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+
+  function handleSort(col: SortColumn) {
+    if (sortColumn === col) {
+      setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortColumn(col);
+      setSortDirection('asc');
+    }
+  }
 
   function toggleExpand(id: string) {
     setExpandedIds((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -79,6 +140,46 @@ export function DashboardView() {
     { value: 'RSVP_YES', label: 'Attending' },
     { value: 'RSVP_NO', label: 'Declined' },
   ];
+
+  // ── Sort Invitees List ─────────────────────────────────────────────────────
+  const sortedInvitees = [...invitees].sort((a, b) => {
+    let valA: string | number = '';
+    let valB: string | number = '';
+
+    switch (sortColumn) {
+      case 'name':
+        valA = a.name.toLowerCase();
+        valB = b.name.toLowerCase();
+        break;
+
+      case 'dependents':
+        valA = a.dependents ? a.dependents.length : 0;
+        valB = b.dependents ? b.dependents.length : 0;
+        break;
+
+      case 'status': {
+        const statusOrder: Record<string, number> = {
+          PENDING: 1,
+          SENT: 2,
+          OPENED: 3,
+          RSVP_YES: 4,
+          RSVP_NO: 5,
+        };
+        valA = statusOrder[a.status] ?? 99;
+        valB = statusOrder[b.status] ?? 99;
+        break;
+      }
+
+      case 'openedAt':
+        valA = a.openedAt ? new Date(a.openedAt).getTime() : 0;
+        valB = b.openedAt ? new Date(b.openedAt).getTime() : 0;
+        break;
+    }
+
+    if (valA < valB) return sortDirection === 'asc' ? -1 : 1;
+    if (valA > valB) return sortDirection === 'asc' ? 1 : -1;
+    return 0;
+  });
 
   return (
     <div className="dashboard-view">
@@ -122,7 +223,7 @@ export function DashboardView() {
       )}
 
       <p className="dashboard-limitation-note">
-        Opened status is tracked in this browser only. Use the status pill dropdowns below to manage invitation states and dependents.
+        Click on any column header caret (▲ / ▼ / ↕) to sort alphabetically, by dependents, status, or date.
       </p>
 
       {invitees.length === 0 ? (
@@ -133,15 +234,39 @@ export function DashboardView() {
         <table className="dashboard-table">
           <thead>
             <tr>
-              <th scope="col">Name</th>
-              <th scope="col">Dependents</th>
-              <th scope="col">Status</th>
-              <th scope="col">Opened At</th>
+              <SortHeader
+                col="name"
+                label="Name"
+                currentCol={sortColumn}
+                currentDir={sortDirection}
+                onSort={handleSort}
+              />
+              <SortHeader
+                col="dependents"
+                label="Dependents"
+                currentCol={sortColumn}
+                currentDir={sortDirection}
+                onSort={handleSort}
+              />
+              <SortHeader
+                col="status"
+                label="Status"
+                currentCol={sortColumn}
+                currentDir={sortDirection}
+                onSort={handleSort}
+              />
+              <SortHeader
+                col="openedAt"
+                label="Opened At"
+                currentCol={sortColumn}
+                currentDir={sortDirection}
+                onSort={handleSort}
+              />
               <th scope="col">Actions</th>
             </tr>
           </thead>
           <tbody>
-            {invitees.map((inv) => {
+            {sortedInvitees.map((inv) => {
               const isExpanded = !!expandedIds[inv.id];
               const isEditingName = editingNameId === inv.id;
 
