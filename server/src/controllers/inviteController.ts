@@ -104,20 +104,59 @@ export async function getInviteByToken(req: Request, res: Response): Promise<voi
     const acceptsHtml = req.headers.accept?.includes('text/html');
 
     if (acceptsHtml || isSocialCrawler(userAgent)) {
-      const guestName = guest.name || 'Guest';
+      const guestName = guest.name || '';
       const eventTitle = getEventTitleFromCanvas(guest.canvas?.designData);
-      const ogTitle = `Invitation for ${guestName} to ${eventTitle}`;
+      
+      let lang = 'ES';
+      if (guest.canvas?.designData) {
+        try {
+          const data = typeof guest.canvas.designData === 'string' ? JSON.parse(guest.canvas.designData) : guest.canvas.designData;
+          if (data.language && typeof data.language === 'string') {
+            lang = data.language.trim().toUpperCase();
+          }
+        } catch (e) {
+          // ignore
+        }
+      }
+
+      let ogTitle = '';
+      let ogDesc = '';
+
+      if (lang === 'ES') {
+        if (guestName && eventTitle && eventTitle !== 'Our Event') {
+          ogTitle = `Invitación para ${guestName} a ${eventTitle}`;
+        } else if (guestName) {
+          ogTitle = `Invitación para ${guestName}`;
+        } else if (eventTitle && eventTitle !== 'Our Event') {
+          ogTitle = `Invitación a ${eventTitle}`;
+        } else {
+          ogTitle = `Invitación al Evento`;
+        }
+        ogDesc = 'Toca para abrir tu invitación digital personalizada.';
+      } else {
+        if (guestName && eventTitle && eventTitle !== 'Our Event') {
+          ogTitle = `Invitation for ${guestName} to ${eventTitle}`;
+        } else if (guestName) {
+          ogTitle = `Invitation for ${guestName}`;
+        } else if (eventTitle && eventTitle !== 'Our Event') {
+          ogTitle = `Invitation to ${eventTitle}`;
+        } else {
+          ogTitle = `Invitation to Event`;
+        }
+        ogDesc = 'Tap to unseal your personalized digital stationery invitation.';
+      }
+
       const ogImage = getClosedEnvelopeImageUrl(guest.canvas?.designData);
       const frontendUrl = `https://sigil-and-script-frontend.vercel.app/invite/${validatedToken}`;
 
       const html = `<!DOCTYPE html>
-<html lang="en">
+<html lang="${lang === 'ES' ? 'es' : 'en'}">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>${escapeHtml(ogTitle)}</title>
   <meta property="og:title" content="${escapeHtml(ogTitle)}" />
-  <meta property="og:description" content="Tap to unseal your personalized digital stationery invitation." />
+  <meta property="og:description" content="${escapeHtml(ogDesc)}" />
   <meta property="og:image" content="${escapeHtml(ogImage)}" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
@@ -125,7 +164,7 @@ export async function getInviteByToken(req: Request, res: Response): Promise<voi
   <meta property="og:url" content="${escapeHtml(frontendUrl)}" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="${escapeHtml(ogTitle)}" />
-  <meta name="twitter:description" content="Tap to unseal your personalized digital stationery invitation." />
+  <meta name="twitter:description" content="${escapeHtml(ogDesc)}" />
   <meta name="twitter:image" content="${escapeHtml(ogImage)}" />
 </head>
 <body>

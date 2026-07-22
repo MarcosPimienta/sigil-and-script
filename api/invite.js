@@ -25,6 +25,7 @@ export default async function handler(req, res) {
 
   let guestName = '';
   let eventTitle = '';
+  let lang = 'ES';
   let ogImage = 'https://sigil-and-script-frontend.vercel.app/envelope-with-seal.png';
 
   if (token && token.length > 10) {
@@ -37,6 +38,9 @@ export default async function handler(req, res) {
         }
         if (guest && guest.canvas && guest.canvas.designData) {
           const data = typeof guest.canvas.designData === 'string' ? JSON.parse(guest.canvas.designData) : guest.canvas.designData;
+          if (data.language && typeof data.language === 'string') {
+            lang = data.language.trim().toUpperCase();
+          }
           if (data.hostNames && typeof data.hostNames === 'string' && data.hostNames.trim()) {
             eventTitle = data.hostNames.trim();
           } else if (Array.isArray(data.textBlocks)) {
@@ -55,26 +59,44 @@ export default async function handler(req, res) {
     }
   }
 
-  let ogTitle = 'Invitation to Event';
-  if (guestName && eventTitle) {
-    ogTitle = `Invitation for ${guestName} to ${eventTitle}`;
-  } else if (guestName) {
-    ogTitle = `Invitation for ${guestName}`;
-  } else if (eventTitle) {
-    ogTitle = `Invitation to ${eventTitle}`;
+  let ogTitle = '';
+  let ogDesc = '';
+
+  if (lang === 'ES') {
+    if (guestName && eventTitle) {
+      ogTitle = `Invitación para ${guestName} a ${eventTitle}`;
+    } else if (guestName) {
+      ogTitle = `Invitación para ${guestName}`;
+    } else if (eventTitle) {
+      ogTitle = `Invitación a ${eventTitle}`;
+    } else {
+      ogTitle = `Invitación al Evento`;
+    }
+    ogDesc = 'Toca para abrir tu invitación digital personalizada.';
+  } else {
+    if (guestName && eventTitle) {
+      ogTitle = `Invitation for ${guestName} to ${eventTitle}`;
+    } else if (guestName) {
+      ogTitle = `Invitation for ${guestName}`;
+    } else if (eventTitle) {
+      ogTitle = `Invitation to ${eventTitle}`;
+    } else {
+      ogTitle = `Invitation to Event`;
+    }
+    ogDesc = 'Tap to unseal your personalized digital stationery invitation.';
   }
 
   const frontendUrl = `https://sigil-and-script-frontend.vercel.app/invite/${token || ''}`;
 
   if (isSocialCrawler(userAgent) || acceptsHtml) {
     const html = `<!DOCTYPE html>
-<html lang="en">
+<html lang="${lang === 'ES' ? 'es' : 'en'}">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>${escapeHtml(ogTitle)}</title>
   <meta property="og:title" content="${escapeHtml(ogTitle)}" />
-  <meta property="og:description" content="Tap to unseal your personalized digital stationery invitation." />
+  <meta property="og:description" content="${escapeHtml(ogDesc)}" />
   <meta property="og:image" content="${escapeHtml(ogImage)}" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
@@ -82,7 +104,7 @@ export default async function handler(req, res) {
   <meta property="og:url" content="${escapeHtml(frontendUrl)}" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="${escapeHtml(ogTitle)}" />
-  <meta name="twitter:description" content="Tap to unseal your personalized digital stationery invitation." />
+  <meta name="twitter:description" content="${escapeHtml(ogDesc)}" />
   <meta name="twitter:image" content="${escapeHtml(ogImage)}" />
 </head>
 <body>
