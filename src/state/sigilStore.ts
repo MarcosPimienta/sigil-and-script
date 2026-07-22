@@ -139,6 +139,7 @@ export interface SigilState {
   }) => Promise<void>;
   fetchInvitationDetails: (token: string) => Promise<void>;
   saveCurrentDesign: () => Promise<void>;
+  refreshRoster: () => Promise<void>;
   loadDesign: (designId: string) => Promise<void>;
   fetchSavedDesigns: () => Promise<{ id: string; title: string; countdownTarget: string }[]>;
   deleteSavedDesign: (designId: string) => Promise<void>;
@@ -570,6 +571,42 @@ export const useSigilStore = create<SigilState>((set, get) => ({
         apiError: error.message || 'Failed to save configuration',
       });
       throw error;
+    }
+  },
+
+  refreshRoster: async () => {
+    const { design } = get();
+    if (!design.id || design.id === 'design-default') return;
+    try {
+      const canvas = await apiFetch(`/canvas/${design.id}`);
+      if (canvas && Array.isArray(canvas.invitees)) {
+        const loadedInvitees: InviteeRecord[] = canvas.invitees.map((inv: any) => {
+          let dependents: Dependent[] = [];
+          if (inv.formResponses) {
+            try {
+              const parsed = JSON.parse(inv.formResponses);
+              if (Array.isArray(parsed.dependents)) {
+                dependents = parsed.dependents;
+              }
+            } catch (e) {
+              console.error('Failed to parse formResponses in refreshRoster', e);
+            }
+          }
+          return {
+            id: inv.id,
+            name: inv.name,
+            email: inv.email || undefined,
+            dependents,
+            status: (inv.status || 'PENDING') as import('../types/sigil.types').InvitationStatus,
+            openedAt: inv.openedTimestamp || undefined,
+          };
+        });
+        const roster: GuestRoster = { invitees: loadedInvitees };
+        localStorage.setItem('sigil-guest-roster', JSON.stringify(roster));
+        set({ guestRoster: roster });
+      }
+    } catch (e) {
+      console.warn('Failed to refresh live roster from backend:', e);
     }
   },
 

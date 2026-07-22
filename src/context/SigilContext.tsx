@@ -395,6 +395,7 @@ interface SigilContextValue {
   removeDependent: (inviteeId: string, dependentId: string) => void;
   toggleDependent: (inviteeId: string, dependentId: string) => void;
   markInvitationOpened: (inviteeId: string) => void;
+  refreshRoster: () => Promise<void>;
   submitRsvp: (payload: {
     tokenOrId: string;
     status: 'RSVP_YES' | 'RSVP_NO';
@@ -455,6 +456,7 @@ export function useSigil(): SigilContextValue {
     removeDependent: store.removeDependent,
     toggleDependent: store.toggleDependent,
     markInvitationOpened: store.markInvitationOpened,
+    refreshRoster: store.refreshRoster,
     submitRsvp: store.submitRsvp,
     fetchInvitationDetails: store.fetchInvitationDetails,
   };

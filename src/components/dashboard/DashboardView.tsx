@@ -1,4 +1,4 @@
-import { useState, useCallback, Fragment } from 'react';
+import { useState, useCallback, useEffect, Fragment } from 'react';
 import type { InviteeRecord, InvitationStatus } from '../../types/sigil.types';
 import '../../styles/dashboard.css';
 import { useSigil, useSigilSelector } from '../../context/SigilContext';
@@ -81,8 +81,25 @@ function SortHeader({
 // ── Dashboard view ────────────────────────────────────────────────────────────
 
 export function DashboardView() {
-  const { updateInvitee, removeInvitee, addDependent } = useSigil();
+  const { updateInvitee, removeInvitee, addDependent, refreshRoster } = useSigil();
   const invitees = useSigilSelector((s) => s.guestRoster.invitees);
+  const [isSyncing, setIsSyncing] = useState(false);
+
+  useEffect(() => {
+    if (refreshRoster) {
+      refreshRoster().catch((e) => console.error('Failed to sync live RSVPs:', e));
+    }
+  }, [refreshRoster]);
+
+  const handleManualSync = useCallback(async () => {
+    if (!refreshRoster) return;
+    setIsSyncing(true);
+    try {
+      await refreshRoster();
+    } finally {
+      setTimeout(() => setIsSyncing(false), 600);
+    }
+  }, [refreshRoster]);
 
   const [showAddForm, setShowAddForm] = useState(false);
   const [expandedIds, setExpandedIds] = useState<Record<string, boolean>>({});
@@ -188,6 +205,22 @@ export function DashboardView() {
         <DashboardStats invitees={invitees} />
         
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <button
+            type="button"
+            className="dashboard-action-btn"
+            onClick={handleManualSync}
+            disabled={isSyncing}
+            style={{
+              backgroundColor: isSyncing ? 'rgba(74, 93, 35, 0.4)' : '#28c76f',
+              color: '#ffffff',
+              borderColor: 'transparent',
+              fontWeight: 600,
+              padding: '6px 14px',
+            }}
+            title="Fetch real-time live RSVPs & confirmations from backend database"
+          >
+            {isSyncing ? '🔄 Syncing...' : '🔄 Sync RSVPs'}
+          </button>
           <button
             type="button"
             className="dashboard-action-btn"
