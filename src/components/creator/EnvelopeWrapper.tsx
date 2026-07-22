@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { audioEngine } from '../../utils/audioEngine';
 import { useSigilSelector } from '../../context/SigilContext';
+import { SvgColorImage } from '../common/SvgColorImage';
 
 interface EnvelopeWrapperProps {
   children?: React.ReactNode;
@@ -208,8 +209,8 @@ export function EnvelopeWrapper({ children, onPhaseChange, alwaysOpen }: Envelop
         color: '#333333'
       }}>
         <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
-        {/* Host Names or Event Title Artwork */}
-        {design.headerImage ? (
+        {/* Event Title Artwork (above title text) */}
+        {design.headerImage && (
           <div style={{
             display: 'flex',
             justifyContent: 'center',
@@ -217,30 +218,27 @@ export function EnvelopeWrapper({ children, onPhaseChange, alwaysOpen }: Envelop
             width: '100%',
             margin: '0 auto 0.5rem auto',
           }}>
-            <img 
-              src={design.headerImage} 
-              alt="Event Title Artwork" 
-              style={{
-                maxWidth: `${Math.round(280 * ((design.headerImageScale ?? 100) / 100))}px`,
-                maxHeight: `${Math.round(180 * ((design.headerImageScale ?? 100) / 100))}px`,
-                objectFit: 'contain',
-                display: 'block',
-                margin: '0 auto',
-              }}
+            <SvgColorImage
+              src={design.headerImage}
+              alt="Event Title Artwork"
+              color="#111111"
+              maxWidth={Math.round(280 * ((design.headerImageScale ?? 100) / 100))}
+              maxHeight={Math.round(180 * ((design.headerImageScale ?? 100) / 100))}
             />
           </div>
-        ) : (
-          <h2 className="letter-host-names" style={{
-            fontSize: '1.45rem',
-            fontWeight: 400,
-            color: '#111111',
-            margin: '0 0 0.3rem 0',
-            letterSpacing: '0.04em',
-            fontFamily: "'Cormorant Garamond', serif",
-          }}>
-            {hostNames}
-          </h2>
         )}
+
+        {/* Title Text */}
+        <h2 className="letter-host-names" style={{
+          fontSize: '1.45rem',
+          fontWeight: 400,
+          color: '#111111',
+          margin: '0 0 0.3rem 0',
+          letterSpacing: '0.04em',
+          fontFamily: "'Cormorant Garamond', serif",
+        }}>
+          {hostNames}
+        </h2>
 
         <span className="letter-invite-prompt" style={{
           fontSize: '0.58rem',
@@ -343,6 +341,17 @@ export function EnvelopeWrapper({ children, onPhaseChange, alwaysOpen }: Envelop
         <div className="envelope-png-wrapper">
           {/* Header titles: fade in after seal cracking */}
           <div style={{ minHeight: '80px', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', alignItems: 'center', width: '100%' }}>
+            {design.headerImage && (
+              <div style={{ marginBottom: '0.4rem' }}>
+                <SvgColorImage
+                  src={design.headerImage}
+                  alt="Event Title Artwork"
+                  color="#ffffff"
+                  maxWidth={Math.round(200 * ((design.headerImageScale ?? 100) / 100))}
+                  maxHeight={Math.round(100 * ((design.headerImageScale ?? 100) / 100))}
+                />
+              </div>
+            )}
             <h2 className="envelope-header-title">
               {hostNames}
             </h2>

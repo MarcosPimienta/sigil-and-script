@@ -10,6 +10,7 @@ import { resolveTokens } from '../../utils/tokenResolver';
 import { PAPER_CSS_VAR } from '../../utils/luminanceGuards';
 import { TextBlock } from './TextBlock';
 import { SvgFilterBank } from '../shared/SvgFilterBank';
+import { SvgColorImage } from '../common/SvgColorImage';
 
 // ── Ornamental border SVG overlay ─────────────────────────────────────────────
 
@@ -313,7 +314,7 @@ export function InvitationStage({
 
         {/* ── Flowing content column ─── */}
         <div className="stage-content">
-          {/* Custom Event Title Artwork / Calligraphy Header Image */}
+          {/* Custom Event Title Artwork / Calligraphy Header Image (above title text) */}
           {design.headerImage && (
             <div style={{
               display: 'flex',
@@ -322,16 +323,12 @@ export function InvitationStage({
               width: '100%',
               margin: '0 auto 1rem auto',
             }}>
-              <img
+              <SvgColorImage
                 src={design.headerImage}
                 alt="Event Title Artwork"
-                style={{
-                  maxWidth: `${Math.round(280 * ((design.headerImageScale ?? 100) / 100))}px`,
-                  maxHeight: `${Math.round(200 * ((design.headerImageScale ?? 100) / 100))}px`,
-                  objectFit: 'contain',
-                  display: 'block',
-                  margin: '0 auto',
-                }}
+                color="var(--color-sepia-800, #4c4844)"
+                maxWidth={Math.round(280 * ((design.headerImageScale ?? 100) / 100))}
+                maxHeight={Math.round(200 * ((design.headerImageScale ?? 100) / 100))}
               />
             </div>
           )}
