@@ -228,18 +228,6 @@ export function EnvelopeWrapper({ children, onPhaseChange, alwaysOpen }: Envelop
           </div>
         )}
 
-        {/* Title Text */}
-        <h2 className="letter-host-names" style={{
-          fontSize: '1.45rem',
-          fontWeight: 400,
-          color: '#111111',
-          margin: '0 0 0.3rem 0',
-          letterSpacing: '0.04em',
-          fontFamily: "'Cormorant Garamond', serif",
-        }}>
-          {hostNames}
-        </h2>
-
         <span className="letter-invite-prompt" style={{
           fontSize: '0.58rem',
           letterSpacing: '0.12em',
