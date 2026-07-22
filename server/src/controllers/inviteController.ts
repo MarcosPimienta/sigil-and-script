@@ -9,6 +9,62 @@ const getPrisma = (): PrismaClient => { if (!_prisma) _prisma = new PrismaClient
 
 const tokenParamSchema = z.string().uuid();
 
+function isSocialCrawler(ua?: string): boolean {
+  if (!ua) return false;
+  const crawlers = [
+    'whatsapp', 'facebookexternalhit', 'twitterbot', 'telegrambot',
+    'slackbot', 'linkedinbot', 'applebot', 'discordbot', 'bingbot', 'googlebot'
+  ];
+  const lower = ua.toLowerCase();
+  return crawlers.some((c) => lower.includes(c));
+}
+
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function getEventTitleFromCanvas(designDataStr?: string | null): string {
+  if (!designDataStr) return 'Our Event';
+  try {
+    const data = typeof designDataStr === 'string' ? JSON.parse(designDataStr) : designDataStr;
+    if (data.hostNames && typeof data.hostNames === 'string' && data.hostNames.trim()) {
+      return data.hostNames.trim();
+    }
+    if (data.title && typeof data.title === 'string' && data.title.trim()) {
+      return data.title.trim();
+    }
+    if (Array.isArray(data.textBlocks)) {
+      const headline = data.textBlocks.find((b: any) => b.id === 'tb-headline' || b.id === 'tb-title');
+      if (headline && headline.content) {
+        return headline.content.trim();
+      }
+    }
+  } catch (e) {
+    // ignore json parse error
+  }
+  return 'Our Event';
+}
+
+function getClosedEnvelopeImageUrl(designDataStr?: string | null): string {
+  const fallback = 'https://sigil-and-script-frontend.vercel.app/icons/letter-envelope.svg';
+  if (!designDataStr) return fallback;
+  try {
+    const data = typeof designDataStr === 'string' ? JSON.parse(designDataStr) : designDataStr;
+    const img = data.closedEnvelopeImage || data.openedEnvelopeImage || data.headerImage;
+    if (typeof img === 'string' && img.startsWith('http')) {
+      return img;
+    }
+  } catch (e) {
+    // ignore
+  }
+  return fallback;
+}
+
 export async function getInviteByToken(req: Request, res: Response): Promise<void> {
   const { token } = req.params;
 
@@ -32,15 +88,53 @@ export async function getInviteByToken(req: Request, res: Response): Promise<voi
     }
 
     if (guest.status === 'PENDING') {
-      const updatedGuest = await getPrisma().guest.update({
+      const now = new Date().toISOString();
+      await getPrisma().guest.update({
         where: { id: validatedToken },
         data: {
           status: 'OPENED',
-          openedTimestamp: new Date().toISOString(),
+          openedTimestamp: now,
         },
-        include: { canvas: true },
       });
-      res.json(updatedGuest);
+      guest.status = 'OPENED';
+      guest.openedTimestamp = now;
+    }
+
+    const userAgent = req.headers['user-agent'] || '';
+    const acceptsHtml = req.headers.accept?.includes('text/html');
+
+    if (acceptsHtml || isSocialCrawler(userAgent)) {
+      const guestName = guest.name || 'Guest';
+      const eventTitle = getEventTitleFromCanvas(guest.canvas?.designData);
+      const ogTitle = `Invitation for ${guestName} to ${eventTitle}`;
+      const ogImage = getClosedEnvelopeImageUrl(guest.canvas?.designData);
+      const frontendUrl = `https://sigil-and-script-frontend.vercel.app/invite/${validatedToken}`;
+
+      const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>${escapeHtml(ogTitle)}</title>
+  <meta property="og:title" content="${escapeHtml(ogTitle)}" />
+  <meta property="og:description" content="Tap to unseal your personalized digital stationery invitation." />
+  <meta property="og:image" content="${escapeHtml(ogImage)}" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="${escapeHtml(frontendUrl)}" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="${escapeHtml(ogTitle)}" />
+  <meta name="twitter:description" content="Tap to unseal your personalized digital stationery invitation." />
+  <meta name="twitter:image" content="${escapeHtml(ogImage)}" />
+</head>
+<body>
+  <p>Redirecting to invitation...</p>
+  <script>window.location.href = "${escapeHtml(frontendUrl)}";</script>
+</body>
+</html>`;
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      res.status(200).send(html);
       return;
     }
 

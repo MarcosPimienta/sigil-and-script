@@ -99,6 +99,17 @@ describe('Sigil & Script Backend API Tests', () => {
       expect(dbGuestAfter?.openedTimestamp).toBe(initialTimestamp);
     });
 
+    it('should return HTML Open Graph tags when request accepts text/html', async () => {
+      const res = await request(app)
+        .get(`/invite/${openedGuestId}`)
+        .set('Accept', 'text/html')
+        .expect(200);
+
+      expect(res.headers['content-type']).toContain('text/html');
+      expect(res.text).toContain('<meta property="og:title" content="Invitation for Jane Smith to Our Event" />');
+      expect(res.text).toContain('<meta property="og:image"');
+    });
+
     it('should return 404 for a non-existent UUID token', async () => {
       const res = await request(app)
         .get(`/invite/${nonExistentGuestId}`)
