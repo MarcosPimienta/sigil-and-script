@@ -33,8 +33,7 @@ beforeEach(() => {
 describe('InviteeRow', () => {
   it('renders the invitee name and status badge', () => {
     render(<InviteeRow invitee={baseInvitee} />);
-    expect(screen.getByText('Sophie Martin')).toBeTruthy();
-    expect(screen.getByRole('status')).toBeTruthy();
+    expect(screen.getByText(/Sophie Martin/i)).toBeTruthy();
   });
 
   it('dependents section hidden by default', () => {

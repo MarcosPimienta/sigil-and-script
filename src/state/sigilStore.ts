@@ -124,6 +124,7 @@ export interface SigilState {
   removeInvitee: (inviteeId: string) => void;
   updateInvitee: (inviteeId: string, updates: Partial<Pick<InviteeRecord, 'name' | 'email' | 'status'>>) => void;
   addDependent: (inviteeId: string, name: string) => void;
+  updateDependentName: (inviteeId: string, dependentId: string, name: string) => void;
   removeDependent: (inviteeId: string, dependentId: string) => void;
   toggleDependent: (inviteeId: string, dependentId: string) => void;
   markInvitationOpened: (inviteeId: string) => void;
@@ -303,6 +304,30 @@ export const useSigilStore = create<SigilState>((set, get) => ({
         invitees: state.guestRoster.invitees.map((inv) =>
           inv.id === inviteeId
             ? { ...inv, dependents: inv.dependents.filter((d) => d.id !== dependentId) }
+            : inv,
+        ),
+      };
+      localStorage.setItem('sigil-guest-roster', JSON.stringify(roster));
+      return { guestRoster: roster };
+    });
+    if (get().user) {
+      get().saveCurrentDesign().catch((e) => console.error('Auto-save roster error:', e));
+    }
+  },
+
+  updateDependentName: (inviteeId, dependentId, name) => {
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    set((state) => {
+      const roster = {
+        invitees: state.guestRoster.invitees.map((inv) =>
+          inv.id === inviteeId
+            ? {
+                ...inv,
+                dependents: inv.dependents.map((d) =>
+                  d.id === dependentId ? { ...d, name: trimmed } : d,
+                ),
+              }
             : inv,
         ),
       };

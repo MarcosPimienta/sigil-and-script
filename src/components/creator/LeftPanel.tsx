@@ -6,7 +6,6 @@
 import { useCallback, useState, type ChangeEvent } from 'react';
 import { useSigil } from '../../context/SigilContext';
 import type { InvitationDesign } from '../../types/sigil.types';
-import { GuestRosterPanel } from './GuestRosterPanel';
 import { FormConfiguratorPanel } from './FormConfiguratorPanel';
 import { SectionEditor } from './SectionEditor';
 import { apiFetch } from '../../utils/api';
@@ -694,10 +693,6 @@ export function LeftPanel() {
             />
           </div>
         </section>
-
-        <Divider />
- 
-        <GuestRosterPanel />
 
         {/* Bottom spacer */}
         <div style={{ height: 40 }} />
