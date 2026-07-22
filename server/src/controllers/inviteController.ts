@@ -51,12 +51,12 @@ function getEventTitleFromCanvas(designDataStr?: string | null): string {
 }
 
 function getClosedEnvelopeImageUrl(designDataStr?: string | null): string {
-  const fallback = 'https://sigil-and-script-frontend.vercel.app/icons/letter-envelope.svg';
+  const fallback = 'https://sigil-and-script-frontend.vercel.app/ClosedEnvelope00.png';
   if (!designDataStr) return fallback;
   try {
     const data = typeof designDataStr === 'string' ? JSON.parse(designDataStr) : designDataStr;
     const img = data.closedEnvelopeImage || data.openedEnvelopeImage || data.headerImage;
-    if (typeof img === 'string' && img.startsWith('http')) {
+    if (typeof img === 'string' && img.startsWith('http') && !img.toLowerCase().endsWith('.svg')) {
       return img;
     }
   } catch (e) {

@@ -1,5 +1,16 @@
 {
   "rewrites": [
+    {
+      "source": "/invite/:token",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(whatsapp|facebookexternalhit|twitterbot|telegrambot|slackbot|linkedinbot|applebot|discordbot).*"
+        }
+      ],
+      "destination": "https://sigil-and-script-backend.vercel.app/invite/:token"
+    },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
