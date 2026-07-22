@@ -18,36 +18,50 @@ function escapeHtml(str) {
     .replace(/'/g, '&#039;');
 }
 
-function formatGuestTitleName(guest, lang) {
-  const primaryName = (guest && guest.name ? guest.name : '').trim();
-  if (!primaryName) return lang === 'ES' ? 'Invitado' : 'Guest';
+function extractDependentsFromGuest(guest) {
+  if (!guest) return [];
 
-  let dependentNames = [];
-  if (guest && guest.dependents) {
+  // 1. Check direct guest.dependents
+  if (guest.dependents) {
     let deps = guest.dependents;
     if (typeof deps === 'string') {
       try { deps = JSON.parse(deps); } catch (e) {}
     }
-    if (Array.isArray(deps)) {
-      dependentNames = deps
-        .filter((d) => d && (d.included === undefined || d.included === true))
-        .map((d) => (typeof d === 'string' ? d : d.name))
-        .filter((n) => typeof n === 'string' && n.trim().length > 0);
+    if (Array.isArray(deps)) return deps;
+  }
+
+  // 2. Check guest.formResponses (where Prisma stores JSON serialized form responses)
+  if (guest.formResponses) {
+    let resp = guest.formResponses;
+    if (typeof resp === 'string') {
+      try { resp = JSON.parse(resp); } catch (e) {}
+    }
+    if (resp && typeof resp === 'object' && Array.isArray(resp.dependents)) {
+      return resp.dependents;
     }
   }
 
-  if (dependentNames.length === 0 && guest && guest.additionalGuests) {
+  // 3. Fallback to guest.additionalGuests
+  if (guest.additionalGuests) {
     let add = guest.additionalGuests;
     if (typeof add === 'string') {
       try { add = JSON.parse(add); } catch (e) {}
     }
-    if (Array.isArray(add)) {
-      dependentNames = add
-        .filter((d) => d && (d.included === undefined || d.included === true))
-        .map((d) => (typeof d === 'string' ? d : d.name))
-        .filter((n) => typeof n === 'string' && n.trim().length > 0);
-    }
+    if (Array.isArray(add)) return add;
   }
+
+  return [];
+}
+
+function formatGuestTitleName(guest, lang) {
+  const primaryName = (guest && (guest.name || guest.guestName) ? (guest.name || guest.guestName) : '').trim();
+  if (!primaryName) return lang === 'ES' ? 'Invitado' : 'Guest';
+
+  const rawDeps = extractDependentsFromGuest(guest);
+  const dependentNames = rawDeps
+    .filter((d) => d && (d.included === undefined || d.included === true))
+    .map((d) => (typeof d === 'string' ? d : d.name))
+    .filter((n) => typeof n === 'string' && n.trim().length > 0);
 
   if (dependentNames.length === 0) {
     return primaryName;

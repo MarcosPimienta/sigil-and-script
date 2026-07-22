@@ -2,15 +2,15 @@ export interface GuestLike {
   name?: string;
   guestName?: string;
   dependents?: Array<{ name: string; included?: boolean }> | string;
+  formResponses?: { dependents?: Array<{ name: string; included?: boolean }> } | string;
   additionalGuests?: Array<string | { name: string; included?: boolean }> | string;
 }
 
-export function formatGuestTitleName(guest?: GuestLike | null, lang: string = 'ES'): string {
-  const primaryName = (guest?.name || guest?.guestName || '').trim();
-  if (!primaryName) return lang.toUpperCase() === 'ES' ? 'Invitado' : 'Guest';
+export function extractDependentsFromGuest(guest?: GuestLike | null): Array<{ name: string; included?: boolean }> {
+  if (!guest) return [];
 
-  let dependentNames: string[] = [];
-  if (guest?.dependents) {
+  // 1. Check direct guest.dependents
+  if (guest.dependents) {
     let deps = guest.dependents;
     if (typeof deps === 'string') {
       try {
@@ -19,15 +19,26 @@ export function formatGuestTitleName(guest?: GuestLike | null, lang: string = 'E
         // ignore parse error
       }
     }
-    if (Array.isArray(deps)) {
-      dependentNames = deps
-        .filter((d: any) => d && (d.included === undefined || d.included === true))
-        .map((d: any) => (typeof d === 'string' ? d : d.name))
-        .filter((n: any) => typeof n === 'string' && n.trim().length > 0);
+    if (Array.isArray(deps)) return deps;
+  }
+
+  // 2. Check guest.formResponses (where Prisma stores JSON serialized form responses)
+  if (guest.formResponses) {
+    let resp = guest.formResponses;
+    if (typeof resp === 'string') {
+      try {
+        resp = JSON.parse(resp);
+      } catch {
+        // ignore parse error
+      }
+    }
+    if (resp && typeof resp === 'object' && Array.isArray((resp as any).dependents)) {
+      return (resp as any).dependents;
     }
   }
 
-  if (dependentNames.length === 0 && guest?.additionalGuests) {
+  // 3. Fallback to guest.additionalGuests
+  if (guest.additionalGuests) {
     let add = guest.additionalGuests;
     if (typeof add === 'string') {
       try {
@@ -37,12 +48,22 @@ export function formatGuestTitleName(guest?: GuestLike | null, lang: string = 'E
       }
     }
     if (Array.isArray(add)) {
-      dependentNames = add
-        .filter((d: any) => d && (d.included === undefined || d.included === true))
-        .map((d: any) => (typeof d === 'string' ? d : d.name))
-        .filter((n: any) => typeof n === 'string' && n.trim().length > 0);
+      return add.map((item) => (typeof item === 'string' ? { name: item, included: true } : item));
     }
   }
+
+  return [];
+}
+
+export function formatGuestTitleName(guest?: GuestLike | null, lang: string = 'ES'): string {
+  const primaryName = (guest?.name || guest?.guestName || '').trim();
+  if (!primaryName) return lang.toUpperCase() === 'ES' ? 'Invitado' : 'Guest';
+
+  const rawDeps = extractDependentsFromGuest(guest);
+  const dependentNames = rawDeps
+    .filter((d: any) => d && (d.included === undefined || d.included === true))
+    .map((d: any) => (typeof d === 'string' ? d : d.name))
+    .filter((n: any) => typeof n === 'string' && n.trim().length > 0);
 
   if (dependentNames.length === 0) {
     return primaryName;
