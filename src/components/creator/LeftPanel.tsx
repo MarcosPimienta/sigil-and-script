@@ -17,10 +17,10 @@ import { apiFetch } from '../../utils/api';
 // upload can't execute script; browsers don't run scripts embedded in an
 // SVG loaded that way. Raster-only allow-list closes the remaining gap
 // (an SVG can still reference external resources like a tracking pixel).
-const ACCEPTED_IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/gif', 'image/svg+xml'];
-const MAX_IMAGE_BYTES = 8 * 1024 * 1024; // 8MB
+export const ACCEPTED_IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/gif', 'image/svg+xml'];
+export const MAX_IMAGE_BYTES = 8 * 1024 * 1024; // 8MB
 
-function compressImage(
+export function compressImage(
   base64Str: string,
   format = 'image/jpeg',
   quality = 0.8,
@@ -82,7 +82,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 
 // ── Custom artwork upload slot ───────────────────────────────────────────────
 
-function ImageUploadSlot({
+export function ImageUploadSlot({
   id,
   label,
   hint,
@@ -255,24 +255,31 @@ export function LeftPanel() {
         if (typeof reader.result === 'string') {
           try {
             setUploadingFields((prev) => ({ ...prev, [field]: true }));
-            const format = (field === 'stickerImage' || field === 'openedEnvelopeImage' || field === 'registryImage') ? 'image/png' : 'image/jpeg';
-            const compressed = await compressImage(reader.result, format, 0.85);
+            const isSvg = file.type === 'image/svg+xml' || file.name.toLowerCase().endsWith('.svg');
+            const format = isSvg ? 'image/svg+xml' : (field === 'stickerImage' || field === 'openedEnvelopeImage' || field === 'registryImage') ? 'image/png' : 'image/jpeg';
+            const fileData = isSvg ? reader.result : await compressImage(reader.result, format, 0.85);
 
-            // Upload compressed file to Supabase Storage via backend REST API
-            const response = await apiFetch('/upload/media', {
-              method: 'POST',
-              body: JSON.stringify({
-                fileData: compressed,
-                fileName: file.name,
-                fileType: format,
-                bucket: 'invitation-images',
-              }),
-            });
+            let publicUrl: string | undefined;
+            try {
+              const response = await apiFetch('/upload/media', {
+                method: 'POST',
+                body: JSON.stringify({
+                  fileData,
+                  fileName: file.name,
+                  fileType: format,
+                  bucket: 'invitation-images',
+                }),
+              });
+              if (response && response.publicUrl) {
+                publicUrl = response.publicUrl;
+              }
+            } catch (apiErr) {
+              console.warn('Storage upload API failed, storing data URL locally for preview', apiErr);
+            }
 
-            updateDesign({ [field]: response.publicUrl });
+            updateDesign({ [field]: publicUrl || reader.result });
           } catch (err: any) {
             console.error('Failed to upload image, using original locally', err);
-            alert(err.message || 'Image upload failed. Storing locally for preview.');
             updateDesign({ [field]: reader.result });
           } finally {
             setUploadingFields((prev) => ({ ...prev, [field]: false }));
@@ -404,13 +411,40 @@ export function LeftPanel() {
 
           <ImageUploadSlot
             id="upload-opened-envelope"
-            label="Event Logo Image"
-            hint="Couple photo, monogram or initials stamp rendered at the top"
+            label="Logo del Evento / Monograma (Envelope Logo)"
+            hint="Logo, monograma o sello en la solapa de apertura del sobre"
             value={design.openedEnvelopeImage}
             onUpload={handleImageUpload('openedEnvelopeImage')}
             onClear={handleImageClear('openedEnvelopeImage')}
             isUploading={uploadingFields['openedEnvelopeImage']}
           />
+
+          {design.openedEnvelopeImage && (
+            <div className="lp-field" style={{ marginTop: '0.8rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <label className="lp-field-label" htmlFor="slider-opened-envelope-scale">
+                  Escala de Logo del Evento
+                </label>
+                <span style={{ fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.5)' }}>
+                  {design.openedEnvelopeImageScale ?? 100}%
+                </span>
+              </div>
+              <input
+                id="slider-opened-envelope-scale"
+                type="range"
+                min="20"
+                max="200"
+                value={design.openedEnvelopeImageScale ?? 100}
+                onChange={(e) => updateDesign({ openedEnvelopeImageScale: parseInt(e.target.value, 10) })}
+                style={{
+                  width: '100%',
+                  marginTop: '4px',
+                  accentColor: 'var(--cr-accent)',
+                  cursor: 'pointer',
+                }}
+              />
+            </div>
+          )}
 
           <ImageUploadSlot
             id="upload-sticker-image"
@@ -431,6 +465,33 @@ export function LeftPanel() {
             onClear={handleImageClear('registryImage')}
             isUploading={uploadingFields['registryImage']}
           />
+
+          {design.registryImage && (
+            <div className="lp-field" style={{ marginTop: '0.8rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <label className="lp-field-label" htmlFor="slider-registry-image-scale">
+                  Escala de Imagen de Regalos
+                </label>
+                <span style={{ fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.5)' }}>
+                  {design.registryImageScale ?? 100}%
+                </span>
+              </div>
+              <input
+                id="slider-registry-image-scale"
+                type="range"
+                min="20"
+                max="200"
+                value={design.registryImageScale ?? 100}
+                onChange={(e) => updateDesign({ registryImageScale: parseInt(e.target.value, 10) })}
+                style={{
+                  width: '100%',
+                  marginTop: '4px',
+                  accentColor: 'var(--cr-accent)',
+                  cursor: 'pointer',
+                }}
+              />
+            </div>
+          )}
 
           <ImageUploadSlot
             id="upload-paper-image"

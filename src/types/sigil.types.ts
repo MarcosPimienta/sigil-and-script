@@ -100,6 +100,7 @@ export interface InvitationDesign {
   /** Custom uploaded artwork (data URLs) — layered over the procedural design */
   /** Shown centered near the top of the stage, above the headline */
   headerImage?: string;
+  headerImageScale?: number;
   /** Full-bleed decorative frame, stretched to the stage bounds; replaces the procedural border when set */
   frameImage?: string;
   /** Tiled/cover background texture for the paper itself */
@@ -126,8 +127,10 @@ export interface InvitationDesign {
   registryText?: string;
   registrySymbol?: string;
   registryImage?: string;
+  registryImageScale?: number;
   closedEnvelopeImage?: string;
   openedEnvelopeImage?: string;
+  openedEnvelopeImageScale?: number;
   stickerImage?: string;
   sealSize?: number;
   musicUrl?: string;

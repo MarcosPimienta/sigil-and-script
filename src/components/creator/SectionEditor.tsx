@@ -1,9 +1,14 @@
+import { useState, useCallback, type ChangeEvent } from 'react';
 import { useSigil } from '../../context/SigilContext';
 import type { ItineraryItem } from '../../types/sigil.types';
+import { ImageUploadSlot, ACCEPTED_IMAGE_TYPES, MAX_IMAGE_BYTES, compressImage } from './LeftPanel';
+import { apiFetch } from '../../utils/api';
 
 export function SectionEditor() {
   const { state, updateDesign, updateTextBlock } = useSigil();
   const design = state.design;
+
+  const [isUploadingTitleImage, setIsUploadingTitleImage] = useState(false);
 
   const headlineBlock = design.textBlocks?.find((b) => b.id === 'tb-headline');
   const hostNames = headlineBlock ? headlineBlock.content : 'Oscar & Rocio';
@@ -11,6 +16,52 @@ export function SectionEditor() {
   const handleFieldChange = (key: string, value: any) => {
     updateDesign({ [key]: value });
   };
+
+  const handleTitleImageUpload = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) return;
+    if (file.size > MAX_IMAGE_BYTES) return;
+
+    const reader = new FileReader();
+    reader.onload = async () => {
+      if (typeof reader.result === 'string') {
+        try {
+          setIsUploadingTitleImage(true);
+          const isSvg = file.type === 'image/svg+xml' || file.name.toLowerCase().endsWith('.svg');
+          const format = isSvg ? 'image/svg+xml' : 'image/png';
+          const fileData = isSvg ? reader.result : await compressImage(reader.result, format, 0.85);
+
+          let publicUrl: string | undefined;
+          try {
+            const response = await apiFetch('/upload/media', {
+              method: 'POST',
+              body: JSON.stringify({
+                fileData,
+                fileName: file.name,
+                fileType: format,
+                bucket: 'invitation-images',
+              }),
+            });
+            if (response && response.publicUrl) {
+              publicUrl = response.publicUrl;
+            }
+          } catch (apiErr) {
+            console.warn('Storage upload API failed, storing data URL locally for preview', apiErr);
+          }
+
+          updateDesign({ headerImage: publicUrl || reader.result });
+        } catch (err: any) {
+          console.error('Failed to process title image', err);
+          updateDesign({ headerImage: reader.result });
+        } finally {
+          setIsUploadingTitleImage(false);
+        }
+      }
+    };
+    reader.readAsDataURL(file);
+  }, [updateDesign]);
 
   const handleItineraryChange = (idx: number, field: keyof ItineraryItem, val: string) => {
     const list = [...(design.itinerary || [])];
@@ -79,20 +130,57 @@ export function SectionEditor() {
         </div>
       </div>
 
-      {/* ── Host Names ── */}
+      {/* ── Event Title ── */}
       <div className="lp-field">
         <label className="lp-field-label" htmlFor="host-names-input">
-          Nombres de los Novios (Host Names)
+          Título del Evento (Event Title)
         </label>
         <input
           id="host-names-input"
           type="text"
           className="lp-input"
-          placeholder="Ej: Oscar & Rocio"
+          placeholder="Ej: Oscar & Rocio / Nuestra Boda"
           value={hostNames}
           onChange={(e) => updateTextBlock('tb-headline', { content: e.target.value })}
         />
       </div>
+
+      <ImageUploadSlot
+        id="upload-section-title-image"
+        label="Imagen del Título / Caligrafía (En Pergamino)"
+        hint="Sube una caligrafía, logo o imagen para el título principal en el pergamino"
+        value={design.headerImage}
+        onUpload={handleTitleImageUpload}
+        onClear={() => handleFieldChange('headerImage', '')}
+        isUploading={isUploadingTitleImage}
+      />
+
+      {design.headerImage && (
+        <div className="lp-field">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <label className="lp-field-label" htmlFor="section-title-image-scale">
+              Escala de Imagen del Título
+            </label>
+            <span style={{ fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.5)' }}>
+              {design.headerImageScale ?? 100}%
+            </span>
+          </div>
+          <input
+            id="section-title-image-scale"
+            type="range"
+            min="20"
+            max="200"
+            value={design.headerImageScale ?? 100}
+            onChange={(e) => handleFieldChange('headerImageScale', parseInt(e.target.value, 10))}
+            style={{
+              width: '100%',
+              marginTop: '4px',
+              accentColor: 'var(--cr-accent)',
+              cursor: 'pointer',
+            }}
+          />
+        </div>
+      )}
 
       {/* ── Countdown ── */}
       <div className="lp-field">
@@ -415,6 +503,33 @@ export function SectionEditor() {
           onChange={(e) => handleFieldChange('registryLink', e.target.value)}
         />
       </div>
+
+      {design.registryImage && (
+        <div className="lp-field">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <label className="lp-field-label" htmlFor="section-registry-image-scale">
+              Escala de Imagen de Regalos
+            </label>
+            <span style={{ fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.5)' }}>
+              {design.registryImageScale ?? 100}%
+            </span>
+          </div>
+          <input
+            id="section-registry-image-scale"
+            type="range"
+            min="20"
+            max="200"
+            value={design.registryImageScale ?? 100}
+            onChange={(e) => handleFieldChange('registryImageScale', parseInt(e.target.value, 10))}
+            style={{
+              width: '100%',
+              marginTop: '4px',
+              accentColor: 'var(--cr-accent)',
+              cursor: 'pointer',
+            }}
+          />
+        </div>
+      )}
 
       {/* ── Itinerary Timeline ── */}
       <div className="lp-field" style={{ borderTop: '1px dashed var(--cr-panel-border)', paddingTop: '15px' }}>

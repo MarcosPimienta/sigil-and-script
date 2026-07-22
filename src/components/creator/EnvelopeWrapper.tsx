@@ -153,9 +153,11 @@ export function EnvelopeWrapper({ children, onPhaseChange, alwaysOpen }: Envelop
             src={design.openedEnvelopeImage} 
             alt="Event Logo"
             style={{
-              maxWidth: '220px',
-              maxHeight: '280px',
+              maxWidth: `${Math.round(220 * ((design.openedEnvelopeImageScale ?? 100) / 100))}px`,
+              maxHeight: `${Math.round(280 * ((design.openedEnvelopeImageScale ?? 100) / 100))}px`,
               objectFit: 'contain',
+              display: 'block',
+              margin: '0 auto',
             }}
           />
         ) : (
@@ -206,17 +208,39 @@ export function EnvelopeWrapper({ children, onPhaseChange, alwaysOpen }: Envelop
         color: '#333333'
       }}>
         <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
-        {/* Host Names */}
-        <h2 className="letter-host-names" style={{
-          fontSize: '1.45rem',
-          fontWeight: 400,
-          color: '#111111',
-          margin: '0 0 0.3rem 0',
-          letterSpacing: '0.04em',
-          fontFamily: "'Cormorant Garamond', serif",
-        }}>
-          {hostNames}
-        </h2>
+        {/* Host Names or Event Title Artwork */}
+        {design.headerImage ? (
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            width: '100%',
+            margin: '0 auto 0.5rem auto',
+          }}>
+            <img 
+              src={design.headerImage} 
+              alt="Event Title Artwork" 
+              style={{
+                maxWidth: `${Math.round(280 * ((design.headerImageScale ?? 100) / 100))}px`,
+                maxHeight: `${Math.round(180 * ((design.headerImageScale ?? 100) / 100))}px`,
+                objectFit: 'contain',
+                display: 'block',
+                margin: '0 auto',
+              }}
+            />
+          </div>
+        ) : (
+          <h2 className="letter-host-names" style={{
+            fontSize: '1.45rem',
+            fontWeight: 400,
+            color: '#111111',
+            margin: '0 0 0.3rem 0',
+            letterSpacing: '0.04em',
+            fontFamily: "'Cormorant Garamond', serif",
+          }}>
+            {hostNames}
+          </h2>
+        )}
 
         <span className="letter-invite-prompt" style={{
           fontSize: '0.58rem',
@@ -306,7 +330,7 @@ export function EnvelopeWrapper({ children, onPhaseChange, alwaysOpen }: Envelop
           fontWeight: 600,
           marginTop: '0.1rem',
         }}>
-          {guest?.eventLocation || 'Auspiciado por San Jose'}
+          {guest?.eventLocation || 'San José, cuyo poder sabe hacer posibles las cosas imposibles'}
         </span>
         </div>
       </div>

@@ -17,11 +17,14 @@ export function GiftsRegistryPanel() {
   const registryText = useSigilSelector((s) => s.design.registryText);
   const registryLink = useSigilSelector((s) => s.design.registryLink);
   const registryImage = useSigilSelector((s) => s.design.registryImage);
+  const registryImageScale = useSigilSelector((s) => s.design.registryImageScale);
   const registrySymbol = useSigilSelector((s) => s.design.registrySymbol);
   const lang = useSigilSelector((s) => s.design.language);
   const t = getTranslation(lang);
 
-  if (!registryText && !registryLink) return null;
+  if (!registryText && !registryLink && !registryImage) return null;
+
+  const imageMaxDimension = `${Math.round(120 * ((registryImageScale ?? 100) / 100))}px`;
 
   return (
     <div className="section-gifts" style={{
@@ -75,14 +78,24 @@ export function GiftsRegistryPanel() {
         
         {/* Render the optional registry image */}
         {registryImage && (
-          <div style={{ marginBottom: registrySymbol ? '0.5rem' : '1.25rem' }}>
+          <div style={{
+            marginBottom: registrySymbol ? '0.5rem' : '1.25rem',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            width: '100%',
+          }}>
             <img 
               src={registryImage} 
               alt="Registry decorative image" 
               style={{
-                maxWidth: '120px',
-                maxHeight: '120px',
-                objectFit: 'contain'
+                maxWidth: imageMaxDimension,
+                maxHeight: imageMaxDimension,
+                width: 'auto',
+                height: 'auto',
+                objectFit: 'contain',
+                display: 'block',
+                margin: '0 auto',
               }}
             />
           </div>

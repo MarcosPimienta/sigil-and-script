@@ -279,16 +279,19 @@ export async function saveCanvas(req: Request, res: Response): Promise<void> {
           });
         }
 
+        // Pre-fetch all existing guests for this canvas in a single query to avoid sequential N roundtrips
+        const existingGuests = await tx.guest.findMany({
+          where: { canvasId },
+        });
+        const existingMap = new Map(existingGuests.map((g) => [g.id, g]));
+
         // Upsert all guests in the incoming list
         for (const guest of invitees) {
           if (!guest.id || !guest.name) continue;
 
-          // Read existing guest if present to preserve their RSVP responses
-          const existingDbGuest = await tx.guest.findUnique({
-            where: { id: guest.id },
-          });
+          const existingDbGuest = existingMap.get(guest.id);
 
-          let mergedFormResponses = {};
+          let mergedFormResponses: Record<string, any> = {};
           if (existingDbGuest && existingDbGuest.formResponses) {
             try {
               mergedFormResponses = JSON.parse(existingDbGuest.formResponses);
@@ -319,6 +322,9 @@ export async function saveCanvas(req: Request, res: Response): Promise<void> {
             },
           });
         }
+      }, {
+        maxWait: 10000,
+        timeout: 30000,
       });
     }
 

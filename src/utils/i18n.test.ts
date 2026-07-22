@@ -14,13 +14,13 @@ describe('i18n translation utility', () => {
     expect(t.countdownTitle).toBe('The Celebration Begins In');
     expect(t.days).toBe('DAYS');
     expect(t.rsvpTitle).toBe('RSVP Response');
-    expect(t.yesGladly).toBe('Yes, gladly');
+    expect(t.yesGladly).toBe('Yes');
   });
 
   it('returns Spanish (ES) translations when language is ES', () => {
     const t = getTranslation('ES');
     expect(t.countdownTitle).toBe('La Celebración Comienza En');
     expect(t.viewMap).toBe('Ver Mapa');
-    expect(t.yesGladly).toBe('Sí, con gusto');
+    expect(t.yesGladly).toBe('Sí');
   });
 });

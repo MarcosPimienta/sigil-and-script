@@ -256,7 +256,7 @@ export function InvitationStage({
 
   useEffect(() => {
     const el = stageRef.current;
-    if (!el) return;
+    if (!el || typeof ResizeObserver === 'undefined') return;
     const observer = new ResizeObserver((entries) => {
       const h = entries[0]?.contentRect.height;
       if (h) setMeasuredHeight(h);
@@ -313,6 +313,28 @@ export function InvitationStage({
 
         {/* ── Flowing content column ─── */}
         <div className="stage-content">
+          {/* Custom Event Title Artwork / Calligraphy Header Image */}
+          {design.headerImage && (
+            <div style={{
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              width: '100%',
+              margin: '0 auto 1rem auto',
+            }}>
+              <img
+                src={design.headerImage}
+                alt="Event Title Artwork"
+                style={{
+                  maxWidth: `${Math.round(280 * ((design.headerImageScale ?? 100) / 100))}px`,
+                  maxHeight: `${Math.round(200 * ((design.headerImageScale ?? 100) / 100))}px`,
+                  objectFit: 'contain',
+                  display: 'block',
+                  margin: '0 auto',
+                }}
+              />
+            </div>
+          )}
 
           {/* ── Text Blocks — flow top-to-bottom in array order ─── */}
           {design.textBlocks

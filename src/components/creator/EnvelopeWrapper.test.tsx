@@ -14,11 +14,12 @@ vi.mock('../../utils/audioEngine', () => ({
   },
 }));
 
+let mockState = {
+  design: { envelopeStyle: 'CLASSIC', backgroundColor: '#e0cfa9', openedEnvelopeImage: 'data:image/png;base64,testLogo', openedEnvelopeImageScale: 50 },
+};
+
 vi.mock('../../context/SigilContext', () => ({
-  useSigilSelector: (selector: any) =>
-    selector({
-      design: { envelopeStyle: 'CLASSIC', backgroundColor: '#e0cfa9' },
-    }),
+  useSigilSelector: (selector: any) => selector(mockState),
 }));
 
 describe('EnvelopeWrapper', () => {
@@ -61,5 +62,21 @@ describe('EnvelopeWrapper', () => {
     });
 
     expect(mockPlayAmbient).toHaveBeenCalled();
+  });
+
+  it('renders event title logo scaled according to openedEnvelopeImageScale', () => {
+    render(
+      <EnvelopeWrapper>
+        <div>Test Letter</div>
+      </EnvelopeWrapper>,
+    );
+
+    const logo = screen.getByAltText('Event Logo');
+    expect(logo).toBeInTheDocument();
+    // 50% of 220px = 110px, 50% of 280px = 140px
+    expect(logo).toHaveStyle({
+      maxWidth: '110px',
+      maxHeight: '140px',
+    });
   });
 });
