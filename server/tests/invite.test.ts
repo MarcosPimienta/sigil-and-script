@@ -118,12 +118,12 @@ describe('Sigil & Script Backend API Tests', () => {
       expect(res.body).toHaveProperty('error', 'Invitation not found');
     });
 
-    it('should return 400 for a malformed token UUID', async () => {
+    it('should return 404 for a non-matching custom token', async () => {
       const res = await request(app)
-        .get('/invite/malformed-uuid')
-        .expect(400);
+        .get('/invite/non-existent-token')
+        .expect(404);
 
-      expect(res.body).toHaveProperty('error', 'Invalid token format');
+      expect(res.body).toHaveProperty('error', 'Invitation not found');
     });
   });
 

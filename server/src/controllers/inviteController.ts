@@ -7,7 +7,7 @@ import crypto from 'crypto';
 let _prisma: PrismaClient | null = null;
 const getPrisma = (): PrismaClient => { if (!_prisma) _prisma = new PrismaClient(); return _prisma; };
 
-const tokenParamSchema = z.string().uuid();
+const tokenParamSchema = z.string().min(1);
 
 function isSocialCrawler(ua?: string): boolean {
   if (!ua) return false;
@@ -439,75 +439,77 @@ export async function saveCanvas(req: Request, res: Response): Promise<void> {
 
     // Sync guest list roster to the database
     if (Array.isArray(invitees)) {
-      const activeGuestIds = invitees
-        .map((g: any) => g.id)
-        .filter((gid: any) => typeof gid === 'string');
-
-      await getPrisma().$transaction(async (tx) => {
-        // Delete guests associated with this canvas who are NOT in the incoming active list
-        // Guard: only execute deleteMany if activeGuestIds is non-empty to protect against accidental wipes
-        if (activeGuestIds.length > 0) {
-          await tx.guest.deleteMany({
-            where: {
-              canvasId,
-              id: { notIn: activeGuestIds },
-            },
-          });
-        }
-
-        // Pre-fetch all existing guests for this canvas in a single query to avoid sequential N roundtrips
-        const existingGuests = await tx.guest.findMany({
-          where: { canvasId },
+      const validGuestRecords = invitees
+        .filter((g: any) => g && (g.name || g.guestName))
+        .map((g: any) => {
+          const rawId = typeof g.id === 'string' && g.id.trim() ? g.id.trim() : (typeof g.routingToken === 'string' && g.routingToken.trim() ? g.routingToken.trim() : crypto.randomUUID());
+          return { ...g, id: rawId, name: (g.name || g.guestName || '').trim() };
         });
-        const existingMap = new Map(existingGuests.map((g) => [g.id, g]));
 
-        // Upsert all guests in the incoming list
-        for (const guest of invitees) {
-          if (!guest.id || !guest.name) continue;
+      const activeGuestIds = validGuestRecords.map((g: any) => g.id);
 
-          const existingDbGuest = existingMap.get(guest.id);
-
-          let mergedFormResponses: Record<string, any> = {};
-          if (existingDbGuest && existingDbGuest.formResponses) {
-            try {
-              mergedFormResponses = JSON.parse(existingDbGuest.formResponses);
-            } catch (e) {
-              console.error("Failed to parse existing formResponses", e);
-            }
-          }
-
-          const dependents = Array.isArray(guest.dependents) ? guest.dependents : [];
-          mergedFormResponses = {
-            ...mergedFormResponses,
-            dependents,
-          };
-
-          await tx.guest.upsert({
-            where: { id: guest.id },
-            update: {
-              name: guest.name,
-              status: guest.status || 'PENDING',
-              formResponses: JSON.stringify(mergedFormResponses),
-            },
-            create: {
-              id: guest.id,
-              name: guest.name,
-              status: guest.status || 'PENDING',
-              formResponses: JSON.stringify(mergedFormResponses),
-              canvasId,
-            },
-          });
-        }
-      }, {
-        maxWait: 10000,
-        timeout: 30000,
+      // Pre-fetch existing guests to merge existing formResponses
+      const existingGuests = await getPrisma().guest.findMany({
+        where: { canvasId },
       });
+      const existingMap = new Map(existingGuests.map((g) => [g.id, g]));
+
+      // Clean up deleted guests (guests no longer in active roster)
+      if (activeGuestIds.length > 0) {
+        await getPrisma().guest.deleteMany({
+          where: {
+            canvasId,
+            id: { notIn: activeGuestIds },
+          },
+        });
+      }
+
+      // Upsert guests in parallelized non-blocking batches of 15
+      const chunkSize = 15;
+      for (let i = 0; i < validGuestRecords.length; i += chunkSize) {
+        const chunk = validGuestRecords.slice(i, i + chunkSize);
+        await Promise.all(
+          chunk.map(async (guest: any) => {
+            const existingDbGuest = existingMap.get(guest.id);
+            let mergedFormResponses: Record<string, any> = {};
+            if (existingDbGuest && existingDbGuest.formResponses) {
+              try {
+                mergedFormResponses = JSON.parse(existingDbGuest.formResponses);
+              } catch (e) {
+                console.error("Failed to parse existing formResponses", e);
+              }
+            }
+
+            const dependents = Array.isArray(guest.dependents) ? guest.dependents : [];
+            mergedFormResponses = {
+              ...mergedFormResponses,
+              dependents,
+            };
+
+            return getPrisma().guest.upsert({
+              where: { id: guest.id },
+              update: {
+                name: guest.name,
+                status: guest.status || 'PENDING',
+                formResponses: JSON.stringify(mergedFormResponses),
+              },
+              create: {
+                id: guest.id,
+                name: guest.name,
+                status: guest.status || 'PENDING',
+                formResponses: JSON.stringify(mergedFormResponses),
+                canvasId,
+              },
+            });
+          })
+        );
+      }
     }
 
     res.json(canvasObj);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error saving canvas:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: error.message || 'Internal server error' });
   }
 }
 
