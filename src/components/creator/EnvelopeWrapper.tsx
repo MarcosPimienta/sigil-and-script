@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { audioEngine } from '../../utils/audioEngine';
 import { useSigilSelector } from '../../context/SigilContext';
 import { SvgColorImage } from '../common/SvgColorImage';
-import { formatFullInvitationTitle } from '../../utils/formatGuestTitle';
+import { formatFullInvitationTitle, formatEventTitle } from '../../utils/formatGuestTitle';
 
 interface EnvelopeWrapperProps {
   children?: React.ReactNode;
@@ -369,7 +369,7 @@ export function EnvelopeWrapper({ children, onPhaseChange, alwaysOpen }: Envelop
               </div>
             )}
             <h2 className="envelope-header-title">
-              {hostNames}
+              {formatEventTitle(hostNames, lang)}
             </h2>
             <div className="envelope-header-date">
               {dateText}

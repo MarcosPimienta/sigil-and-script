@@ -92,12 +92,24 @@ function formatEventTitle(hostNames, lang) {
     return isEs ? 'Matrimonio' : 'Wedding';
   }
 
-  const lower = clean.toLowerCase();
-  if (lower.startsWith('matrimonio') || lower.startsWith('boda') || lower.startsWith('wedding')) {
-    return clean;
+  let result = clean;
+  if (isEs) {
+    if (/^(wedding of|wedding)\s+/i.test(result)) {
+      result = result.replace(/^(wedding of|wedding)\s+/i, 'Matrimonio de ');
+    } else if (!/^(matrimonio|boda)/i.test(result)) {
+      result = `Matrimonio de ${result}`;
+    }
+  } else {
+    if (/^(matrimonio de|boda de)\s+/i.test(result)) {
+      result = result.replace(/^(matrimonio de|boda de)\s+/i, 'Wedding of ');
+    } else if (/^(matrimonio|boda)\s+/i.test(result)) {
+      result = result.replace(/^(matrimonio|boda)\s+/i, 'Wedding ');
+    } else if (!/^wedding/i.test(result)) {
+      result = `Wedding of ${result}`;
+    }
   }
 
-  return isEs ? `Matrimonio de ${clean}` : `Wedding of ${clean}`;
+  return result;
 }
 
 export default async function handler(req, res) {
