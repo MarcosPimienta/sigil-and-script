@@ -292,12 +292,19 @@ export async function submitRsvp(req: Request, res: Response): Promise<void> {
     // Calculate confirmed seats
     let confirmedSeats = 0;
     if (status === 'RSVP_YES') {
-      confirmedSeats = 1;
-      if (plusOne && plusOne.trim().length > 0) {
-        confirmedSeats += 1;
-      }
-      if (dependents && Array.isArray(dependents)) {
-        confirmedSeats += dependents.filter((d) => d.included).length;
+      const isFamily = existingGuest.guestType === 'FAMILY';
+      const includedDepsCount = (dependents && Array.isArray(dependents))
+        ? dependents.filter((d) => d.included).length
+        : 0;
+
+      if (isFamily) {
+        confirmedSeats = includedDepsCount > 0 ? includedDepsCount : 1;
+      } else {
+        confirmedSeats = 1;
+        if (plusOne && plusOne.trim().length > 0) {
+          confirmedSeats += 1;
+        }
+        confirmedSeats += includedDepsCount;
       }
     }
 

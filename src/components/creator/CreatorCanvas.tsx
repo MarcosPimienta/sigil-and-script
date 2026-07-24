@@ -39,6 +39,11 @@ export function CreatorCanvas() {
 
   const showRosterDetails = envelopePhase === 'FADING_OUT' || envelopePhase === 'COMPLETED';
 
+  const depsCount = Math.max(state.guest.additionalGuests?.length || 0, state.guest.dependents?.length || 0);
+  const reservedSeats = state.guest.guestType === 'FAMILY'
+    ? (depsCount > 0 ? depsCount : 1)
+    : 1 + depsCount;
+
   return (
     <div
       className="creator-canvas"
@@ -132,8 +137,8 @@ export function CreatorCanvas() {
                         fontStyle: 'italic',
                       }}>
                         {(state.guest?.language || state.design.language) === 'EN'
-                          ? `We have reserved (${1 + Math.max(state.guest.additionalGuests?.length || 0, state.guest.dependents?.length || 0)}) ${1 + Math.max(state.guest.additionalGuests?.length || 0, state.guest.dependents?.length || 0) === 1 ? 'seat' : 'seats'} for you`
-                          : `Hemos reservado (${1 + Math.max(state.guest.additionalGuests?.length || 0, state.guest.dependents?.length || 0)}) ${1 + Math.max(state.guest.additionalGuests?.length || 0, state.guest.dependents?.length || 0) === 1 ? 'cupo' : 'cupos'} para ti`}
+                          ? `We have reserved (${reservedSeats}) ${reservedSeats === 1 ? 'seat' : 'seats'} for you`
+                          : `Hemos reservado (${reservedSeats}) ${reservedSeats === 1 ? 'cupo' : 'cupos'} para ti`}
                       </p>
                       <p style={{
                         fontSize: '0.85rem',
@@ -190,8 +195,8 @@ export function CreatorCanvas() {
                         fontStyle: 'italic',
                       }}>
                         {(state.guest?.language || state.design.language) === 'EN'
-                          ? `We have reserved (${1 + Math.max(state.guest.additionalGuests?.length || 0, state.guest.dependents?.length || 0)}) ${1 + Math.max(state.guest.additionalGuests?.length || 0, state.guest.dependents?.length || 0) === 1 ? 'seat' : 'seats'} for you`
-                          : `Hemos reservado (${1 + Math.max(state.guest.additionalGuests?.length || 0, state.guest.dependents?.length || 0)}) ${1 + Math.max(state.guest.additionalGuests?.length || 0, state.guest.dependents?.length || 0) === 1 ? 'cupo' : 'cupos'} para ti`}
+                          ? `We have reserved (${reservedSeats}) ${reservedSeats === 1 ? 'seat' : 'seats'} for you`
+                          : `Hemos reservado (${reservedSeats}) ${reservedSeats === 1 ? 'cupo' : 'cupos'} para ti`}
                       </p>
                     </div>
                   </div>

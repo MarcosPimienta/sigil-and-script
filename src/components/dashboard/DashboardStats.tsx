@@ -7,7 +7,13 @@ interface DashboardStatsProps {
 
 // eslint-disable-next-line react-refresh/only-export-components
 export function computeStats(invitees: InviteeRecord[]) {
-  const getGuestCount = (i: InviteeRecord) => 1 + (i.dependents?.length || 0);
+  const getGuestCount = (i: InviteeRecord) => {
+    const depsCount = i.dependents?.length || 0;
+    if (i.guestType === 'FAMILY') {
+      return depsCount > 0 ? depsCount : 1;
+    }
+    return 1 + depsCount;
+  };
   const totalDependents = invitees.reduce((acc, i) => acc + (i.dependents?.length || 0), 0);
 
   return {
