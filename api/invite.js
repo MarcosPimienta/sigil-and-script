@@ -57,6 +57,14 @@ function formatGuestTitleName(guest, lang) {
   const primaryName = (guest && (guest.name || guest.guestName) ? (guest.name || guest.guestName) : '').trim();
   if (!primaryName) return lang === 'ES' ? 'Invitado' : 'Guest';
 
+  if (guest && guest.guestType === 'FAMILY') {
+    const lower = primaryName.toLowerCase();
+    if (lower.startsWith('familia') || lower.startsWith('the ') || lower.endsWith(' family')) {
+      return primaryName;
+    }
+    return lang === 'ES' ? `Familia ${primaryName}` : `The ${primaryName} Family`;
+  }
+
   const rawDeps = extractDependentsFromGuest(guest);
   const dependentNames = rawDeps
     .filter((d) => d && (d.included === undefined || d.included === true))
