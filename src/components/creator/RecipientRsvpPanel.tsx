@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSigil } from '../../context/SigilContext';
+import { formatGuestTitleName } from '../../utils/formatGuestTitle';
 import { getTranslation } from '../../utils/i18n';
 
 // Corner flourish
@@ -126,7 +127,7 @@ export function RecipientRsvpPanel() {
             {t.rsvpTitle}
           </h1>
           <p style={{ color: 'var(--rsvp-text-secondary, rgba(255, 255, 255, 0.5))', fontSize: '0.8rem' }}>
-            For: {guest.guestName}
+            For: {formatGuestTitleName(guest, guest.language || 'ES')}
           </p>
         </div>
 

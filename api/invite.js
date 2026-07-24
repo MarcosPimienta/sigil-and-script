@@ -58,11 +58,21 @@ function formatGuestTitleName(guest, lang) {
   if (!primaryName) return lang === 'ES' ? 'Invitado' : 'Guest';
 
   if (guest && guest.guestType === 'FAMILY') {
+    const isEs = lang === 'ES';
     const lower = primaryName.toLowerCase();
-    if (lower.startsWith('familia') || lower.startsWith('the ') || lower.endsWith(' family')) {
-      return primaryName;
+    let baseName = primaryName;
+    if (lower.startsWith('familia ')) {
+      baseName = primaryName.slice(8).trim();
+    } else if (lower.startsWith('the ')) {
+      baseName = primaryName.slice(4).trim();
+      if (baseName.toLowerCase().endsWith(' family')) {
+        baseName = baseName.slice(0, -7).trim();
+      }
+    } else if (lower.endsWith(' family')) {
+      baseName = primaryName.slice(0, -7).trim();
     }
-    return lang === 'ES' ? `Familia ${primaryName}` : `The ${primaryName} Family`;
+
+    return isEs ? `Familia ${baseName}` : `${baseName} Family`;
   }
 
   const rawDeps = extractDependentsFromGuest(guest);

@@ -10,6 +10,7 @@ import { GiftsRegistryPanel } from './GiftsRegistryPanel';
 import { AudioControls } from './AudioControls';
 import { AudioToggle } from '../shared/AudioToggle';
 import { useSigil } from '../../context/SigilContext';
+import { formatGuestTitleName } from '../../utils/formatGuestTitle';
 import { audioEngine } from '../../utils/audioEngine';
 
 export function CreatorCanvas() {
@@ -128,7 +129,7 @@ export function CreatorCanvas() {
                         textTransform: 'uppercase',
                         letterSpacing: '0.08em',
                       }}>
-                        {state.guest.guestName}
+                        {formatGuestTitleName(state.guest, state.guest?.language || state.design.language)}
                       </h4>
                       <p style={{
                         fontSize: '1.1rem',
@@ -186,7 +187,7 @@ export function CreatorCanvas() {
                         textTransform: 'uppercase',
                         letterSpacing: '0.08em',
                       }}>
-                        {state.guest.guestName}
+                        {formatGuestTitleName(state.guest, state.guest?.language || state.design.language)}
                       </h4>
                       <p style={{
                         fontSize: '1.1rem',
