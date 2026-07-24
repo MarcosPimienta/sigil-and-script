@@ -122,7 +122,7 @@ export interface SigilState {
   // Roster Actions
   addInvitee: (name: string, email?: string) => void;
   removeInvitee: (inviteeId: string) => void;
-  updateInvitee: (inviteeId: string, updates: Partial<Pick<InviteeRecord, 'name' | 'email' | 'status'>>) => void;
+  updateInvitee: (inviteeId: string, updates: Partial<Pick<InviteeRecord, 'name' | 'email' | 'status' | 'language'>>) => void;
   addDependent: (inviteeId: string, name: string) => void;
   updateDependentName: (inviteeId: string, dependentId: string, name: string) => void;
   removeDependent: (inviteeId: string, dependentId: string) => void;
@@ -242,9 +242,6 @@ export const useSigilStore = create<SigilState>((set, get) => ({
       localStorage.setItem('sigil-guest-roster', JSON.stringify(roster));
       return { guestRoster: roster };
     });
-    if (get().user) {
-      get().saveCurrentDesign().catch((e) => console.error('Auto-save roster error:', e));
-    }
   },
 
   removeInvitee: (inviteeId) => {
@@ -255,9 +252,6 @@ export const useSigilStore = create<SigilState>((set, get) => ({
       localStorage.setItem('sigil-guest-roster', JSON.stringify(roster));
       return { guestRoster: roster };
     });
-    if (get().user) {
-      get().saveCurrentDesign().catch((e) => console.error('Auto-save roster error:', e));
-    }
   },
 
   updateInvitee: (inviteeId, updates) => {
@@ -270,9 +264,6 @@ export const useSigilStore = create<SigilState>((set, get) => ({
       localStorage.setItem('sigil-guest-roster', JSON.stringify(roster));
       return { guestRoster: roster };
     });
-    if (get().user) {
-      get().saveCurrentDesign().catch((e) => console.error('Auto-save roster error:', e));
-    }
   },
 
   addDependent: (inviteeId, name) => {
@@ -294,9 +285,6 @@ export const useSigilStore = create<SigilState>((set, get) => ({
       localStorage.setItem('sigil-guest-roster', JSON.stringify(roster));
       return { guestRoster: roster };
     });
-    if (get().user) {
-      get().saveCurrentDesign().catch((e) => console.error('Auto-save roster error:', e));
-    }
   },
 
   removeDependent: (inviteeId, dependentId) => {
@@ -311,9 +299,6 @@ export const useSigilStore = create<SigilState>((set, get) => ({
       localStorage.setItem('sigil-guest-roster', JSON.stringify(roster));
       return { guestRoster: roster };
     });
-    if (get().user) {
-      get().saveCurrentDesign().catch((e) => console.error('Auto-save roster error:', e));
-    }
   },
 
   updateDependentName: (inviteeId, dependentId, name) => {
@@ -335,9 +320,6 @@ export const useSigilStore = create<SigilState>((set, get) => ({
       localStorage.setItem('sigil-guest-roster', JSON.stringify(roster));
       return { guestRoster: roster };
     });
-    if (get().user) {
-      get().saveCurrentDesign().catch((e) => console.error('Auto-save roster error:', e));
-    }
   },
 
   toggleDependent: (inviteeId, dependentId) => {
@@ -357,9 +339,6 @@ export const useSigilStore = create<SigilState>((set, get) => ({
       localStorage.setItem('sigil-guest-roster', JSON.stringify(roster));
       return { guestRoster: roster };
     });
-    if (get().user) {
-      get().saveCurrentDesign().catch((e) => console.error('Auto-save roster error:', e));
-    }
   },
 
   markInvitationOpened: (inviteeId) => {
@@ -445,8 +424,13 @@ export const useSigilStore = create<SigilState>((set, get) => ({
         console.error("Failed to parse dependents from formResponses", e);
       }
 
+      const effectiveLang = (data.language && (data.language === 'EN' || data.language === 'ES'))
+        ? (data.language as 'ES' | 'EN')
+        : undefined;
+
       const guest: GuestPayload = {
         guestName: data.name,
+        language: effectiveLang,
         additionalGuests,
         routingToken: data.id,
         rsvpBy: 'January 31st',
@@ -468,6 +452,7 @@ export const useSigilStore = create<SigilState>((set, get) => ({
           design = {
             ...design,
             ...parsedDesign,
+            language: effectiveLang || parsedDesign.language || 'ES',
             id: data.canvas.id,
             musicUrl: data.canvas.musicUrl || parsedDesign.musicUrl || '',
           };
@@ -516,7 +501,6 @@ export const useSigilStore = create<SigilState>((set, get) => ({
 
   saveCurrentDesign: async () => {
     const { design } = get();
-    set({ apiStatus: 'loading', apiError: null });
     try {
       const isDefaultId = design.id === 'design-default';
       const { musicUrl, ...designWithoutMusic } = design;
@@ -595,6 +579,7 @@ export const useSigilStore = create<SigilState>((set, get) => ({
           return {
             id: inv.id,
             name: inv.name,
+            language: (inv.language as 'ES' | 'EN') || 'ES',
             email: inv.email || undefined,
             dependents,
             status: (inv.status || 'PENDING') as import('../types/sigil.types').InvitationStatus,
@@ -655,6 +640,7 @@ export const useSigilStore = create<SigilState>((set, get) => ({
           return {
             id: inv.id,
             name: inv.name,
+            language: (inv.language as 'ES' | 'EN') || 'ES',
             email: inv.email || undefined,
             dependents,
             status: (inv.status || 'PENDING') as import('../types/sigil.types').InvitationStatus,

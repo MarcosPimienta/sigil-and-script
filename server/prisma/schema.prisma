@@ -46,6 +46,7 @@ model Session {
 model Guest {
   id               String            @id @default(uuid())
   name             String
+  language         String            @default("ES") // ES | EN
   allottedSeats    Int               @default(1)
   confirmedSeats   Int               @default(0)
   status           String            @default("PENDING") // PENDING | OPENED | CONFIRMED | DECLINED

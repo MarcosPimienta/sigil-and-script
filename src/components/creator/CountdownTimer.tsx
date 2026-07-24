@@ -16,7 +16,7 @@ const CornerFlourish = ({ color = 'rgba(120, 100, 80, 0.55)' }: { color?: string
 
 export function CountdownTimer() {
   const target = useSigilSelector((s) => s.design.countdownTarget);
-  const lang = useSigilSelector((s) => s.design.language);
+  const lang = useSigilSelector((s) => s.guest?.language || s.design.language);
   const t = getTranslation(lang);
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
 

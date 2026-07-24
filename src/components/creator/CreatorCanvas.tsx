@@ -101,7 +101,7 @@ export function CreatorCanvas() {
                           fontFamily: "'Cormorant Garamond', serif",
                           color: '#4c4844',
                         }}>
-                          Confirmar Asistencia
+                          {(state.guest?.language || state.design.language) === 'EN' ? 'RSVP Response' : 'Confirmar Asistencia'}
                         </h3>
                         <RecipientRsvpPanel />
                       </div>
@@ -131,7 +131,9 @@ export function CreatorCanvas() {
                         margin: '0.5rem 0 0 0',
                         fontStyle: 'italic',
                       }}>
-                        Hemos reservado ({1 + Math.max(state.guest.additionalGuests?.length || 0, state.guest.dependents?.length || 0)}) {1 + Math.max(state.guest.additionalGuests?.length || 0, state.guest.dependents?.length || 0) === 1 ? 'cupo' : 'cupos'} para ti
+                        {(state.guest?.language || state.design.language) === 'EN'
+                          ? `We have reserved (${1 + Math.max(state.guest.additionalGuests?.length || 0, state.guest.dependents?.length || 0)}) ${1 + Math.max(state.guest.additionalGuests?.length || 0, state.guest.dependents?.length || 0) === 1 ? 'seat' : 'seats'} for you`
+                          : `Hemos reservado (${1 + Math.max(state.guest.additionalGuests?.length || 0, state.guest.dependents?.length || 0)}) ${1 + Math.max(state.guest.additionalGuests?.length || 0, state.guest.dependents?.length || 0) === 1 ? 'cupo' : 'cupos'} para ti`}
                       </p>
                       <p style={{
                         fontSize: '0.85rem',
@@ -140,7 +142,7 @@ export function CreatorCanvas() {
                         letterSpacing: '0.1em',
                         textTransform: 'uppercase'
                       }}>
-                        Da clic para abrir la invitación
+                        {(state.guest?.language || state.design.language) === 'EN' ? 'Click to unseal invitation' : 'Da clic para abrir la invitación'}
                       </p>
                     </div>
                   ) : null}
@@ -187,7 +189,9 @@ export function CreatorCanvas() {
                         margin: '0.5rem 0 0 0',
                         fontStyle: 'italic',
                       }}>
-                        Hemos reservado ({1 + Math.max(state.guest.additionalGuests?.length || 0, state.guest.dependents?.length || 0)}) {1 + Math.max(state.guest.additionalGuests?.length || 0, state.guest.dependents?.length || 0) === 1 ? 'cupo' : 'cupos'} para ti
+                        {(state.guest?.language || state.design.language) === 'EN'
+                          ? `We have reserved (${1 + Math.max(state.guest.additionalGuests?.length || 0, state.guest.dependents?.length || 0)}) ${1 + Math.max(state.guest.additionalGuests?.length || 0, state.guest.dependents?.length || 0) === 1 ? 'seat' : 'seats'} for you`
+                          : `Hemos reservado (${1 + Math.max(state.guest.additionalGuests?.length || 0, state.guest.dependents?.length || 0)}) ${1 + Math.max(state.guest.additionalGuests?.length || 0, state.guest.dependents?.length || 0) === 1 ? 'cupo' : 'cupos'} para ti`}
                       </p>
                     </div>
                   </div>
@@ -221,7 +225,7 @@ export function CreatorCanvas() {
                       fontFamily: "'Cormorant Garamond', serif",
                       fontWeight: 500,
                     }}>
-                      Dale play para escuchar nuestra canción
+                      {(state.guest?.language || state.design.language) === 'EN' ? 'Press play to listen to our song' : 'Dale play para escuchar nuestra canción'}
                     </p>
                   </div>
                 </>
@@ -248,7 +252,7 @@ export function CreatorCanvas() {
                       fontFamily: "'Cormorant Garamond', serif",
                       color: '#ffffff',
                     }}>
-                      Confirmar Asistencia
+                      {(state.guest?.language || state.design.language) === 'EN' ? 'RSVP Response' : 'Confirmar Asistencia'}
                     </h3>
                     <RecipientRsvpPanel />
                   </div>

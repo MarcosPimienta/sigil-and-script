@@ -7,6 +7,7 @@ const mockRemoveInvitee = vi.fn();
 const mockAddDependent = vi.fn();
 const mockToggleDependent = vi.fn();
 const mockRemoveDependent = vi.fn();
+const mockUpdateInvitee = vi.fn();
 
 vi.mock('../../context/SigilContext', () => ({
   useSigil: () => ({
@@ -14,6 +15,7 @@ vi.mock('../../context/SigilContext', () => ({
     addDependent: mockAddDependent,
     toggleDependent: mockToggleDependent,
     removeDependent: mockRemoveDependent,
+    updateInvitee: mockUpdateInvitee,
   }),
 }));
 
@@ -22,11 +24,13 @@ const baseInvitee: InviteeRecord = {
   name: 'Sophie Martin',
   dependents: [],
   status: 'PENDING',
+  language: 'ES',
 };
 
 beforeEach(() => {
   mockRemoveInvitee.mockClear();
   mockAddDependent.mockClear();
+  mockUpdateInvitee.mockClear();
   vi.stubGlobal('confirm', vi.fn(() => true));
 });
 
@@ -34,6 +38,14 @@ describe('InviteeRow', () => {
   it('renders the invitee name and status badge', () => {
     render(<InviteeRow invitee={baseInvitee} />);
     expect(screen.getByText(/Sophie Martin/i)).toBeTruthy();
+  });
+
+  it('renders the language switch and updates language on click', () => {
+    render(<InviteeRow invitee={baseInvitee} />);
+    const enBtn = screen.getByRole('button', { name: /set english for sophie martin/i });
+    expect(enBtn).toBeTruthy();
+    fireEvent.click(enBtn);
+    expect(mockUpdateInvitee).toHaveBeenCalledWith('inv-1', { language: 'EN' });
   });
 
   it('dependents section hidden by default', () => {

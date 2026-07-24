@@ -7,6 +7,7 @@
 import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 import { useSigil } from '../../context/SigilContext';
 import { resolveTokens } from '../../utils/tokenResolver';
+import { useAutoTranslation } from '../../utils/translator';
 import { PAPER_CSS_VAR } from '../../utils/luminanceGuards';
 import { TextBlock } from './TextBlock';
 import { SvgFilterBank } from '../shared/SvgFilterBank';
@@ -337,14 +338,17 @@ export function InvitationStage({
           {design.textBlocks
             .filter((block) => !transparent || block.id === 'tb-headline')
             .map((block, i) => {
-              const displayText = resolveTokens(block.content, guest);
+              const targetLang = (guest?.language || design.language || 'ES') as 'ES' | 'EN';
+              const rawText = resolveTokens(block.content, guest);
+              // eslint-disable-next-line react-hooks/rules-of-hooks
+              const translatedText = useAutoTranslation(rawText, targetLang);
               return (
                 <Fragment key={block.id}>
                   {/* Decorative divider right after the headline (first block) */}
                   {i === 1 && <DividerOrnament width={STAGE_W} />}
                   <TextBlock
                     config={block}
-                    displayText={displayText}
+                    displayText={translatedText}
                     isSelected={canvasSelection.selectedTextBlockId === block.id}
                     isEditing={editingBlockId === block.id}
                     onSelect={() => handleBlockSelect(block.id)}

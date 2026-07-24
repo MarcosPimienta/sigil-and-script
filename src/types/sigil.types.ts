@@ -56,6 +56,7 @@ export interface InviteeRecord {
   id: string;
   name: string;
   email?: string;
+  language?: 'ES' | 'EN';
   dependents: Dependent[];
   status: InvitationStatus;
   openedAt?: string;
@@ -71,6 +72,7 @@ export interface GuestPayload {
   /** Primary name or family name. Supports "The Smith Family" */
   guestName: string;
   name?: string;
+  language?: 'ES' | 'EN';
   /** Optional array for multi-guest invitations */
   additionalGuests?: (string | { name: string; included?: boolean })[];
   /** Unique token used for mock routing */

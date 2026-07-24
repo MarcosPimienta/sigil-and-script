@@ -24,13 +24,15 @@ export function EnvelopeWrapper({ children, onPhaseChange, alwaysOpen }: Envelop
   const design = useSigilSelector((s) => s.design);
   const guest = useSigilSelector((s) => s.guest);
 
-  // Dynamic document title update based on guest & event
+  // Dynamic document title and html lang attribute update based on guest & event
   useEffect(() => {
+    const activeLang = (guest?.language || design.language || 'ES').toLowerCase();
+    document.documentElement.lang = activeLang;
     if (guest && guest.name) {
       const fullTitle = formatFullInvitationTitle(
         guest,
         design.hostNames || design.title,
-        design.language || 'ES'
+        guest?.language || design.language || 'ES'
       );
       if (fullTitle) {
         document.title = fullTitle;
@@ -99,11 +101,14 @@ export function EnvelopeWrapper({ children, onPhaseChange, alwaysOpen }: Envelop
   const headlineBlock = design.textBlocks?.find((b) => b.id === 'tb-headline');
   const hostNames = headlineBlock ? headlineBlock.content : 'Marcos & Diana';
 
+  const lang = guest?.language || design.language || 'ES';
+  const isEn = lang === 'EN';
+
   const getFormattedDateFields = (targetDateStr?: string) => {
     const defaultFields = {
-      dayOfWeek: 'Jueves',
+      dayOfWeek: isEn ? 'Thursday' : 'Jueves',
       dayOfMonth: '17',
-      monthName: 'SEPTIEMBRE',
+      monthName: isEn ? 'SEPTEMBER' : 'SEPTIEMBRE',
       year: '2026'
     };
     if (!targetDateStr) return defaultFields;
@@ -111,19 +116,27 @@ export function EnvelopeWrapper({ children, onPhaseChange, alwaysOpen }: Envelop
       const d = new Date(targetDateStr);
       if (isNaN(d.getTime())) return defaultFields;
       
+      const weekdaysEnglish = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
       const weekdaysSpanish = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+      const monthsEnglish = [
+        'JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE', 
+        'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER'
+      ];
       const monthsSpanish = [
         'ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO', 
         'JULIO', 'AGOSTO', 'SEPTIEMBRE', 'OCTUBRE', 'NOVIEMBRE', 'DICIEMBRE'
       ];
       
+      const weekdays = isEn ? weekdaysEnglish : weekdaysSpanish;
+      const months = isEn ? monthsEnglish : monthsSpanish;
+
       return {
-        dayOfWeek: weekdaysSpanish[d.getDay()],
+        dayOfWeek: weekdays[d.getDay()],
         dayOfMonth: String(d.getDate()),
-        monthName: monthsSpanish[d.getMonth()],
+        monthName: months[d.getMonth()],
         year: String(d.getFullYear())
       };
-    } catch {
+    } catch (e) {
       return defaultFields;
     }
   };
@@ -251,7 +264,7 @@ export function EnvelopeWrapper({ children, onPhaseChange, alwaysOpen }: Envelop
           fontWeight: 600,
           marginBottom: '0.2rem',
         }}>
-          tenemos el honor de invitarte al
+          {isEn ? 'we request the honor of your presence at the' : 'tenemos el honor de invitarte al'}
         </span>
 
         <h3 className="letter-cursive-title" style={{
@@ -331,7 +344,7 @@ export function EnvelopeWrapper({ children, onPhaseChange, alwaysOpen }: Envelop
           fontWeight: 600,
           marginTop: '0.1rem',
         }}>
-          {guest?.eventLocation || 'San José, cuyo poder sabe hacer posibles las cosas imposibles'}
+          {guest?.eventLocation || (isEn ? 'San José, whose power knows how to make impossible things possible' : 'San José, cuyo poder sabe hacer posibles las cosas imposibles')}
         </span>
         </div>
       </div>

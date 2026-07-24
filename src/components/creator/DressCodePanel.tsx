@@ -43,14 +43,41 @@ const DressIcon = () => (
 );
 
 export function DressCodePanel() {
+  const guestLang = useSigilSelector((s) => s.guest?.language);
   const design = useSigilSelector((s) => s.design);
-  const lang = design.language;
+  const lang = guestLang || design.language;
   const t = getTranslation(lang);
 
   const hasMale = design.dressCodeMaleHeading || design.dressCodeMaleText;
   const hasFemale = design.dressCodeFemaleHeading || design.dressCodeFemaleText;
 
   if (!design.dressCodeText && !hasMale && !hasFemale) return null;
+
+  const isEn = lang === 'EN';
+
+  const maleHeading = (design.dressCodeMaleHeading && design.dressCodeMaleHeading !== 'Ellos')
+    ? design.dressCodeMaleHeading
+    : (isEn ? 'Gentlemen' : 'Ellos');
+
+  const maleText = (design.dressCodeMaleText && design.dressCodeMaleText !== 'Traje formal')
+    ? design.dressCodeMaleText
+    : (isEn ? 'Formal Suit' : 'Traje formal');
+
+  const maleSubtext = (design.dressCodeMaleSubtext && design.dressCodeMaleSubtext !== 'Favor de evitar color azul marino')
+    ? design.dressCodeMaleSubtext
+    : (isEn ? 'Please avoid navy blue' : 'Favor de evitar color azul marino');
+
+  const femaleHeading = (design.dressCodeFemaleHeading && design.dressCodeFemaleHeading !== 'Ellas')
+    ? design.dressCodeFemaleHeading
+    : (isEn ? 'Ladies' : 'Ellas');
+
+  const femaleText = (design.dressCodeFemaleText && design.dressCodeFemaleText !== 'Vestido largo')
+    ? design.dressCodeFemaleText
+    : (isEn ? 'Evening Gown' : 'Vestido largo');
+
+  const femaleSubtext = (design.dressCodeFemaleSubtext && design.dressCodeFemaleSubtext !== 'Favor de evitar colores blanco, beige o colores pasteles')
+    ? design.dressCodeFemaleSubtext
+    : (isEn ? 'Please avoid white, beige, or pastel colors' : 'Favor de evitar colores blanco, beige o colores pasteles');
 
   return (
     <div className="section-dresscode" style={{
@@ -94,14 +121,14 @@ export function DressCodePanel() {
           {hasMale && (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100%' }}>
               <h4 style={{ fontSize: '1.5rem', margin: '0 0 1rem 0', fontStyle: 'italic', fontWeight: 400, color: '#4c4844' }}>
-                {design.dressCodeMaleHeading}
+                {maleHeading}
               </h4>
               <SuitIcon />
               <p style={{ fontSize: '1.6rem', margin: '1rem 0 0.25rem 0', fontStyle: 'italic', color: '#333' }}>
-                {design.dressCodeMaleText}
+                {maleText}
               </p>
               <p style={{ fontSize: '1.1rem', margin: '0 0 1rem 0', color: '#666', fontStyle: 'italic', lineHeight: 1.3, maxWidth: '80%' }}>
-                {design.dressCodeMaleSubtext}
+                {maleSubtext}
               </p>
               {design.dressCodeMaleAvoidColors && design.dressCodeMaleAvoidColors.length > 0 && (
                 <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', justifyContent: 'center', marginTop: 'auto' }}>
@@ -117,14 +144,14 @@ export function DressCodePanel() {
           {hasFemale && (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100%' }}>
               <h4 style={{ fontSize: '1.5rem', margin: '0 0 1rem 0', fontStyle: 'italic', fontWeight: 400, color: '#4c4844' }}>
-                {design.dressCodeFemaleHeading}
+                {femaleHeading}
               </h4>
               <DressIcon />
               <p style={{ fontSize: '1.6rem', margin: '1rem 0 0.25rem 0', fontStyle: 'italic', color: '#333' }}>
-                {design.dressCodeFemaleText}
+                {femaleText}
               </p>
               <p style={{ fontSize: '1.1rem', margin: '0 0 1rem 0', color: '#666', fontStyle: 'italic', lineHeight: 1.3, maxWidth: '80%' }}>
-                {design.dressCodeFemaleSubtext}
+                {femaleSubtext}
               </p>
               {design.dressCodeFemaleAvoidColors && design.dressCodeFemaleAvoidColors.length > 0 && (
                 <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', justifyContent: 'center', marginTop: 'auto' }}>

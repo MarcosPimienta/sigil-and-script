@@ -28,6 +28,7 @@ describe('DashboardView Column Sorting', () => {
     render(<DashboardView />);
     expect(screen.getByText('Name')).toBeTruthy();
     expect(screen.getByText('Dependents')).toBeTruthy();
+    expect(screen.getByText('Lang')).toBeTruthy();
     expect(screen.getByText('Status')).toBeTruthy();
     expect(screen.getByText('Opened At')).toBeTruthy();
   });

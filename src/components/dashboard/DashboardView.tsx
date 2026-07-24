@@ -2,12 +2,13 @@ import { useState, useCallback, useEffect, Fragment } from 'react';
 import type { InviteeRecord, InvitationStatus } from '../../types/sigil.types';
 import '../../styles/dashboard.css';
 import { useSigil, useSigilSelector } from '../../context/SigilContext';
+import { useSigilStore } from '../../state/sigilStore';
 import { DashboardStats } from './DashboardStats';
 import { AddInviteeForm } from '../creator/AddInviteeForm';
 import { CsvIngestionButton } from '../creator/CsvIngestionButton';
 import { DependentCheckbox } from '../creator/DependentCheckbox';
 
-export type SortColumn = 'name' | 'dependents' | 'status' | 'openedAt';
+export type SortColumn = 'name' | 'dependents' | 'language' | 'status' | 'openedAt';
 export type SortDirection = 'asc' | 'desc';
 
 // ── Copy-link cell ────────────────────────────────────────────────────────────
@@ -83,7 +84,23 @@ function SortHeader({
 export function DashboardView() {
   const { updateInvitee, removeInvitee, addDependent, refreshRoster } = useSigil();
   const invitees = useSigilSelector((s) => s.guestRoster.invitees);
+  const saveCurrentDesign = useSigilStore((s) => s.saveCurrentDesign);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [savedToast, setSavedToast] = useState(false);
+
+  const handleSaveChanges = useCallback(async () => {
+    setIsSaving(true);
+    try {
+      await saveCurrentDesign();
+      setSavedToast(true);
+      setTimeout(() => setSavedToast(false), 2500);
+    } catch (e: any) {
+      alert(`Save failed: ${e.message}`);
+    } finally {
+      setIsSaving(false);
+    }
+  }, [saveCurrentDesign]);
 
   useEffect(() => {
     if (refreshRoster) {
@@ -174,6 +191,11 @@ export function DashboardView() {
         valB = b.dependents ? b.dependents.length : 0;
         break;
 
+      case 'language':
+        valA = (a.language || 'ES').toLowerCase();
+        valB = (b.language || 'ES').toLowerCase();
+        break;
+
       case 'status': {
         const statusOrder: Record<string, number> = {
           PENDING: 1,
@@ -205,6 +227,23 @@ export function DashboardView() {
         <DashboardStats invitees={invitees} />
         
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <button
+            type="button"
+            className="dashboard-action-btn"
+            onClick={handleSaveChanges}
+            disabled={isSaving}
+            style={{
+              backgroundColor: savedToast ? '#28c76f' : '#4A5D23',
+              color: '#ffffff',
+              borderColor: 'transparent',
+              fontWeight: 600,
+              padding: '6px 14px',
+              transition: 'all 0.2s ease',
+            }}
+            title="Upload current roster changes to the database"
+          >
+            {isSaving ? '💾 Saving...' : savedToast ? '✓ Saved!' : '💾 Save to Database'}
+          </button>
           <button
             type="button"
             className="dashboard-action-btn"
@@ -277,6 +316,13 @@ export function DashboardView() {
               <SortHeader
                 col="dependents"
                 label="Dependents"
+                currentCol={sortColumn}
+                currentDir={sortDirection}
+                onSort={handleSort}
+              />
+              <SortHeader
+                col="language"
+                label="Lang"
                 currentCol={sortColumn}
                 currentDir={sortDirection}
                 onSort={handleSort}
@@ -363,6 +409,61 @@ export function DashboardView() {
                       </button>
                     </td>
 
+                    {/* Language Switch cell */}
+                    <td>
+                      <div
+                        className="lp-guest-lang-switch"
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          background: '#ffffff',
+                          borderRadius: '12px',
+                          padding: '2px',
+                          border: '1px solid var(--ui-border, #ccc)',
+                        }}
+                        aria-label={`Invitation language for ${inv.name}`}
+                      >
+                        <button
+                          type="button"
+                          className={`lp-lang-btn ${(inv.language || 'ES') === 'ES' ? 'active' : ''}`}
+                          onClick={() => updateInvitee && updateInvitee(inv.id, { language: 'ES' })}
+                          style={{
+                            padding: '2px 8px',
+                            borderRadius: '10px',
+                            border: 'none',
+                            fontSize: '0.75rem',
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                            background: (inv.language || 'ES') === 'ES' ? '#4A5D23' : 'transparent',
+                            color: (inv.language || 'ES') === 'ES' ? '#ffffff' : '#555555',
+                            transition: 'all 0.15s ease',
+                          }}
+                          aria-label={`Set Spanish for ${inv.name}`}
+                        >
+                          ES
+                        </button>
+                        <button
+                          type="button"
+                          className={`lp-lang-btn ${inv.language === 'EN' ? 'active' : ''}`}
+                          onClick={() => updateInvitee && updateInvitee(inv.id, { language: 'EN' })}
+                          style={{
+                            padding: '2px 8px',
+                            borderRadius: '10px',
+                            border: 'none',
+                            fontSize: '0.75rem',
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                            background: inv.language === 'EN' ? '#4A5D23' : 'transparent',
+                            color: inv.language === 'EN' ? '#ffffff' : '#555555',
+                            transition: 'all 0.15s ease',
+                          }}
+                          aria-label={`Set English for ${inv.name}`}
+                        >
+                          EN
+                        </button>
+                      </div>
+                    </td>
+
                     {/* Status Pill Dropdown */}
                     <td>
                       <select
@@ -419,7 +520,7 @@ export function DashboardView() {
                   {/* Expandable Dependents Manager Row */}
                   {isExpanded && (
                     <tr style={{ background: 'rgba(40, 30, 20, 0.03)' }}>
-                      <td colSpan={5} style={{ padding: '12px 16px 16px 32px' }}>
+                      <td colSpan={6} style={{ padding: '12px 16px 16px 32px' }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxWidth: '500px' }}>
                           <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--ui-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                             Dependents for {inv.name}

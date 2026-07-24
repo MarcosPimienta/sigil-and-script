@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { audioEngine } from '../../utils/audioEngine';
+import { useSigilSelector } from '../../context/SigilContext';
 
 export function AudioControls({ musicUrl }: { musicUrl?: string }) {
+  const lang = useSigilSelector((s) => s.guest?.language || s.design.language);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -134,7 +136,7 @@ export function AudioControls({ musicUrl }: { musicUrl?: string }) {
         textAlign: 'center',
         display: 'block',
       }}>
-        Dale play para escuchar nuestra canción
+        {lang === 'EN' ? 'Press play to listen to our song' : 'Dale play para escuchar nuestra canción'}
       </span>
 
       {/* Seekbar */}

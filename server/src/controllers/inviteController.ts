@@ -162,7 +162,9 @@ export async function getInviteByToken(req: Request, res: Response): Promise<voi
 
     if (acceptsHtml || isSocialCrawler(userAgent)) {
       let lang = 'ES';
-      if (guest.canvas?.designData) {
+      if (guest.language && typeof guest.language === 'string' && guest.language.trim()) {
+        lang = guest.language.trim().toUpperCase();
+      } else if (guest.canvas?.designData) {
         try {
           const data = typeof guest.canvas.designData === 'string' ? JSON.parse(guest.canvas.designData) : guest.canvas.designData;
           if (data.language && typeof data.language === 'string') {
@@ -486,16 +488,20 @@ export async function saveCanvas(req: Request, res: Response): Promise<void> {
               dependents,
             };
 
+            const lang = (guest.language && typeof guest.language === 'string' && guest.language.trim()) ? guest.language.trim().toUpperCase() : 'ES';
+
             return getPrisma().guest.upsert({
               where: { id: guest.id },
               update: {
                 name: guest.name,
+                language: lang,
                 status: guest.status || 'PENDING',
                 formResponses: JSON.stringify(mergedFormResponses),
               },
               create: {
                 id: guest.id,
                 name: guest.name,
+                language: lang,
                 status: guest.status || 'PENDING',
                 formResponses: JSON.stringify(mergedFormResponses),
                 canvasId,

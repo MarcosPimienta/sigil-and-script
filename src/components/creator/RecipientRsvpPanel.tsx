@@ -23,7 +23,8 @@ const InkUnderline = ({ color }: { color: string }) => (
 export function RecipientRsvpPanel() {
   const { state, submitRsvp } = useSigil();
   const { design, guest } = state;
-  const t = getTranslation(design.language);
+  const lang = guest?.language || design.language;
+  const t = getTranslation(lang);
   const config = design.rsvpFormConfig || {
     requireMealPreference: false,
     requireDietaryRestrictions: false,

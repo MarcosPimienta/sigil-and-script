@@ -89,6 +89,59 @@ export function InviteeRow({ invitee }: InviteeRowProps) {
           </span>
         )}
 
+        {/* Per-Guest Language Switch */}
+        <div
+          className="lp-guest-lang-switch"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            background: 'var(--cr-input-bg, #f0f0f0)',
+            borderRadius: '12px',
+            padding: '2px',
+            border: '1px solid var(--cr-border, #ccc)',
+          }}
+          aria-label={`Invitation language for ${invitee.name}`}
+        >
+          <button
+            type="button"
+            className={`lp-lang-btn ${ (invitee.language || 'ES') === 'ES' ? 'active' : '' }`}
+            onClick={() => updateInvitee && updateInvitee(invitee.id, { language: 'ES' })}
+            style={{
+              padding: '2px 6px',
+              borderRadius: '10px',
+              border: 'none',
+              fontSize: '0.72rem',
+              fontWeight: 600,
+              cursor: 'pointer',
+              background: (invitee.language || 'ES') === 'ES' ? 'var(--status-pending, #4A5D23)' : 'transparent',
+              color: (invitee.language || 'ES') === 'ES' ? '#fff' : 'inherit',
+              transition: 'all 0.15s ease',
+            }}
+            aria-label={`Set Spanish for ${invitee.name}`}
+          >
+            ES
+          </button>
+          <button
+            type="button"
+            className={`lp-lang-btn ${ invitee.language === 'EN' ? 'active' : '' }`}
+            onClick={() => updateInvitee && updateInvitee(invitee.id, { language: 'EN' })}
+            style={{
+              padding: '2px 6px',
+              borderRadius: '10px',
+              border: 'none',
+              fontSize: '0.72rem',
+              fontWeight: 600,
+              cursor: 'pointer',
+              background: invitee.language === 'EN' ? 'var(--status-pending, #4A5D23)' : 'transparent',
+              color: invitee.language === 'EN' ? '#fff' : 'inherit',
+              transition: 'all 0.15s ease',
+            }}
+            aria-label={`Set English for ${invitee.name}`}
+          >
+            EN
+          </button>
+        </div>
+
         {/* Manual Status Editor Dropdown */}
         <select
           className="lp-status-select"

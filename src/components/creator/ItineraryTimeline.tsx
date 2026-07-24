@@ -44,7 +44,7 @@ const ChurchIcon = () => (
 
 export function ItineraryTimeline() {
   const itinerary = useSigilSelector((s) => s.design.itinerary) || [];
-  const lang = useSigilSelector((s) => s.design.language);
+  const lang = useSigilSelector((s) => s.guest?.language || s.design.language);
   const t = getTranslation(lang);
 
   if (itinerary.length === 0) return null;
@@ -119,7 +119,11 @@ export function ItineraryTimeline() {
                 color: '#ffffff',
                 textShadow: '0 1px 2px rgba(0,0,0,0.1)'
               }}>
-                {item.title}
+                {lang === 'EN' && item.title === 'Ceremonia Religiosa'
+                  ? 'Religious Ceremony'
+                  : lang === 'EN' && item.title === 'Recepción'
+                  ? 'Reception'
+                  : item.title}
               </h4>
 
               {/* Church Icon below Ceremonia Religiosa */}

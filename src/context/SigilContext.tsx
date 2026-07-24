@@ -390,7 +390,7 @@ interface SigilContextValue {
   // ── Guest Roster ────────────────────────────────────────────────────────
   addInvitee: (name: string, email?: string) => void;
   removeInvitee: (inviteeId: string) => void;
-  updateInvitee: (inviteeId: string, updates: Partial<Pick<InviteeRecord, 'name' | 'email' | 'status'>>) => void;
+  updateInvitee: (inviteeId: string, updates: Partial<Pick<InviteeRecord, 'name' | 'email' | 'status' | 'language'>>) => void;
   addDependent: (inviteeId: string, name: string) => void;
   removeDependent: (inviteeId: string, dependentId: string) => void;
   toggleDependent: (inviteeId: string, dependentId: string) => void;

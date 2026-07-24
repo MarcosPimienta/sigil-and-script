@@ -105,12 +105,16 @@ export default async function handler(req, res) {
       const apiRes = await fetch(`https://sigil-and-script-backend.vercel.app/invite/${token}`);
       if (apiRes.ok) {
         guestObj = await apiRes.json();
-        if (guestObj && guestObj.canvas && guestObj.canvas.designData) {
-          const data = typeof guestObj.canvas.designData === 'string' ? JSON.parse(guestObj.canvas.designData) : guestObj.canvas.designData;
-          if (data.language && typeof data.language === 'string') {
-            lang = data.language.trim().toUpperCase();
+        if (guestObj) {
+          if (guestObj.language && typeof guestObj.language === 'string' && guestObj.language.trim()) {
+            lang = guestObj.language.trim().toUpperCase();
           }
-          if (data.hostNames && typeof data.hostNames === 'string' && data.hostNames.trim()) {
+          if (guestObj.canvas && guestObj.canvas.designData) {
+            const data = typeof guestObj.canvas.designData === 'string' ? JSON.parse(guestObj.canvas.designData) : guestObj.canvas.designData;
+            if ((!guestObj.language || !guestObj.language.trim()) && data.language && typeof data.language === 'string') {
+              lang = data.language.trim().toUpperCase();
+            }
+            if (data.hostNames && typeof data.hostNames === 'string' && data.hostNames.trim()) {
             rawHostNames = data.hostNames.trim();
           } else if (data.title && typeof data.title === 'string' && data.title.trim()) {
             rawHostNames = data.title.trim();
@@ -125,7 +129,8 @@ export default async function handler(req, res) {
           }
         }
       }
-    } catch (e) {
+    }
+  } catch (e) {
       console.error('Error fetching invite details in Vercel function:', e);
     }
   }
