@@ -274,7 +274,7 @@ export function EnvelopeWrapper({ children, onPhaseChange, alwaysOpen }: Envelop
           color: '#4c4844',
           margin: '0 0 0.2rem 0',
         }}>
-          {design.title || 'Nuestra Boda'}
+          {formatEventTitle(design.title || hostNames, lang)}
         </h3>
 
         <span className="letter-month-name" style={{

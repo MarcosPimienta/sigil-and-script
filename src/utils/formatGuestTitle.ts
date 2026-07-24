@@ -98,19 +98,26 @@ export function formatEventTitle(hostNames?: string | null, lang: string = 'ES')
   }
 
   let result = clean;
+
   if (isEs) {
-    if (/^(wedding of|wedding)\s+/i.test(result)) {
-      result = result.replace(/^(wedding of|wedding)\s+/i, 'Matrimonio de ');
+    if (/^(wedding of)\s+/i.test(result)) {
+      result = result.replace(/^(wedding of)\s+/i, 'Matrimonio de ');
+    } else if (/\s+wedding$/i.test(result)) {
+      const names = result.replace(/\s+wedding$/i, '').replace(/'s$/i, '').trim();
+      result = `Matrimonio de ${names}`;
     } else if (!/^(matrimonio|boda)/i.test(result)) {
       result = `Matrimonio de ${result}`;
     }
   } else {
+    // English translation -> "Marcos & Diana Wedding"
     if (/^(matrimonio de|boda de)\s+/i.test(result)) {
-      result = result.replace(/^(matrimonio de|boda de)\s+/i, 'Wedding of ');
+      const names = result.replace(/^(matrimonio de|boda de)\s+/i, '').trim();
+      result = `${names} Wedding`;
     } else if (/^(matrimonio|boda)\s+/i.test(result)) {
-      result = result.replace(/^(matrimonio|boda)\s+/i, 'Wedding ');
-    } else if (!/^wedding/i.test(result)) {
-      result = `Wedding of ${result}`;
+      const names = result.replace(/^(matrimonio|boda)\s+/i, '').trim();
+      result = `${names} Wedding`;
+    } else if (!/(wedding|'s wedding)$/i.test(result) && !/^wedding of/i.test(result)) {
+      result = `${result} Wedding`;
     }
   }
 

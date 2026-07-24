@@ -75,6 +75,6 @@ describe('formatFullInvitationTitle', () => {
   it('formats full invitation title for 1 dependent in English', () => {
     const guest = { name: 'Oscar', dependents: [{ name: 'Diana', included: true }] };
     const title = formatFullInvitationTitle(guest, 'Marcos & Diana', 'EN');
-    expect(title).toBe('Invitation for Oscar & Diana to Wedding of Marcos & Diana');
+    expect(title).toBe('Invitation for Oscar & Diana to Marcos & Diana Wedding');
   });
 });
