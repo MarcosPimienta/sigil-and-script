@@ -29,6 +29,12 @@ describe('formatGuestTitleName', () => {
     expect(formatGuestTitleName(guest, 'EN')).toBe('Oscar & Family');
   });
 
+  it('formats FAMILY guestType correctly in Spanish and English', () => {
+    const guest = { name: 'Gómez Pérez', guestType: 'FAMILY', dependents: [] };
+    expect(formatGuestTitleName(guest, 'ES')).toBe('Familia Gómez Pérez');
+    expect(formatGuestTitleName(guest, 'EN')).toBe('The Gómez Pérez Family');
+  });
+
   it('ignores excluded dependents', () => {
     const guest = {
       name: 'Oscar',

@@ -15,7 +15,7 @@ describe('AddInviteeForm', () => {
     render(<AddInviteeForm />);
     fireEvent.change(screen.getByLabelText(/guest name/i), { target: { value: '  Sophie  ' } });
     fireEvent.click(screen.getByRole('button', { name: /add guest/i }));
-    expect(mockAddInvitee).toHaveBeenCalledWith('Sophie', undefined);
+    expect(mockAddInvitee).toHaveBeenCalledWith('Sophie', undefined, 'INDIVIDUAL', []);
   });
 
   it('shows validation error and does not call addInvitee for empty name', () => {
@@ -39,6 +39,15 @@ describe('AddInviteeForm', () => {
     fireEvent.change(screen.getByLabelText(/guest name/i), { target: { value: 'Sophie' } });
     fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'sophie@example.com' } });
     fireEvent.click(screen.getByRole('button', { name: /add guest/i }));
-    expect(mockAddInvitee).toHaveBeenCalledWith('Sophie', 'sophie@example.com');
+    expect(mockAddInvitee).toHaveBeenCalledWith('Sophie', 'sophie@example.com', 'INDIVIDUAL', []);
+  });
+
+  it('submits family mode guest with family member dependents', () => {
+    render(<AddInviteeForm />);
+    fireEvent.click(screen.getByRole('button', { name: /family/i }));
+    fireEvent.change(screen.getByLabelText(/family name/i), { target: { value: 'Familia Gómez' } });
+    fireEvent.change(screen.getByPlaceholderText(/member #1 name/i), { target: { value: 'Carlos' } });
+    fireEvent.click(screen.getByRole('button', { name: /add family/i }));
+    expect(mockAddInvitee).toHaveBeenCalledWith('Familia Gómez', undefined, 'FAMILY', ['Carlos']);
   });
 });

@@ -489,12 +489,14 @@ export async function saveCanvas(req: Request, res: Response): Promise<void> {
             };
 
             const lang = (guest.language && typeof guest.language === 'string' && guest.language.trim()) ? guest.language.trim().toUpperCase() : 'ES';
+            const gType = (guest.guestType && typeof guest.guestType === 'string' && guest.guestType.trim()) ? guest.guestType.trim().toUpperCase() : 'INDIVIDUAL';
 
             return getPrisma().guest.upsert({
               where: { id: guest.id },
               update: {
                 name: guest.name,
                 language: lang,
+                guestType: gType,
                 status: guest.status || 'PENDING',
                 formResponses: JSON.stringify(mergedFormResponses),
               },
@@ -502,6 +504,7 @@ export async function saveCanvas(req: Request, res: Response): Promise<void> {
                 id: guest.id,
                 name: guest.name,
                 language: lang,
+                guestType: gType,
                 status: guest.status || 'PENDING',
                 formResponses: JSON.stringify(mergedFormResponses),
                 canvasId,

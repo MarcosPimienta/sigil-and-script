@@ -89,6 +89,25 @@ export function InviteeRow({ invitee }: InviteeRowProps) {
           </span>
         )}
 
+        {/* Guest Category Badge / Toggle */}
+        <button
+          type="button"
+          onClick={() => updateInvitee && updateInvitee(invitee.id, { guestType: invitee.guestType === 'FAMILY' ? 'INDIVIDUAL' : 'FAMILY' })}
+          style={{
+            fontSize: '0.75rem',
+            fontWeight: 600,
+            padding: '2px 8px',
+            borderRadius: '10px',
+            border: '1px solid rgba(74, 93, 35, 0.3)',
+            background: invitee.guestType === 'FAMILY' ? 'rgba(74, 93, 35, 0.15)' : 'rgba(0, 0, 0, 0.04)',
+            color: '#4A5D23',
+            cursor: 'pointer',
+          }}
+          title="Click to toggle between Individual and Family guest category"
+        >
+          {invitee.guestType === 'FAMILY' ? '👨‍👩‍👧‍👦 Family' : '👤 Individual'}
+        </button>
+
         {/* Per-Guest Language Switch */}
         <div
           className="lp-guest-lang-switch"

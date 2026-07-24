@@ -388,9 +388,9 @@ interface SigilContextValue {
   fetchInvitationDetails: (token: string) => Promise<void>;
 
   // ── Guest Roster ────────────────────────────────────────────────────────
-  addInvitee: (name: string, email?: string) => void;
+  addInvitee: (name: string, email?: string, guestType?: 'INDIVIDUAL' | 'FAMILY', initialDependents?: string[]) => void;
   removeInvitee: (inviteeId: string) => void;
-  updateInvitee: (inviteeId: string, updates: Partial<Pick<InviteeRecord, 'name' | 'email' | 'status' | 'language'>>) => void;
+  updateInvitee: (inviteeId: string, updates: Partial<Pick<InviteeRecord, 'name' | 'email' | 'status' | 'language' | 'guestType'>>) => void;
   addDependent: (inviteeId: string, name: string) => void;
   removeDependent: (inviteeId: string, dependentId: string) => void;
   toggleDependent: (inviteeId: string, dependentId: string) => void;

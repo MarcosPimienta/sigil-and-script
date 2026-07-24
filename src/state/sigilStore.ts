@@ -120,9 +120,9 @@ export interface SigilState {
   resetToDefaults: () => void;
 
   // Roster Actions
-  addInvitee: (name: string, email?: string) => void;
+  addInvitee: (name: string, email?: string, guestType?: 'INDIVIDUAL' | 'FAMILY', initialDependents?: string[]) => void;
   removeInvitee: (inviteeId: string) => void;
-  updateInvitee: (inviteeId: string, updates: Partial<Pick<InviteeRecord, 'name' | 'email' | 'status' | 'language'>>) => void;
+  updateInvitee: (inviteeId: string, updates: Partial<Pick<InviteeRecord, 'name' | 'email' | 'status' | 'language' | 'guestType'>>) => void;
   addDependent: (inviteeId: string, name: string) => void;
   updateDependentName: (inviteeId: string, dependentId: string, name: string) => void;
   removeDependent: (inviteeId: string, dependentId: string) => void;
@@ -227,14 +227,24 @@ export const useSigilStore = create<SigilState>((set, get) => ({
       guestRoster: { invitees: [] },
     }),
 
-  addInvitee: (name, email) => {
+  addInvitee: (name, email, guestType = 'INDIVIDUAL', initialDependents = []) => {
     const trimmed = name.trim();
     if (!trimmed) return;
+    const deps: Dependent[] = initialDependents
+      .map((dName) => dName.trim())
+      .filter((dName) => dName.length > 0)
+      .map((dName) => ({
+        id: crypto.randomUUID(),
+        name: dName,
+        included: true,
+      }));
+
     const newInvitee: InviteeRecord = {
       id: crypto.randomUUID(),
       name: trimmed,
       email: email?.trim(),
-      dependents: [],
+      guestType,
+      dependents: deps,
       status: 'PENDING',
     };
     set((state) => {
@@ -431,6 +441,7 @@ export const useSigilStore = create<SigilState>((set, get) => ({
       const guest: GuestPayload = {
         guestName: data.name,
         language: effectiveLang,
+        guestType: (data.guestType as 'INDIVIDUAL' | 'FAMILY') || 'INDIVIDUAL',
         additionalGuests,
         routingToken: data.id,
         rsvpBy: 'January 31st',
@@ -580,6 +591,7 @@ export const useSigilStore = create<SigilState>((set, get) => ({
             id: inv.id,
             name: inv.name,
             language: (inv.language as 'ES' | 'EN') || 'ES',
+            guestType: (inv.guestType as 'INDIVIDUAL' | 'FAMILY') || 'INDIVIDUAL',
             email: inv.email || undefined,
             dependents,
             status: (inv.status || 'PENDING') as import('../types/sigil.types').InvitationStatus,
@@ -641,6 +653,7 @@ export const useSigilStore = create<SigilState>((set, get) => ({
             id: inv.id,
             name: inv.name,
             language: (inv.language as 'ES' | 'EN') || 'ES',
+            guestType: (inv.guestType as 'INDIVIDUAL' | 'FAMILY') || 'INDIVIDUAL',
             email: inv.email || undefined,
             dependents,
             status: (inv.status || 'PENDING') as import('../types/sigil.types').InvitationStatus,

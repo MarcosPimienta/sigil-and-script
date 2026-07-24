@@ -1,6 +1,7 @@
 export interface GuestLike {
   name?: string;
   guestName?: string;
+  guestType?: string;
   dependents?: Array<{ name: string; included?: boolean }> | string;
   formResponses?: { dependents?: Array<{ name: string; included?: boolean }> } | string;
   additionalGuests?: Array<string | { name: string; included?: boolean }> | string;
@@ -59,6 +60,16 @@ export function formatGuestTitleName(guest?: GuestLike | null, lang: string = 'E
   const primaryName = (guest?.name || guest?.guestName || '').trim();
   if (!primaryName) return lang.toUpperCase() === 'ES' ? 'Invitado' : 'Guest';
 
+  const isEs = lang.toUpperCase() === 'ES';
+
+  if (guest?.guestType === 'FAMILY') {
+    const lower = primaryName.toLowerCase();
+    if (lower.startsWith('familia') || lower.startsWith('the ') || lower.endsWith(' family')) {
+      return primaryName;
+    }
+    return isEs ? `Familia ${primaryName}` : `The ${primaryName} Family`;
+  }
+
   const rawDeps = extractDependentsFromGuest(guest);
   const dependentNames = rawDeps
     .filter((d: any) => d && (d.included === undefined || d.included === true))
@@ -69,7 +80,6 @@ export function formatGuestTitleName(guest?: GuestLike | null, lang: string = 'E
     return primaryName;
   }
 
-  const isEs = lang.toUpperCase() === 'ES';
   if (dependentNames.length === 1) {
     const connector = isEs ? 'y' : '&';
     return `${primaryName} ${connector} ${dependentNames[0].trim()}`;

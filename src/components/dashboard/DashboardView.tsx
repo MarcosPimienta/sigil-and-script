@@ -8,7 +8,7 @@ import { AddInviteeForm } from '../creator/AddInviteeForm';
 import { CsvIngestionButton } from '../creator/CsvIngestionButton';
 import { DependentCheckbox } from '../creator/DependentCheckbox';
 
-export type SortColumn = 'name' | 'dependents' | 'language' | 'status' | 'openedAt';
+export type SortColumn = 'name' | 'guestType' | 'dependents' | 'language' | 'status' | 'openedAt';
 export type SortDirection = 'asc' | 'desc';
 
 // ── Copy-link cell ────────────────────────────────────────────────────────────
@@ -186,6 +186,11 @@ export function DashboardView() {
         valB = b.name.toLowerCase();
         break;
 
+      case 'guestType':
+        valA = (a.guestType || 'INDIVIDUAL').toLowerCase();
+        valB = (b.guestType || 'INDIVIDUAL').toLowerCase();
+        break;
+
       case 'dependents':
         valA = a.dependents ? a.dependents.length : 0;
         valB = b.dependents ? b.dependents.length : 0;
@@ -314,6 +319,13 @@ export function DashboardView() {
                 onSort={handleSort}
               />
               <SortHeader
+                col="guestType"
+                label="Type"
+                currentCol={sortColumn}
+                currentDir={sortDirection}
+                onSort={handleSort}
+              />
+              <SortHeader
                 col="dependents"
                 label="Dependents"
                 currentCol={sortColumn}
@@ -381,6 +393,27 @@ export function DashboardView() {
                           {inv.name} <span style={{ opacity: 0.5, fontSize: '0.8em' }}>✏️</span>
                         </span>
                       )}
+                    </td>
+
+                    {/* Category cell */}
+                    <td>
+                      <button
+                        type="button"
+                        onClick={() => updateInvitee(inv.id, { guestType: inv.guestType === 'FAMILY' ? 'INDIVIDUAL' : 'FAMILY' })}
+                        style={{
+                          fontSize: '0.75rem',
+                          fontWeight: 600,
+                          padding: '2px 8px',
+                          borderRadius: '10px',
+                          border: '1px solid rgba(74, 93, 35, 0.3)',
+                          background: inv.guestType === 'FAMILY' ? 'rgba(74, 93, 35, 0.15)' : 'rgba(0, 0, 0, 0.04)',
+                          color: '#4A5D23',
+                          cursor: 'pointer',
+                        }}
+                        title="Click to toggle guest category"
+                      >
+                        {inv.guestType === 'FAMILY' ? '👨‍👩‍👧‍👦 Family' : '👤 Individual'}
+                      </button>
                     </td>
 
                     {/* Dependents Count & Expand Trigger */}
@@ -520,7 +553,7 @@ export function DashboardView() {
                   {/* Expandable Dependents Manager Row */}
                   {isExpanded && (
                     <tr style={{ background: 'rgba(40, 30, 20, 0.03)' }}>
-                      <td colSpan={6} style={{ padding: '12px 16px 16px 32px' }}>
+                      <td colSpan={7} style={{ padding: '12px 16px 16px 32px' }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxWidth: '500px' }}>
                           <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--ui-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                             Dependents for {inv.name}
