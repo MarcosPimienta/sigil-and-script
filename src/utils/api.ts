@@ -24,15 +24,22 @@ export async function apiFetch<T = any>(path: string, options: RequestInit = {})
     }
   }
 
-  const response = await fetch(url, {
-    ...options,
-    headers,
-  });
+  try {
+    const response = await fetch(url, {
+      ...options,
+      headers,
+    });
 
-  if (!response.ok) {
-    const errorBody = await response.json().catch(() => ({}));
-    throw new Error(errorBody.error || `HTTP error! status: ${response.status}`);
+    if (!response.ok) {
+      const errorBody = await response.json().catch(() => ({}));
+      throw new Error(errorBody.error || `HTTP error! status: ${response.status}`);
+    }
+
+    return response.json() as Promise<T>;
+  } catch (err: any) {
+    if (err.name === 'TypeError' && (err.message === 'Failed to fetch' || err.message.includes('fetch'))) {
+      throw new Error(`Unable to connect to backend server at ${BASE_URL}. Ensure server is running on port 5001.`);
+    }
+    throw err;
   }
-
-  return response.json() as Promise<T>;
 }

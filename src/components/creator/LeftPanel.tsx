@@ -8,6 +8,7 @@ import { useSigil } from '../../context/SigilContext';
 import type { InvitationDesign } from '../../types/sigil.types';
 import { FormConfiguratorPanel } from './FormConfiguratorPanel';
 import { SectionEditor } from './SectionEditor';
+import { SealCreator } from './SealCreator';
 import { apiFetch } from '../../utils/api';
 
 // ── Custom artwork uploads ───────────────────────────────────────────────────
@@ -239,6 +240,7 @@ export function LeftPanel() {
   const { design, guest } = state;
 
   const [uploadingFields, setUploadingFields] = useState<Record<string, boolean>>({});
+  const [isSealCreatorOpen, setIsSealCreatorOpen] = useState(false);
 
   // ── Custom artwork uploads ─────────────────────────────────────────────────
   const handleImageUpload = useCallback(
@@ -445,15 +447,59 @@ export function LeftPanel() {
             </div>
           )}
 
-          <ImageUploadSlot
-            id="upload-sticker-image"
-            label="Sticker Label / Seal"
-            hint="Custom PNG image to keep the invitation sealed"
-            value={design.stickerImage}
-            onUpload={handleImageUpload('stickerImage')}
-            onClear={handleImageClear('stickerImage')}
-            isUploading={uploadingFields['stickerImage']}
-          />
+          {isSealCreatorOpen ? (
+            <div className="lp-field" style={{ marginBottom: '0.8rem' }}>
+              <SealCreator
+                onApply={(imgUrl) => {
+                  updateDesign({ stickerImage: imgUrl });
+                  setIsSealCreatorOpen(false);
+                }}
+                onCancel={() => setIsSealCreatorOpen(false)}
+                initialImage={design.stickerImage}
+              />
+            </div>
+          ) : (
+            <>
+              <div className="lp-field" style={{ marginBottom: '0.8rem' }}>
+                <button
+                  type="button"
+                  className="lp-seal-modal-trigger"
+                  onClick={() => setIsSealCreatorOpen(true)}
+                  style={{
+                    width: '100%',
+                    padding: '9px 12px',
+                    fontSize: '0.82rem',
+                    fontWeight: 500,
+                    color: 'var(--cr-accent, #d4af37)',
+                    backgroundColor: 'rgba(212, 175, 55, 0.08)',
+                    border: '1px dashed rgba(212, 175, 55, 0.4)',
+                    borderRadius: '6px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                  }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                  </svg>
+                  <span>Create Custom Seal or Sticker...</span>
+                </button>
+              </div>
+
+              <ImageUploadSlot
+                id="upload-sticker-image"
+                label="Sticker Label / Seal"
+                hint="Custom PNG image to keep the invitation sealed"
+                value={design.stickerImage}
+                onUpload={handleImageUpload('stickerImage')}
+                onClear={handleImageClear('stickerImage')}
+                isUploading={uploadingFields['stickerImage']}
+              />
+            </>
+          )}
 
           <ImageUploadSlot
             id="upload-registry-image"
