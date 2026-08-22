@@ -130,7 +130,16 @@ function formatEventTitle(hostNames, lang) {
 }
 
 export default async function handler(req, res) {
-  const token = req.query.token || (req.url || '').split('/invite/')[1]?.split('?')[0];
+  let token = req.query ? req.query.token : undefined;
+  if (!token && req.url) {
+    try {
+      const parsedUrl = new URL(req.url, 'https://sigil-and-script-frontend.vercel.app');
+      token = parsedUrl.searchParams.get('token') || parsedUrl.pathname.split('/invite/')[1]?.split('?')[0];
+    } catch (e) {
+      const match = req.url.match(/[\?&]token=([^&]+)/) || req.url.match(/\/invite\/([^?]+)/);
+      if (match) token = match[1];
+    }
+  }
 
   let guestObj = null;
   let rawHostNames = '';
@@ -139,7 +148,12 @@ export default async function handler(req, res) {
 
   if (token && token.length > 10) {
     try {
-      const apiRes = await fetch(`https://sigil-and-script-backend.vercel.app/invite/${token}`);
+      const apiRes = await fetch(`https://sigil-and-script-backend.vercel.app/invite/${token}`, {
+        headers: {
+          'Accept': 'application/json',
+          'User-Agent': 'SigilFrontend/1.0',
+        },
+      });
       if (apiRes.ok) {
         guestObj = await apiRes.json();
         if (guestObj) {

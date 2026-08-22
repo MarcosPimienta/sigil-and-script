@@ -158,9 +158,10 @@ export async function getInviteByToken(req: Request, res: Response): Promise<voi
     }
 
     const userAgent = req.headers['user-agent'] || '';
+    const acceptsJson = req.headers.accept?.includes('application/json');
     const acceptsHtml = req.headers.accept?.includes('text/html');
 
-    if (acceptsHtml || isSocialCrawler(userAgent)) {
+    if (!acceptsJson && (acceptsHtml || isSocialCrawler(userAgent))) {
       let lang = 'ES';
       if (guest.language && typeof guest.language === 'string' && guest.language.trim()) {
         lang = guest.language.trim().toUpperCase();

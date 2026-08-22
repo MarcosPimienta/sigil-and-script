@@ -110,6 +110,18 @@ describe('Sigil & Script Backend API Tests', () => {
       expect(res.text).toContain('<meta property="og:image"');
     });
 
+    it('should return JSON when request specifies Accept: application/json even with social crawler User-Agent', async () => {
+      const res = await request(app)
+        .get(`/invite/${openedGuestId}`)
+        .set('User-Agent', 'WhatsApp/2.21.12.21 i')
+        .set('Accept', 'application/json')
+        .expect(200);
+
+      expect(res.headers['content-type']).toContain('application/json');
+      expect(res.body).toHaveProperty('id', openedGuestId);
+      expect(res.body).toHaveProperty('name', 'Jane Smith');
+    });
+
     it('should return 404 for a non-existent UUID token', async () => {
       const res = await request(app)
         .get(`/invite/${nonExistentGuestId}`)
