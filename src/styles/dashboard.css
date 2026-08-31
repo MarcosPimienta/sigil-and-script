@@ -113,3 +113,156 @@
 .status-badge--opened   { background: var(--status-opened); }
 .status-badge--rsvp_yes { background: var(--status-rsvp-yes); }
 .status-badge--rsvp_no  { background: var(--status-rsvp-no); }
+
+/* ── View Mode Switcher ──────────────────────────────────────────────────────── */
+
+.dashboard-view-mode-toggle {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(40, 30, 20, 0.06);
+  padding: 3px;
+  border-radius: var(--radius-sm, 6px);
+  border: 1px solid var(--ui-border, rgba(40, 30, 20, 0.2));
+  gap: 2px;
+}
+
+.dashboard-view-mode-btn {
+  border: none;
+  background: transparent;
+  padding: 5px 12px;
+  font-size: var(--text-xs, 0.8rem);
+  font-weight: 600;
+  border-radius: 4px;
+  cursor: pointer;
+  color: var(--ui-text-secondary, #5c534c);
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.dashboard-view-mode-btn.active {
+  background: var(--status-pending, #4A5D23);
+  color: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* ── Guest Hierarchy Tree View ────────────────────────────────────────────────── */
+
+.guest-tree-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4, 16px);
+}
+
+.guest-tree-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-3, 12px);
+  padding-bottom: var(--space-2, 8px);
+  border-bottom: 1px solid var(--ui-border-subtle, rgba(40, 30, 20, 0.1));
+}
+
+.guest-tree-count-badge {
+  font-size: var(--text-sm, 0.88rem);
+  font-weight: 600;
+  color: var(--ui-text-secondary, #5c534c);
+}
+
+.guest-tree-copy-btn {
+  background: rgba(255, 255, 255, 0.9);
+  padding: 5px 14px;
+  font-weight: 600;
+  color: var(--status-pending, #4A5D23);
+  border-color: var(--status-pending, #4A5D23);
+}
+
+.guest-tree-copy-btn:hover {
+  background: var(--status-pending, #4A5D23);
+  color: #ffffff;
+}
+
+.guest-tree-paper {
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid var(--ui-border, rgba(40, 30, 20, 0.2));
+  border-radius: 6px;
+  padding: var(--space-6, 24px) var(--space-8, 32px);
+  box-shadow: 0 2px 8px rgba(40, 30, 20, 0.05);
+  font-family: 'Courier New', Courier, monospace;
+}
+
+.guest-tree-content {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.guest-tree-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.guest-tree-stem-line {
+  color: var(--ui-text-muted, #8c7d73);
+  font-size: 1.05rem;
+  line-height: 1.2;
+  font-weight: 700;
+  user-select: none;
+}
+
+.guest-tree-primary {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  line-height: 1.4;
+}
+
+.guest-tree-branch {
+  color: var(--ui-text-muted, #8c7d73);
+  font-size: 1.05rem;
+  font-weight: 700;
+  user-select: none;
+}
+
+.guest-tree-primary-name {
+  font-family: var(--font-body, inherit);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--ui-text-primary, #2d2a26);
+}
+
+.guest-tree-dependents-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 2px;
+}
+
+.guest-tree-dependent {
+  display: flex;
+  align-items: baseline;
+  line-height: 1.4;
+}
+
+.guest-tree-dep-indent {
+  display: inline-flex;
+  padding-left: 36px;
+}
+
+.guest-tree-dep-branch {
+  color: var(--ui-text-muted, #8c7d73);
+  font-size: 1rem;
+  font-weight: 700;
+  user-select: none;
+  margin-right: 6px;
+}
+
+.guest-tree-dep-name {
+  font-family: var(--font-body, inherit);
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--ui-text-secondary, #5c534c);
+}
+

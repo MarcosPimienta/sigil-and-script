@@ -7,6 +7,7 @@ import { DashboardStats } from './DashboardStats';
 import { AddInviteeForm } from '../creator/AddInviteeForm';
 import { CsvIngestionButton } from '../creator/CsvIngestionButton';
 import { DependentCheckbox } from '../creator/DependentCheckbox';
+import { GuestHierarchyTreeView } from './GuestHierarchyTreeView';
 
 export type SortColumn = 'name' | 'guestType' | 'dependents' | 'language' | 'status' | 'openedAt';
 export type SortDirection = 'asc' | 'desc';
@@ -119,6 +120,7 @@ export function DashboardView() {
   }, [refreshRoster]);
 
   const [showAddForm, setShowAddForm] = useState(false);
+  const [viewMode, setViewMode] = useState<'table' | 'tree'>('table');
   const [expandedIds, setExpandedIds] = useState<Record<string, boolean>>({});
   const [editingNameId, setEditingNameId] = useState<string | null>(null);
   const [editingNameValue, setEditingNameValue] = useState<string>('');
@@ -231,7 +233,27 @@ export function DashboardView() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', marginBottom: '8px' }}>
         <DashboardStats invitees={invitees} />
         
-        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+          {/* View Mode Switcher */}
+          <div className="dashboard-view-mode-toggle" role="group" aria-label="Dashboard view mode">
+            <button
+              type="button"
+              className={`dashboard-view-mode-btn ${viewMode === 'table' ? 'active' : ''}`}
+              onClick={() => setViewMode('table')}
+              aria-pressed={viewMode === 'table'}
+            >
+              ▦ Table
+            </button>
+            <button
+              type="button"
+              className={`dashboard-view-mode-btn ${viewMode === 'tree' ? 'active' : ''}`}
+              onClick={() => setViewMode('tree')}
+              aria-pressed={viewMode === 'tree'}
+            >
+              🌳 Tree View
+            </button>
+          </div>
+
           <button
             type="button"
             className="dashboard-action-btn"
@@ -299,16 +321,20 @@ export function DashboardView() {
         </div>
       )}
 
-      <p className="dashboard-limitation-note">
-        Click on any column header caret (▲ / ▼ / ↕) to sort alphabetically, by dependents, status, or date.
-      </p>
-
-      {invitees.length === 0 ? (
-        <div className="dashboard-view--empty" style={{ padding: '60px 0' }}>
-          <p>No guests added yet. Click "+ Add Guest" above to get started!</p>
-        </div>
+      {viewMode === 'tree' ? (
+        <GuestHierarchyTreeView invitees={invitees} />
       ) : (
-        <table className="dashboard-table">
+        <>
+          <p className="dashboard-limitation-note">
+            Click on any column header caret (▲ / ▼ / ↕) to sort alphabetically, by dependents, status, or date.
+          </p>
+
+          {invitees.length === 0 ? (
+            <div className="dashboard-view--empty" style={{ padding: '60px 0' }}>
+              <p>No guests added yet. Click "+ Add Guest" above to get started!</p>
+            </div>
+          ) : (
+            <table className="dashboard-table">
           <thead>
             <tr>
               <SortHeader
@@ -617,6 +643,9 @@ export function DashboardView() {
           </tbody>
         </table>
       )}
+        </>
+      )}
     </div>
   );
 }
+
