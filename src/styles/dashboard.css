@@ -165,6 +165,54 @@
   border-bottom: 1px solid var(--ui-border-subtle, rgba(40, 30, 20, 0.1));
 }
 
+.guest-tree-filter-group {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.guest-tree-filter-label {
+  font-size: var(--text-xs, 0.78rem);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ui-text-muted, #8c7d73);
+  margin-right: 4px;
+}
+
+.guest-tree-filter-pill {
+  border: 1px solid var(--ui-border, rgba(40, 30, 20, 0.2));
+  background: rgba(255, 255, 255, 0.7);
+  padding: 3px 10px;
+  font-size: var(--text-xs, 0.78rem);
+  font-weight: 600;
+  border-radius: 12px;
+  cursor: pointer;
+  color: var(--ui-text-secondary, #5c534c);
+  transition: all 0.15s ease;
+}
+
+.guest-tree-filter-pill:hover {
+  background: rgba(255, 255, 255, 1);
+  border-color: var(--status-pending, #4A5D23);
+  color: var(--status-pending, #4A5D23);
+}
+
+.guest-tree-filter-pill.active {
+  background: var(--status-pending, #4A5D23);
+  border-color: var(--status-pending, #4A5D23);
+  color: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.guest-tree-actions-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
 .guest-tree-count-badge {
   font-size: var(--text-sm, 0.88rem);
   font-weight: 600;

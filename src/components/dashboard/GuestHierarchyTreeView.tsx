@@ -1,9 +1,20 @@
 import { useState, useCallback } from 'react';
-import type { InviteeRecord } from '../../types/sigil.types';
+import type { InviteeRecord, InvitationStatus } from '../../types/sigil.types';
 
 export interface GuestHierarchyTreeViewProps {
   invitees: InviteeRecord[];
 }
+
+export type StatusFilterOption = 'ALL' | InvitationStatus;
+
+export const STATUS_FILTER_OPTIONS: { value: StatusFilterOption; label: string }[] = [
+  { value: 'ALL', label: 'All' },
+  { value: 'RSVP_YES', label: '✅ Confirmed' },
+  { value: 'PENDING', label: '⏳ Pending' },
+  { value: 'OPENED', label: '📬 Opened' },
+  { value: 'SENT', label: '📤 Sent' },
+  { value: 'RSVP_NO', label: '❌ Declined' },
+];
 
 /**
  * Formats the invitees and dependents into an ASCII / plaintext tree representation:
@@ -35,10 +46,15 @@ export function formatGuestHierarchyText(invitees: InviteeRecord[]): string {
 }
 
 export function GuestHierarchyTreeView({ invitees }: GuestHierarchyTreeViewProps) {
+  const [statusFilter, setStatusFilter] = useState<StatusFilterOption>('ALL');
   const [copied, setCopied] = useState(false);
 
+  const filteredInvitees = statusFilter === 'ALL'
+    ? invitees
+    : invitees.filter((i) => i.status === statusFilter);
+
   const handleCopyText = useCallback(async () => {
-    const text = formatGuestHierarchyText(invitees);
+    const text = formatGuestHierarchyText(filteredInvitees);
     try {
       await navigator.clipboard.writeText(text);
       setCopied(true);
@@ -48,10 +64,15 @@ export function GuestHierarchyTreeView({ invitees }: GuestHierarchyTreeViewProps
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
-  }, [invitees]);
+  }, [filteredInvitees]);
 
+  const totalPrimary = invitees.length;
   const totalDependents = invitees.reduce((acc, i) => acc + (i.dependents?.length || 0), 0);
-  const totalCount = invitees.length + totalDependents;
+  const totalCount = totalPrimary + totalDependents;
+
+  const filteredPrimary = filteredInvitees.length;
+  const filteredDependents = filteredInvitees.reduce((acc, i) => acc + (i.dependents?.length || 0), 0);
+  const filteredTotal = filteredPrimary + filteredDependents;
 
   if (invitees.length === 0) {
     return (
@@ -61,50 +82,96 @@ export function GuestHierarchyTreeView({ invitees }: GuestHierarchyTreeViewProps
     );
   }
 
+  const activeFilterLabel = STATUS_FILTER_OPTIONS.find((o) => o.value === statusFilter)?.label || statusFilter;
+
   return (
     <div className="guest-tree-container">
+      {/* Top Header: Filters, Count & Copy Action */}
       <div className="guest-tree-header">
-        <div className="guest-tree-summary">
-          <span className="guest-tree-count-badge">
-            {invitees.length} primary {invitees.length === 1 ? 'guest' : 'guests'} • {totalDependents} {totalDependents === 1 ? 'dependent' : 'dependents'} ({totalCount} total)
-          </span>
-        </div>
-        <button
-          type="button"
-          className="dashboard-action-btn guest-tree-copy-btn"
-          onClick={handleCopyText}
-          title="Copy tree hierarchy as plain text"
-        >
-          {copied ? '✓ Copied Tree!' : '📋 Copy as Text'}
-        </button>
-      </div>
-
-      <div className="guest-tree-paper" role="region" aria-label="Guest hierarchy tree">
-        <div className="guest-tree-content">
-          {invitees.map((inv) => (
-            <div key={inv.id} className="guest-tree-group">
-              <div className="guest-tree-stem-line">|</div>
-              <div className="guest-tree-primary">
-                <span className="guest-tree-branch">|_</span>
-                <span className="guest-tree-primary-name">{inv.name}</span>
-              </div>
-
-              {inv.dependents && inv.dependents.length > 0 && (
-                <div className="guest-tree-dependents-group">
-                  {inv.dependents.map((dep) => (
-                    <div key={dep.id} className="guest-tree-dependent">
-                      <span className="guest-tree-dep-indent">
-                        <span className="guest-tree-dep-branch">|_</span>
-                      </span>
-                      <span className="guest-tree-dep-name">{dep.name}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+        <div className="guest-tree-filter-group" role="group" aria-label="Filter guest tree by status">
+          <span className="guest-tree-filter-label">Filter:</span>
+          {STATUS_FILTER_OPTIONS.map((opt) => (
+            <button
+              key={opt.value}
+              type="button"
+              className={`guest-tree-filter-pill ${statusFilter === opt.value ? 'active' : ''}`}
+              onClick={() => setStatusFilter(opt.value)}
+              aria-pressed={statusFilter === opt.value}
+            >
+              {opt.label}
+            </button>
           ))}
         </div>
+
+        <div className="guest-tree-actions-group">
+          <span className="guest-tree-count-badge">
+            {statusFilter === 'ALL' ? (
+              `${totalPrimary} primary • ${totalDependents} ${totalDependents === 1 ? 'dependent' : 'dependents'} (${totalCount} total)`
+            ) : (
+              `Showing ${filteredPrimary} of ${totalPrimary} primary (${filteredTotal} total with dependents)`
+            )}
+          </span>
+          <button
+            type="button"
+            className="dashboard-action-btn guest-tree-copy-btn"
+            onClick={handleCopyText}
+            disabled={filteredInvitees.length === 0}
+            title={statusFilter === 'ALL' ? 'Copy entire tree hierarchy' : `Copy filtered (${activeFilterLabel}) hierarchy`}
+          >
+            {copied ? '✓ Copied Tree!' : '📋 Copy as Text'}
+          </button>
+        </div>
       </div>
+
+      {/* Tree Content / Filtered Empty State */}
+      {filteredInvitees.length === 0 ? (
+        <div className="guest-tree-paper guest-tree-empty-filter" style={{ textAlign: 'center', padding: '32px 16px' }}>
+          <p style={{ margin: '0 0 12px 0', color: 'var(--ui-text-muted, #8c7d73)' }}>
+            No guests found with status <strong>{activeFilterLabel}</strong>.
+          </p>
+          <button
+            type="button"
+            className="dashboard-action-btn"
+            onClick={() => setStatusFilter('ALL')}
+            style={{
+              backgroundColor: '#4A5D23',
+              color: '#ffffff',
+              borderColor: 'transparent',
+              fontWeight: 600,
+              padding: '6px 14px',
+            }}
+          >
+            Show All Guests ({totalCount})
+          </button>
+        </div>
+      ) : (
+        <div className="guest-tree-paper" role="region" aria-label="Guest hierarchy tree">
+          <div className="guest-tree-content">
+            {filteredInvitees.map((inv) => (
+              <div key={inv.id} className="guest-tree-group">
+                <div className="guest-tree-stem-line">|</div>
+                <div className="guest-tree-primary">
+                  <span className="guest-tree-branch">|_</span>
+                  <span className="guest-tree-primary-name">{inv.name}</span>
+                </div>
+
+                {inv.dependents && inv.dependents.length > 0 && (
+                  <div className="guest-tree-dependents-group">
+                    {inv.dependents.map((dep) => (
+                      <div key={dep.id} className="guest-tree-dependent">
+                        <span className="guest-tree-dep-indent">
+                          <span className="guest-tree-dep-branch">|_</span>
+                        </span>
+                        <span className="guest-tree-dep-name">{dep.name}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

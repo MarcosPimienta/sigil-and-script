@@ -53,15 +53,52 @@ describe('GuestHierarchyTreeView component', () => {
     expect(screen.getByText('Guest 01')).toBeTruthy();
     expect(screen.getByText('Dependent Alpha')).toBeTruthy();
     expect(screen.getByText('Dependent Beta')).toBeTruthy();
-    expect(screen.getByText(/2 primary guests • 2 dependents \(4 total\)/i)).toBeTruthy();
+    expect(screen.getByText(/2 primary • 2 dependents \(4 total\)/i)).toBeTruthy();
   });
 
-  it('renders empty state when no invitees exist', () => {
+  it('renders empty state when no invitees exist in roster', () => {
     render(<GuestHierarchyTreeView invitees={[]} />);
     expect(screen.getByText(/No guests added yet/i)).toBeTruthy();
   });
 
-  it('copies hierarchy text to clipboard when clicking copy button', async () => {
+  it('filters guests by status when filter pill is clicked', () => {
+    render(<GuestHierarchyTreeView invitees={sampleInvitees} />);
+
+    // Click Confirmed filter pill
+    const confirmedPill = screen.getByRole('button', { name: /Confirmed/i });
+    fireEvent.click(confirmedPill);
+
+    expect(screen.getByText('Guest 00')).toBeTruthy();
+    expect(screen.getByText('Dependent Alpha')).toBeTruthy();
+    expect(screen.queryByText('Guest 01')).toBeNull();
+    expect(screen.getByText(/Showing 1 of 2 primary/i)).toBeTruthy();
+
+    // Click Pending filter pill
+    const pendingPill = screen.getByRole('button', { name: /Pending/i });
+    fireEvent.click(pendingPill);
+
+    expect(screen.queryByText('Guest 00')).toBeNull();
+    expect(screen.getByText('Guest 01')).toBeTruthy();
+  });
+
+  it('shows empty filter state and allows resetting to All', () => {
+    render(<GuestHierarchyTreeView invitees={sampleInvitees} />);
+
+    // Click Declined filter pill (which has 0 matches)
+    const declinedPill = screen.getByRole('button', { name: /Declined/i });
+    fireEvent.click(declinedPill);
+
+    expect(screen.getByText(/No guests found with status/i)).toBeTruthy();
+
+    // Click reset button
+    const showAllBtn = screen.getByRole('button', { name: /Show All Guests/i });
+    fireEvent.click(showAllBtn);
+
+    expect(screen.getByText('Guest 00')).toBeTruthy();
+    expect(screen.getByText('Guest 01')).toBeTruthy();
+  });
+
+  it('copies filtered hierarchy text to clipboard when clicking copy button with active filter', async () => {
     const writeTextMock = vi.fn().mockResolvedValue(undefined);
     Object.assign(navigator, {
       clipboard: {
@@ -71,11 +108,13 @@ describe('GuestHierarchyTreeView component', () => {
 
     render(<GuestHierarchyTreeView invitees={sampleInvitees} />);
 
+    // Filter by Pending
+    const pendingPill = screen.getByRole('button', { name: /Pending/i });
+    fireEvent.click(pendingPill);
+
     const copyBtn = screen.getByRole('button', { name: /Copy as Text/i });
     fireEvent.click(copyBtn);
 
-    expect(writeTextMock).toHaveBeenCalledWith(
-      ['|', '|_ Guest 00', '         |_ Dependent Alpha', '         |_ Dependent Beta', '|', '|_ Guest 01'].join('\n')
-    );
+    expect(writeTextMock).toHaveBeenCalledWith(['|', '|_ Guest 01'].join('\n'));
   });
 });
