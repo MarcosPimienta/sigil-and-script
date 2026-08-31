@@ -581,7 +581,11 @@ export const useSigilStore = create<SigilState>((set, get) => ({
             try {
               const parsed = JSON.parse(inv.formResponses);
               if (Array.isArray(parsed.dependents)) {
-                dependents = parsed.dependents;
+                dependents = parsed.dependents.map((d: any) => ({
+                  id: d.id || `dep-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+                  name: typeof d === 'string' ? d : (d.name || ''),
+                  included: Boolean(d.included === true || d.included === 'true'),
+                }));
               }
             } catch (e) {
               console.error('Failed to parse formResponses in refreshRoster', e);
@@ -643,7 +647,11 @@ export const useSigilStore = create<SigilState>((set, get) => ({
             try {
               const parsed = JSON.parse(inv.formResponses);
               if (Array.isArray(parsed.dependents)) {
-                dependents = parsed.dependents;
+                dependents = parsed.dependents.map((d: any) => ({
+                  id: d.id || `dep-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+                  name: typeof d === 'string' ? d : (d.name || ''),
+                  included: Boolean(d.included === true || d.included === 'true'),
+                }));
               }
             } catch (e) {
               console.error('Failed to parse guest formResponses in loadDesign', e);

@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import type { InviteeRecord, InvitationStatus } from '../../types/sigil.types';
+import type { InviteeRecord, InvitationStatus, Dependent } from '../../types/sigil.types';
 
 export interface GuestHierarchyTreeViewProps {
   invitees: InviteeRecord[];
@@ -17,8 +17,16 @@ export const STATUS_FILTER_OPTIONS: { value: StatusFilterOption; label: string }
 ];
 
 /**
+ * Strictly verifies whether a dependent has confirmed attendance (included: true).
+ */
+export function isDependentIncluded(d: Dependent | any): boolean {
+  if (!d) return false;
+  return d.included === true || d.included === 'true';
+}
+
+/**
  * Formats the invitees and dependents into an ASCII / plaintext tree representation.
- * When filterIncludedOnly is true (e.g. for Confirmed RSVP_YES), only checked dependents (included !== false) are output.
+ * When filterIncludedOnly is true (e.g. for Confirmed RSVP_YES), only checked dependents (included === true) are output.
  */
 export function formatGuestHierarchyText(invitees: InviteeRecord[], filterIncludedOnly = false): string {
   if (!invitees || invitees.length === 0) {
@@ -31,7 +39,7 @@ export function formatGuestHierarchyText(invitees: InviteeRecord[], filterInclud
     lines.push('|');
     lines.push(`|_ ${inv.name}`);
     const deps = inv.dependents
-      ? (filterIncludedOnly ? inv.dependents.filter((d) => d.included !== false) : inv.dependents)
+      ? (filterIncludedOnly ? inv.dependents.filter((d) => isDependentIncluded(d)) : inv.dependents)
       : [];
     if (deps.length > 0) {
       deps.forEach((dep) => {
@@ -55,7 +63,7 @@ export function GuestHierarchyTreeView({ invitees }: GuestHierarchyTreeViewProps
     (inv: InviteeRecord) => {
       if (!inv.dependents) return [];
       if (statusFilter === 'RSVP_YES') {
-        return inv.dependents.filter((d) => d.included !== false);
+        return inv.dependents.filter((d) => isDependentIncluded(d));
       }
       return inv.dependents;
     },

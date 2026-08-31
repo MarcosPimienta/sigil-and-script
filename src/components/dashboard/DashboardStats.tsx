@@ -16,7 +16,9 @@ export function computeStats(invitees: InviteeRecord[]) {
   };
 
   const getAttendingGuestCount = (i: InviteeRecord) => {
-    const includedDeps = i.dependents ? i.dependents.filter((d) => d.included !== false).length : 0;
+    const includedDeps = i.dependents
+      ? i.dependents.filter((d) => d.included === true || d.included === ('true' as any)).length
+      : 0;
     if (i.guestType === 'FAMILY') {
       return includedDeps > 0 ? includedDeps : (i.dependents && i.dependents.length > 0 ? 0 : 1);
     }
