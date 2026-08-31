@@ -9,7 +9,7 @@ const sampleInvitees: InviteeRecord[] = [
     name: 'Guest 00',
     dependents: [
       { id: 'd-1', name: 'Dependent Alpha', included: true },
-      { id: 'd-2', name: 'Dependent Beta', included: true },
+      { id: 'd-2', name: 'Dependent Beta', included: false },
     ],
     status: 'RSVP_YES',
   },
@@ -22,13 +22,26 @@ const sampleInvitees: InviteeRecord[] = [
 ];
 
 describe('formatGuestHierarchyText utility', () => {
-  it('formats primary guests and dependents into indented tree text format', () => {
-    const text = formatGuestHierarchyText(sampleInvitees);
+  it('formats primary guests and all dependents when filterIncludedOnly is false', () => {
+    const text = formatGuestHierarchyText(sampleInvitees, false);
     const expected = [
       '|',
       '|_ Guest 00',
       '         |_ Dependent Alpha',
       '         |_ Dependent Beta',
+      '|',
+      '|_ Guest 01',
+    ].join('\n');
+
+    expect(text).toBe(expected);
+  });
+
+  it('formats only checked dependents when filterIncludedOnly is true', () => {
+    const text = formatGuestHierarchyText(sampleInvitees, true);
+    const expected = [
+      '|',
+      '|_ Guest 00',
+      '         |_ Dependent Alpha',
       '|',
       '|_ Guest 01',
     ].join('\n');
@@ -46,7 +59,7 @@ describe('GuestHierarchyTreeView component', () => {
     vi.restoreAllMocks();
   });
 
-  it('renders primary guests and nested dependents', () => {
+  it('renders primary guests and all dependents when viewing All', () => {
     render(<GuestHierarchyTreeView invitees={sampleInvitees} />);
 
     expect(screen.getByText('Guest 00')).toBeTruthy();
@@ -61,7 +74,7 @@ describe('GuestHierarchyTreeView component', () => {
     expect(screen.getByText(/No guests added yet/i)).toBeTruthy();
   });
 
-  it('filters guests by status when filter pill is clicked', () => {
+  it('excludes unchecked dependents when Confirmed filter is active', () => {
     render(<GuestHierarchyTreeView invitees={sampleInvitees} />);
 
     // Click Confirmed filter pill
@@ -70,10 +83,15 @@ describe('GuestHierarchyTreeView component', () => {
 
     expect(screen.getByText('Guest 00')).toBeTruthy();
     expect(screen.getByText('Dependent Alpha')).toBeTruthy();
+    // Dependent Beta is unchecked (included: false) -> should NOT be shown in confirmed list
+    expect(screen.queryByText('Dependent Beta')).toBeNull();
     expect(screen.queryByText('Guest 01')).toBeNull();
-    expect(screen.getByText(/Showing 1 of 2 primary/i)).toBeTruthy();
+    expect(screen.getByText(/Showing 1 of 2 primary \(2 total attending\)/i)).toBeTruthy();
+  });
 
-    // Click Pending filter pill
+  it('filters guests by Pending status', () => {
+    render(<GuestHierarchyTreeView invitees={sampleInvitees} />);
+
     const pendingPill = screen.getByRole('button', { name: /Pending/i });
     fireEvent.click(pendingPill);
 
@@ -98,7 +116,7 @@ describe('GuestHierarchyTreeView component', () => {
     expect(screen.getByText('Guest 01')).toBeTruthy();
   });
 
-  it('copies filtered hierarchy text to clipboard when clicking copy button with active filter', async () => {
+  it('copies only checked dependents to clipboard when Confirmed filter is active', async () => {
     const writeTextMock = vi.fn().mockResolvedValue(undefined);
     Object.assign(navigator, {
       clipboard: {
@@ -108,13 +126,14 @@ describe('GuestHierarchyTreeView component', () => {
 
     render(<GuestHierarchyTreeView invitees={sampleInvitees} />);
 
-    // Filter by Pending
-    const pendingPill = screen.getByRole('button', { name: /Pending/i });
-    fireEvent.click(pendingPill);
+    // Filter by Confirmed
+    const confirmedPill = screen.getByRole('button', { name: /Confirmed/i });
+    fireEvent.click(confirmedPill);
 
     const copyBtn = screen.getByRole('button', { name: /Copy as Text/i });
     fireEvent.click(copyBtn);
 
-    expect(writeTextMock).toHaveBeenCalledWith(['|', '|_ Guest 01'].join('\n'));
+    // Only Guest 00 and Dependent Alpha should be copied
+    expect(writeTextMock).toHaveBeenCalledWith(['|', '|_ Guest 00', '         |_ Dependent Alpha'].join('\n'));
   });
 });

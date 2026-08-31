@@ -48,4 +48,38 @@ describe('computeStats', () => {
     expect(stats.attending).toBe(3);
     expect(stats.declined).toBe(2);
   });
+
+  it('excludes unchecked dependents (included: false) from attending count', () => {
+    const invitees: InviteeRecord[] = [
+      {
+        id: '1',
+        name: 'Individual with Partial Dependents',
+        guestType: 'INDIVIDUAL',
+        dependents: [
+          { id: 'd1', name: 'Attending Child', included: true },
+          { id: 'd2', name: 'Unchecked Child', included: false },
+        ],
+        status: 'RSVP_YES',
+      },
+      {
+        id: '2',
+        name: 'Family Group',
+        guestType: 'FAMILY',
+        dependents: [
+          { id: 'd3', name: 'Member 1', included: true },
+          { id: 'd4', name: 'Member 2', included: false },
+          { id: 'd5', name: 'Member 3', included: true },
+        ],
+        status: 'RSVP_YES',
+      },
+    ];
+
+    const stats = computeStats(invitees);
+    // Total invited capacity
+    expect(stats.total).toBe(3 + 3); // (1 + 2) + 3 = 6
+    expect(stats.dependents).toBe(5);
+    // Attending headcount: Individual (1 primary + 1 checked) = 2, Family (2 checked members) = 2 -> 4 total attending
+    expect(stats.attending).toBe(4);
+  });
 });
+

@@ -17,15 +17,10 @@ export const STATUS_FILTER_OPTIONS: { value: StatusFilterOption; label: string }
 ];
 
 /**
- * Formats the invitees and dependents into an ASCII / plaintext tree representation:
- * |
- * |_ Guest 00
- *          |_ Dependent
- *          |_ Dependent
- * |
- * |_ Guest 01
+ * Formats the invitees and dependents into an ASCII / plaintext tree representation.
+ * When filterIncludedOnly is true (e.g. for Confirmed RSVP_YES), only checked dependents (included !== false) are output.
  */
-export function formatGuestHierarchyText(invitees: InviteeRecord[]): string {
+export function formatGuestHierarchyText(invitees: InviteeRecord[], filterIncludedOnly = false): string {
   if (!invitees || invitees.length === 0) {
     return 'No guests in roster.';
   }
@@ -35,8 +30,11 @@ export function formatGuestHierarchyText(invitees: InviteeRecord[]): string {
   invitees.forEach((inv) => {
     lines.push('|');
     lines.push(`|_ ${inv.name}`);
-    if (inv.dependents && inv.dependents.length > 0) {
-      inv.dependents.forEach((dep) => {
+    const deps = inv.dependents
+      ? (filterIncludedOnly ? inv.dependents.filter((d) => d.included !== false) : inv.dependents)
+      : [];
+    if (deps.length > 0) {
+      deps.forEach((dep) => {
         lines.push(`         |_ ${dep.name}`);
       });
     }
@@ -53,8 +51,19 @@ export function GuestHierarchyTreeView({ invitees }: GuestHierarchyTreeViewProps
     ? invitees
     : invitees.filter((i) => i.status === statusFilter);
 
+  const getVisibleDependents = useCallback(
+    (inv: InviteeRecord) => {
+      if (!inv.dependents) return [];
+      if (statusFilter === 'RSVP_YES') {
+        return inv.dependents.filter((d) => d.included !== false);
+      }
+      return inv.dependents;
+    },
+    [statusFilter]
+  );
+
   const handleCopyText = useCallback(async () => {
-    const text = formatGuestHierarchyText(filteredInvitees);
+    const text = formatGuestHierarchyText(filteredInvitees, statusFilter === 'RSVP_YES');
     try {
       await navigator.clipboard.writeText(text);
       setCopied(true);
@@ -64,14 +73,14 @@ export function GuestHierarchyTreeView({ invitees }: GuestHierarchyTreeViewProps
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
-  }, [filteredInvitees]);
+  }, [filteredInvitees, statusFilter]);
 
   const totalPrimary = invitees.length;
   const totalDependents = invitees.reduce((acc, i) => acc + (i.dependents?.length || 0), 0);
   const totalCount = totalPrimary + totalDependents;
 
   const filteredPrimary = filteredInvitees.length;
-  const filteredDependents = filteredInvitees.reduce((acc, i) => acc + (i.dependents?.length || 0), 0);
+  const filteredDependents = filteredInvitees.reduce((acc, i) => acc + getVisibleDependents(i).length, 0);
   const filteredTotal = filteredPrimary + filteredDependents;
 
   if (invitees.length === 0) {
@@ -108,7 +117,7 @@ export function GuestHierarchyTreeView({ invitees }: GuestHierarchyTreeViewProps
             {statusFilter === 'ALL' ? (
               `${totalPrimary} primary • ${totalDependents} ${totalDependents === 1 ? 'dependent' : 'dependents'} (${totalCount} total)`
             ) : (
-              `Showing ${filteredPrimary} of ${totalPrimary} primary (${filteredTotal} total with dependents)`
+              `Showing ${filteredPrimary} of ${totalPrimary} primary (${filteredTotal} total attending)`
             )}
           </span>
           <button
@@ -147,28 +156,32 @@ export function GuestHierarchyTreeView({ invitees }: GuestHierarchyTreeViewProps
       ) : (
         <div className="guest-tree-paper" role="region" aria-label="Guest hierarchy tree">
           <div className="guest-tree-content">
-            {filteredInvitees.map((inv) => (
-              <div key={inv.id} className="guest-tree-group">
-                <div className="guest-tree-stem-line">|</div>
-                <div className="guest-tree-primary">
-                  <span className="guest-tree-branch">|_</span>
-                  <span className="guest-tree-primary-name">{inv.name}</span>
-                </div>
+            {filteredInvitees.map((inv) => {
+              const visibleDeps = getVisibleDependents(inv);
 
-                {inv.dependents && inv.dependents.length > 0 && (
-                  <div className="guest-tree-dependents-group">
-                    {inv.dependents.map((dep) => (
-                      <div key={dep.id} className="guest-tree-dependent">
-                        <span className="guest-tree-dep-indent">
-                          <span className="guest-tree-dep-branch">|_</span>
-                        </span>
-                        <span className="guest-tree-dep-name">{dep.name}</span>
-                      </div>
-                    ))}
+              return (
+                <div key={inv.id} className="guest-tree-group">
+                  <div className="guest-tree-stem-line">|</div>
+                  <div className="guest-tree-primary">
+                    <span className="guest-tree-branch">|_</span>
+                    <span className="guest-tree-primary-name">{inv.name}</span>
                   </div>
-                )}
-              </div>
-            ))}
+
+                  {visibleDeps.length > 0 && (
+                    <div className="guest-tree-dependents-group">
+                      {visibleDeps.map((dep) => (
+                        <div key={dep.id} className="guest-tree-dependent">
+                          <span className="guest-tree-dep-indent">
+                            <span className="guest-tree-dep-branch">|_</span>
+                          </span>
+                          <span className="guest-tree-dep-name">{dep.name}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
       )}

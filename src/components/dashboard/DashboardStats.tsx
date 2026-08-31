@@ -14,12 +14,21 @@ export function computeStats(invitees: InviteeRecord[]) {
     }
     return 1 + depsCount;
   };
+
+  const getAttendingGuestCount = (i: InviteeRecord) => {
+    const includedDeps = i.dependents ? i.dependents.filter((d) => d.included !== false).length : 0;
+    if (i.guestType === 'FAMILY') {
+      return includedDeps > 0 ? includedDeps : (i.dependents && i.dependents.length > 0 ? 0 : 1);
+    }
+    return 1 + includedDeps;
+  };
+
   const totalDependents = invitees.reduce((acc, i) => acc + (i.dependents?.length || 0), 0);
 
   return {
     total:      invitees.reduce((acc, i) => acc + getGuestCount(i), 0),
     dependents: totalDependents,
-    attending:  invitees.filter((i) => i.status === 'RSVP_YES').reduce((acc, i) => acc + getGuestCount(i), 0),
+    attending:  invitees.filter((i) => i.status === 'RSVP_YES').reduce((acc, i) => acc + getAttendingGuestCount(i), 0),
     declined:   invitees.filter((i) => i.status === 'RSVP_NO').reduce((acc, i) => acc + getGuestCount(i), 0),
     opened:     invitees.filter((i) => i.status === 'OPENED').reduce((acc, i) => acc + getGuestCount(i), 0),
     sent:       invitees.filter((i) => i.status === 'SENT').reduce((acc, i) => acc + getGuestCount(i), 0),
