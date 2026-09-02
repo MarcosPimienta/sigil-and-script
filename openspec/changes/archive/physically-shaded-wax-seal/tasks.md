@@ -58,8 +58,8 @@
 - [x] 6.4 Manual/Playwright check: open Creator Studio → "Create Custom Seal or Sticker…" → upload a transparent PNG emblem → verify relief follows light preset, Matte vs Metallic differ, Emboss vs Deboss differ, all nine colour presets and a custom hex render legibly.
 - [x] 6.5 Measure redraw time in dev (`performance.now()` around `shade`) — target < 16 ms at 512×512 on the dev machine; record the number in the PR notes.
 - [x] 6.6 Side-by-side visual review of the exported PNG against `public/envelope-with-seal.png`; iterate the blank generator parameters (rim width, drip count, grain) until the rim/floor/relief read convincingly.
-- [ ] 6.7 Apply a seal and confirm it appears on the recipient envelope at the configured `sealSize`, opens on click, and that previously saved invitations are unaffected.
-- [ ] 6.8 On archive: add milestone `M8_PHYSICAL_SEAL_SHADING` to `openspec/specs/sigil_and_script_spec.json` and merge the delta spec.
+- [x] 6.7 Apply a seal and confirm it appears on the recipient envelope at the configured `sealSize`, opens on click, and that previously saved invitations are unaffected.
+- [x] 6.8 On archive: add milestone `M8_PHYSICAL_SEAL_SHADING` to `openspec/specs/sigil_and_script_spec.json` and merge the delta spec.
 
 ## Implementation notes (2026-09-02)
 
