@@ -1,11 +1,30 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // Sigil — Inline Dynamic Seal & Sticker Creator
-// Interactive Canvas 2D engine for creating 3D wax seals and custom stickers.
+// Wax seals are rendered by the relief shader (height map → normals → light);
+// stickers are drawn with plain Canvas 2D. Both export a 512×512 PNG.
+// See openspec/changes/physically-shaded-wax-seal/design.md
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { useState, useEffect, useRef, useCallback, type ChangeEvent } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo, type ChangeEvent } from 'react';
 import { apiFetch } from '../../utils/api';
 import { ACCEPTED_IMAGE_TYPES, MAX_IMAGE_BYTES } from './LeftPanel';
+import {
+  shade,
+  prepareGeometry,
+  boxBlur,
+  circularMask,
+  alphaToHeight,
+  bevelDepthToRelief,
+  hexToRgb01,
+  MATERIALS,
+  LIGHT_PRESETS,
+  DEFAULT_AO_STRENGTH,
+  DEFAULT_NORMAL_STRENGTH,
+  type BlankBuffers,
+  type ReliefMode,
+  type LightPresetId,
+} from '../../utils/reliefShader';
+import { SEAL_BLANKS, getSealBlank, loadBlank } from '../../utils/sealBlanks';
 
 interface SealCreatorProps {
   onApply: (imageUrl: string) => void;
@@ -16,6 +35,8 @@ interface SealCreatorProps {
 export type SealType = 'WAX_SEAL' | 'STICKER';
 export type SealFinish = 'MATTE' | 'METALLIC';
 export type StickerShape = 'CIRCLE' | 'ROUNDED_RECT' | 'SHIELD';
+
+const CANVAS_SIZE = 512;
 
 const WAX_PRESET_COLORS = [
   { name: 'Classic Red', hex: '#991b1b' },
@@ -29,21 +50,85 @@ const WAX_PRESET_COLORS = [
   { name: 'Charcoal Black', hex: '#18181b' },
 ];
 
+const LIGHT_OPTIONS: { id: LightPresetId; label: string }[] = [
+  { id: 'TOP_LEFT', label: 'Top-left' },
+  { id: 'TOP', label: 'Top' },
+  { id: 'TOP_RIGHT', label: 'Top-right' },
+];
+
+interface SigilHeightResult {
+  height: Float32Array;
+  source: 'alpha' | 'luminance' | 'glyph';
+}
+
+/**
+ * Rasterises the emblem (or the fallback "S" glyph) into the blank's pressed
+ * floor and converts it to a blurred height field.
+ */
+function buildSigilHeight(
+  blank: BlankBuffers,
+  floor: { cx: number; cy: number; r: number },
+  emblem: HTMLImageElement | null,
+  blurRadius: number,
+): SigilHeightResult | null {
+  const { width: w, height: h } = blank;
+  const c = document.createElement('canvas');
+  c.width = w;
+  c.height = h;
+  const ctx = c.getContext('2d');
+  if (!ctx) return null;
+
+  const cx = floor.cx * w;
+  const cy = floor.cy * h;
+  const box = floor.r * 2 * w * 0.9; // emblem bounding box inside the floor
+
+  let source: SigilHeightResult['source'];
+  if (emblem) {
+    const iw = emblem.naturalWidth || emblem.width || 1;
+    const ih = emblem.naturalHeight || emblem.height || 1;
+    const scale = Math.min(box / iw, box / ih);
+    const dw = iw * scale;
+    const dh = ih * scale;
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(emblem, cx - dw / 2, cy - dh / 2, dw, dh);
+    const raster = ctx.getImageData(0, 0, w, h);
+    const res = alphaToHeight(raster);
+    source = res.source;
+    return { height: boxBlur(res.height, w, h, blurRadius, 2), source };
+  }
+
+  // Fallback monogram
+  ctx.font = `300 ${Math.round(box * 0.78)}px "Cormorant Garamond", serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = '#000';
+  ctx.fillText('S', cx, cy + box * 0.03);
+  const raster = ctx.getImageData(0, 0, w, h);
+  const res = alphaToHeight(raster);
+  return { height: boxBlur(res.height, w, h, blurRadius, 2), source: 'glyph' };
+}
+
 export function SealCreator({
   onApply,
   onCancel,
   initialImage,
 }: SealCreatorProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const rafRef = useRef<number | null>(null);
 
   const [sealType, setSealType] = useState<SealType>('WAX_SEAL');
   const [maskImage, setMaskImage] = useState<string>(initialImage || '');
   const [loadedImgElement, setLoadedImgElement] = useState<HTMLImageElement | null>(null);
 
   // Wax Seal Parameters
+  const [blankId, setBlankId] = useState<string>(SEAL_BLANKS[0].id);
   const [waxColor, setWaxColor] = useState<string>('#991b1b');
   const [bevelDepth, setBevelDepth] = useState<number>(5);
   const [finish, setFinish] = useState<SealFinish>('MATTE');
+  const [reliefMode, setReliefMode] = useState<ReliefMode>('EMBOSS');
+  const [lightPreset, setLightPreset] = useState<LightPresetId>('TOP_LEFT');
+  const [blank, setBlank] = useState<BlankBuffers | null>(null);
 
   // Sticker Parameters
   const [stickerBg, setStickerBg] = useState<string>('#ffffff');
@@ -55,225 +140,112 @@ export function SealCreator({
 
   // Load mask image element whenever maskImage URL changes
   useEffect(() => {
-    if (!maskImage) {
-      setLoadedImgElement(null);
-      return;
-    }
+    if (!maskImage) return;
+    let cancelled = false;
     const img = new Image();
     img.crossOrigin = 'anonymous';
-    img.onload = () => setLoadedImgElement(img);
-    img.onerror = () => setLoadedImgElement(null);
+    img.onload = () => {
+      if (!cancelled) setLoadedImgElement(img);
+    };
+    img.onerror = () => {
+      if (!cancelled) setLoadedImgElement(null);
+    };
     img.src = maskImage;
+    return () => {
+      cancelled = true;
+    };
   }, [maskImage]);
 
-  // Generate deterministic points for organic wax edge
-  const getWaxEdgePoints = useCallback((cx: number, cy: number, radius: number) => {
-    const points: { x: number; y: number }[] = [];
-    const count = 36;
-    // Deterministic pseudo-random offset array
-    const offsets = [
-      0, 2, -1, 3, 1, -2, 4, 1, -3, 2, 0, -2,
-      3, 1, -1, 4, 2, -3, 1, 0, -2, 3, 1, -1,
-      2, 4, -2, 1, 0, -3, 2, 1, -1, 3, 0, -2,
-    ];
+  const clearMaskImage = () => {
+    setMaskImage('');
+    setLoadedImgElement(null);
+  };
 
-    for (let i = 0; i < count; i++) {
-      const angle = (i / count) * Math.PI * 2;
-      const r = radius + offsets[i % offsets.length] * 1.5;
-      points.push({
-        x: cx + Math.cos(angle) * r,
-        y: cy + Math.sin(angle) * r,
-      });
-    }
-    return points;
-  }, []);
+  // Load the selected wax blank (decoded once per id, cached in sealBlanks)
+  useEffect(() => {
+    let cancelled = false;
+    loadBlank(blankId)
+      .then((b) => {
+        if (!cancelled) setBlank(b);
+      })
+      .catch((err) => console.error('Failed to load wax blank', err));
+    return () => {
+      cancelled = true;
+    };
+  }, [blankId]);
 
-  // Main Canvas Redraw Function
-  const redrawCanvas = useCallback(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+  const blankMeta = getSealBlank(blankId);
 
-    const width = canvas.width;
-    const height = canvas.height;
-    const cx = width / 2;
-    const cy = height / 2;
+  const floorMask = useMemo(() => {
+    if (!blank) return null;
+    const r = blankMeta.floor.r * blank.width;
+    return circularMask(
+      blank.width,
+      blank.height,
+      blankMeta.floor.cx * blank.width,
+      blankMeta.floor.cy * blank.height,
+      r - 4,
+      8,
+    );
+  }, [blank, blankMeta]);
 
-    ctx.clearRect(0, 0, width, height);
+  const relief = useMemo(() => bevelDepthToRelief(bevelDepth, reliefMode), [bevelDepth, reliefMode]);
 
-    if (sealType === 'WAX_SEAL') {
-      const radius = 210;
+  const sigil = useMemo(() => {
+    if (!blank) return null;
+    return buildSigilHeight(blank, blankMeta.floor, loadedImgElement, relief.blurRadius * (blank.width / 512));
+  }, [blank, blankMeta, loadedImgElement, relief.blurRadius]);
 
-      // 1. Organic Wax Base
-      const edgePoints = getWaxEdgePoints(cx, cy, radius);
+  // Height field + AO blur: cached across colour / light / finish changes
+  const geometry = useMemo(() => {
+    if (!blank || !floorMask) return null;
+    return prepareGeometry(blank, sigil?.height ?? null, floorMask, relief.reliefGain);
+  }, [blank, floorMask, sigil, relief.reliefGain]);
 
-      // Drop Shadow
+  // ── Wax seal render (relief shader) ──────────────────────────────────────────
+  const drawWaxSeal = useCallback(
+    (ctx: CanvasRenderingContext2D, width: number, height: number) => {
+      if (!blank || !floorMask || !geometry) return;
+
+      const result = shade(
+        {
+          blank,
+          sigilHeight: sigil?.height ?? null,
+          floorMask,
+          reliefGain: relief.reliefGain,
+          normalStrength: DEFAULT_NORMAL_STRENGTH,
+          waxColor: hexToRgb01(waxColor),
+          light: LIGHT_PRESETS[lightPreset],
+          material: MATERIALS[finish],
+          aoStrength: DEFAULT_AO_STRENGTH,
+        },
+        geometry,
+      );
+
+      // Blit through an intermediate canvas so the drop shadow follows the alpha.
+      const tmp = document.createElement('canvas');
+      tmp.width = result.width;
+      tmp.height = result.height;
+      const tctx = tmp.getContext('2d');
+      if (!tctx) return;
+      tctx.putImageData(new ImageData(result.data, result.width, result.height), 0, 0);
+
       ctx.save();
       ctx.shadowColor = 'rgba(0, 0, 0, 0.45)';
       ctx.shadowBlur = 18;
       ctx.shadowOffsetX = 4;
       ctx.shadowOffsetY = 10;
-
-      ctx.beginPath();
-      ctx.moveTo(edgePoints[0].x, edgePoints[0].y);
-      for (let i = 1; i < edgePoints.length; i++) {
-        const xc = (edgePoints[i].x + edgePoints[(i + 1) % edgePoints.length].x) / 2;
-        const yc = (edgePoints[i].y + edgePoints[(i + 1) % edgePoints.length].y) / 2;
-        ctx.quadraticCurveTo(edgePoints[i].x, edgePoints[i].y, xc, yc);
-      }
-      ctx.closePath();
-
-      // Base Fill Radial Gradient
-      const baseGrad = ctx.createRadialGradient(cx - 60, cy - 60, 20, cx, cy, radius + 20);
-      baseGrad.addColorStop(0, lightenColor(waxColor, 35));
-      baseGrad.addColorStop(0.5, waxColor);
-      baseGrad.addColorStop(1, darkenColor(waxColor, 40));
-
-      ctx.fillStyle = baseGrad;
-      ctx.fill();
+      ctx.drawImage(tmp, 0, 0, width, height);
       ctx.restore();
+    },
+    [blank, floorMask, geometry, sigil, relief.reliefGain, waxColor, lightPreset, finish],
+  );
 
-      // 2. Center Pressed Area & Inner Rim Wall
-      ctx.save();
-      const innerRadius = radius * 0.82;
-
-      // Fill the pressed center. 
-      // Top-left is darker (in shadow of the thick outer rim), bottom-right catches ambient light.
-      const centerGrad = ctx.createLinearGradient(cx - innerRadius, cy - innerRadius, cx + innerRadius, cy + innerRadius);
-      centerGrad.addColorStop(0, darkenColor(waxColor, 15));
-      centerGrad.addColorStop(1, lightenColor(waxColor, 5));
-
-      ctx.beginPath();
-      ctx.arc(cx, cy, innerRadius, 0, Math.PI * 2);
-      ctx.fillStyle = centerGrad;
-      ctx.fill();
-
-      // Draw the inner wall of the rim (the transition between the pressed center and the raised outer rim)
-      // Shadow on the top-left inner wall
-      ctx.beginPath();
-      ctx.arc(cx, cy, innerRadius, Math.PI * 0.75, Math.PI * 1.75);
-      ctx.strokeStyle = 'rgba(0, 0, 0, 0.45)';
-      ctx.lineWidth = 10;
-      ctx.stroke();
-
-      // Highlight on the bottom-right inner wall
-      ctx.beginPath();
-      ctx.arc(cx, cy, innerRadius, Math.PI * 1.75, Math.PI * 0.75);
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
-      ctx.lineWidth = 10;
-      ctx.stroke();
-      
-      // Soften the transition slightly with a thin blend ring
-      ctx.beginPath();
-      ctx.arc(cx, cy, innerRadius, 0, Math.PI * 2);
-      ctx.strokeStyle = darkenColor(waxColor, 15);
-      ctx.lineWidth = 3;
-      ctx.stroke();
-      ctx.restore();
-
-      // 4. Emblem / Monogram (Bevel & Emboss)
-      const emblemSize = 220;
-      const emblemX = cx - emblemSize / 2;
-      const emblemY = cy - emblemSize / 2;
-
-      ctx.save();
-      if (loadedImgElement) {
-        // Render Bevel Shadow (bottom-right offset)
-        const shadowCanvas = document.createElement('canvas');
-        shadowCanvas.width = width;
-        shadowCanvas.height = height;
-        const sCtx = shadowCanvas.getContext('2d');
-        if (sCtx) {
-          sCtx.drawImage(
-            loadedImgElement,
-            emblemX + bevelDepth,
-            emblemY + bevelDepth,
-            emblemSize,
-            emblemSize
-          );
-          sCtx.globalCompositeOperation = 'source-in';
-          sCtx.fillStyle = 'rgba(0, 0, 0, 0.65)';
-          sCtx.fillRect(0, 0, width, height);
-          ctx.drawImage(shadowCanvas, 0, 0);
-        }
-
-        // Render Bevel Highlight (top-left offset)
-        const highlightCanvas = document.createElement('canvas');
-        highlightCanvas.width = width;
-        highlightCanvas.height = height;
-        const hCtx = highlightCanvas.getContext('2d');
-        if (hCtx) {
-          hCtx.drawImage(
-            loadedImgElement,
-            emblemX - bevelDepth,
-            emblemY - bevelDepth,
-            emblemSize,
-            emblemSize
-          );
-          hCtx.globalCompositeOperation = 'source-in';
-          hCtx.fillStyle = 'rgba(255, 255, 255, 0.45)';
-          hCtx.fillRect(0, 0, width, height);
-          ctx.drawImage(highlightCanvas, 0, 0);
-        }
-
-        // Render Main Emblem Fill Tinted with Wax Color
-        const mainCanvas = document.createElement('canvas');
-        mainCanvas.width = width;
-        mainCanvas.height = height;
-        const mCtx = mainCanvas.getContext('2d');
-        if (mCtx) {
-          mCtx.drawImage(loadedImgElement, emblemX, emblemY, emblemSize, emblemSize);
-          mCtx.globalCompositeOperation = 'source-in';
-          const mainGrad = mCtx.createLinearGradient(0, emblemY, 0, emblemY + emblemSize);
-          mainGrad.addColorStop(0, lightenColor(waxColor, 20));
-          mainGrad.addColorStop(1, darkenColor(waxColor, 25));
-          mCtx.fillStyle = mainGrad;
-          mCtx.fillRect(0, 0, width, height);
-          ctx.drawImage(mainCanvas, 0, 0);
-        }
-      } else {
-        // Fallback Monogram Emblem ("S")
-        ctx.font = '300 130px "Cormorant Garamond", serif';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-
-        // Shadow
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
-        ctx.fillText('S', cx + bevelDepth, cy + bevelDepth + 6);
-
-        // Highlight
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-        ctx.fillText('S', cx - bevelDepth, cy - bevelDepth + 6);
-
-        // Face
-        const textGrad = ctx.createLinearGradient(0, cy - 60, 0, cy + 60);
-        textGrad.addColorStop(0, lightenColor(waxColor, 25));
-        textGrad.addColorStop(1, darkenColor(waxColor, 20));
-        ctx.fillStyle = textGrad;
-        ctx.fillText('S', cx, cy + 6);
-      }
-      ctx.restore();
-
-      // 5. Metallic Finish Specular Overlay
-      if (finish === 'METALLIC') {
-        ctx.save();
-        ctx.globalCompositeOperation = 'overlay';
-        const shineGrad = ctx.createLinearGradient(0, 0, width, height);
-        shineGrad.addColorStop(0, 'rgba(255, 255, 255, 0.4)');
-        shineGrad.addColorStop(0.3, 'rgba(255, 255, 255, 0.0)');
-        shineGrad.addColorStop(0.5, 'rgba(255, 255, 255, 0.5)');
-        shineGrad.addColorStop(0.7, 'rgba(255, 255, 255, 0.0)');
-        shineGrad.addColorStop(1, 'rgba(255, 255, 255, 0.3)');
-
-        ctx.fillStyle = shineGrad;
-        ctx.beginPath();
-        ctx.arc(cx, cy, radius + 5, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
-      }
-    } else {
-      // ── STICKER LABEL Rendering ──────────────────────────────────────────────
+  // ── Sticker render (unchanged) ───────────────────────────────────────────────
+  const drawSticker = useCallback(
+    (ctx: CanvasRenderingContext2D, width: number, height: number) => {
+      const cx = width / 2;
+      const cy = height / 2;
       const size = 380;
       const x = cx - size / 2;
       const y = cy - size / 2;
@@ -329,23 +301,41 @@ export function SealCreator({
         ctx.fillStyle = stickerBorderColor || '#333333';
         ctx.fillText('S', cx, cy + 6);
       }
-    }
-  }, [
-    sealType,
-    waxColor,
-    bevelDepth,
-    finish,
-    stickerBg,
-    stickerBorderColor,
-    stickerBorderWidth,
-    stickerShape,
-    loadedImgElement,
-    getWaxEdgePoints,
-  ]);
+    },
+    [stickerBg, stickerBorderColor, stickerBorderWidth, stickerShape, loadedImgElement],
+  );
 
-  // Redraw when parameters update
+  // Main Canvas Redraw Function
+  const redrawCanvas = useCallback(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const width = canvas.width;
+    const height = canvas.height;
+    ctx.clearRect(0, 0, width, height);
+
+    if (sealType === 'WAX_SEAL') {
+      drawWaxSeal(ctx, width, height);
+    } else {
+      drawSticker(ctx, width, height);
+    }
+  }, [sealType, drawWaxSeal, drawSticker]);
+
+  // Redraw at most once per animation frame when parameters update
   useEffect(() => {
-    redrawCanvas();
+    if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+    rafRef.current = requestAnimationFrame(() => {
+      rafRef.current = null;
+      redrawCanvas();
+    });
+    return () => {
+      if (rafRef.current !== null) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
+    };
   }, [redrawCanvas]);
 
   // Handle mask image file upload
@@ -371,6 +361,12 @@ export function SealCreator({
 
     try {
       setIsApplying(true);
+      // Make sure the last parameter change is painted before exporting.
+      if (rafRef.current !== null) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
+      redrawCanvas();
       const dataUrl = canvas.toDataURL('image/png');
 
       let publicUrl: string | undefined;
@@ -399,17 +395,19 @@ export function SealCreator({
     }
   };
 
+  const showLuminanceHint = sealType === 'WAX_SEAL' && sigil?.source === 'luminance';
+
   return (
     <div className="seal-creator-inline">
       {/* Preview Section */}
       <div className="sc-inline-preview">
         <canvas
           ref={canvasRef}
-          width={512}
-          height={512}
+          width={CANVAS_SIZE}
+          height={CANVAS_SIZE}
           className="sc-inline-canvas"
         />
-        <p className="sc-inline-hint">Live Preview (512x512 PNG)</p>
+        <p className="sc-inline-hint">Live Preview ({CANVAS_SIZE}x{CANVAS_SIZE} PNG)</p>
       </div>
 
       {/* Controls Section */}
@@ -451,16 +449,41 @@ export function SealCreator({
               <button
                 type="button"
                 className="scm-clear-btn"
-                onClick={() => setMaskImage('')}
+                onClick={clearMaskImage}
               >
                 Clear
               </button>
             )}
           </div>
+          {sealType === 'WAX_SEAL' && (
+            <p className="scm-field-hint">
+              {showLuminanceHint
+                ? 'This image has no transparency — dark areas are treated as raised. A transparent PNG or SVG gives the cleanest relief.'
+                : 'Best results with a transparent PNG or SVG: opaque areas become the raised relief.'}
+            </p>
+          )}
         </div>
 
         {sealType === 'WAX_SEAL' ? (
           <>
+            <div className="scm-group">
+              <label className="lp-field-label">Wax Shape</label>
+              <div className="scm-blank-picker">
+                {SEAL_BLANKS.map((b) => (
+                  <button
+                    key={b.id}
+                    type="button"
+                    className={`scm-blank-thumb ${blankId === b.id ? 'selected' : ''}`}
+                    title={b.name}
+                    onClick={() => setBlankId(b.id)}
+                  >
+                    <img src={b.height} alt={b.name} />
+                    <span>{b.name}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <div className="scm-group">
               <label className="lp-field-label">Wax Color</label>
               <div className="scm-color-presets" style={{ flexWrap: 'wrap' }}>
@@ -487,9 +510,29 @@ export function SealCreator({
             </div>
 
             <div className="scm-group">
+              <label className="lp-field-label">Relief</label>
+              <div className="scm-segmented">
+                <button
+                  type="button"
+                  className={reliefMode === 'EMBOSS' ? 'active' : ''}
+                  onClick={() => setReliefMode('EMBOSS')}
+                >
+                  Embossed
+                </button>
+                <button
+                  type="button"
+                  className={reliefMode === 'DEBOSS' ? 'active' : ''}
+                  onClick={() => setReliefMode('DEBOSS')}
+                >
+                  Debossed
+                </button>
+              </div>
+            </div>
+
+            <div className="scm-group">
               <div className="scm-slider-header">
                 <label className="lp-field-label">Bevel & Emboss Depth</label>
-                <span className="scm-slider-val">{bevelDepth}px</span>
+                <span className="scm-slider-val">{bevelDepth} / 10</span>
               </div>
               <input
                 type="range"
@@ -500,6 +543,22 @@ export function SealCreator({
                 className="scm-range"
                 style={{ width: '100%' }}
               />
+            </div>
+
+            <div className="scm-group">
+              <label className="lp-field-label">Light</label>
+              <div className="scm-segmented">
+                {LIGHT_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    className={lightPreset === opt.id ? 'active' : ''}
+                    onClick={() => setLightPreset(opt.id)}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
             </div>
 
             <div className="scm-group">
@@ -597,7 +656,7 @@ export function SealCreator({
             type="button"
             className="scm-apply-btn"
             onClick={handleApply}
-            disabled={isApplying}
+            disabled={isApplying || (sealType === 'WAX_SEAL' && !blank)}
           >
             {isApplying ? 'Generating...' : 'Apply'}
           </button>
@@ -605,26 +664,4 @@ export function SealCreator({
       </div>
     </div>
   );
-}
-
-// ── Color Utilities ────────────────────────────────────────────────────────────
-
-function lightenColor(color: string, percent: number): string {
-  const num = parseInt(color.replace('#', ''), 16);
-  if (isNaN(num)) return color;
-  const amt = Math.round(2.55 * percent);
-  const R = Math.min(255, (num >> 16) + amt);
-  const G = Math.min(255, ((num >> 8) & 0x00ff) + amt);
-  const B = Math.min(255, (num & 0x0000ff) + amt);
-  return `#${(0x1000000 + R * 0x10000 + G * 0x100 + B).toString(16).slice(1)}`;
-}
-
-function darkenColor(color: string, percent: number): string {
-  const num = parseInt(color.replace('#', ''), 16);
-  if (isNaN(num)) return color;
-  const amt = Math.round(2.55 * percent);
-  const R = Math.max(0, (num >> 16) - amt);
-  const G = Math.max(0, ((num >> 8) & 0x00ff) - amt);
-  const B = Math.max(0, (num & 0x0000ff) - amt);
-  return `#${(0x1000000 + R * 0x10000 + G * 0x100 + B).toString(16).slice(1)}`;
 }

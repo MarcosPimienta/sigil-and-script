@@ -2253,3 +2253,51 @@
 .seal-creator-inline .scm-apply-btn {
   color: #ffffff;
 }
+
+/* ── Wax Seal: blank picker & hints (physically-shaded-wax-seal) ── */
+.scm-field-hint {
+  margin: 0.4rem 0 0;
+  font-size: 0.72rem;
+  line-height: 1.35;
+  color: var(--cr-text-secondary, #71717a);
+}
+
+.scm-blank-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.scm-blank-thumb {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.35rem 0.5rem;
+  background: var(--cr-input-bg, #ffffff);
+  border: 1px solid var(--cr-input-border, #e5e7eb);
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--cr-text-muted, #71717a);
+  font-size: 0.7rem;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.scm-blank-thumb img {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #2a2a2a;
+  filter: contrast(1.3);
+}
+
+.scm-blank-thumb:hover {
+  border-color: var(--cr-accent, #d4af37);
+}
+
+.scm-blank-thumb.selected {
+  border-color: var(--cr-accent, #d4af37);
+  box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.25);
+  color: var(--cr-text, #18181b);
+}

@@ -11,7 +11,8 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:server": "npm --prefix server run test"
+    "test:server": "npm --prefix server run test",
+    "assets:wax": "node --experimental-strip-types scripts/generate-wax-blank.ts"
   },
   "dependencies": {
     "react": "^19.2.6",
