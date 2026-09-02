@@ -152,6 +152,8 @@ export interface SigilState {
   register: (email: string, password: string, name?: string) => Promise<boolean>;
   logout: () => Promise<void>;
   checkAuth: () => void;
+  requestPasswordReset: (email: string) => Promise<boolean>;
+  resetPassword: (token: string, password: string) => Promise<boolean>;
 }
 
 function loadRoster(): GuestRoster {
@@ -775,6 +777,39 @@ export const useSigilStore = create<SigilState>((set, get) => ({
     localStorage.removeItem('sigil_auth_token');
     localStorage.removeItem('sigil_auth_user');
     set({ token: null, user: null, authStatus: 'idle', authError: null });
+  },
+
+  requestPasswordReset: async (email) => {
+    set({ authStatus: 'loading', authError: null });
+    try {
+      await apiFetch('/auth/forgot-password', {
+        method: 'POST',
+        body: JSON.stringify({ email }),
+      });
+      set({ authStatus: 'success' });
+      return true;
+    } catch (e) {
+      set({ authStatus: 'error', authError: e instanceof Error ? e.message : 'Could not send the reset email' });
+      return false;
+    }
+  },
+
+  resetPassword: async (token, password) => {
+    set({ authStatus: 'loading', authError: null });
+    try {
+      await apiFetch('/auth/reset-password', {
+        method: 'POST',
+        body: JSON.stringify({ token, password }),
+      });
+      // Any local session is revoked server-side by the reset
+      localStorage.removeItem('sigil_auth_token');
+      localStorage.removeItem('sigil_auth_user');
+      set({ token: null, user: null, authStatus: 'success' });
+      return true;
+    } catch (e) {
+      set({ authStatus: 'error', authError: e instanceof Error ? e.message : 'Could not reset the password' });
+      return false;
+    }
   },
 
   checkAuth: () => {

@@ -3,9 +3,12 @@ import { useSigilStore } from '../../state/sigilStore';
 
 interface LoginViewProps {
   onToggleToRegister: () => void;
+  onForgotPassword?: () => void;
+  /** One-off notice shown above the form (e.g. after a successful reset). */
+  notice?: string | null;
 }
 
-export function LoginView({ onToggleToRegister }: LoginViewProps) {
+export function LoginView({ onToggleToRegister, onForgotPassword, notice }: LoginViewProps) {
   const login = useSigilStore((state) => state.login);
   const authStatus = useSigilStore((state) => state.authStatus);
   const authError = useSigilStore((state) => state.authError);
@@ -33,6 +36,10 @@ export function LoginView({ onToggleToRegister }: LoginViewProps) {
       <div className="auth-card">
         <h1 className="auth-logo">Sigil & Script</h1>
         <p className="auth-subtitle">Sign in to manage your digital invitations</p>
+
+        {notice && !(localError || authError) && (
+          <div className="auth-notice" role="status">{notice}</div>
+        )}
 
         {(localError || authError) && (
           <div className="auth-error">
@@ -68,6 +75,19 @@ export function LoginView({ onToggleToRegister }: LoginViewProps) {
               required
             />
           </div>
+
+          {onForgotPassword && (
+            <div className="auth-link-row">
+              <button
+                type="button"
+                className="auth-toggle-link"
+                onClick={onForgotPassword}
+                disabled={isLoading}
+              >
+                Forgot password?
+              </button>
+            </div>
+          )}
 
           <button
             type="submit"

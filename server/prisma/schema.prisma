@@ -30,8 +30,21 @@ model User {
   name      String?
   createdAt DateTime           @default(now())
   updatedAt DateTime           @updatedAt
-  canvases  InvitationCanvas[]
-  sessions  Session[]
+  canvases    InvitationCanvas[]
+  sessions    Session[]
+  resetTokens PasswordResetToken[]
+}
+
+model PasswordResetToken {
+  id        String    @id @default(uuid())
+  tokenHash String    @unique // sha256 of the emailed token; plaintext is never stored
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId, createdAt])
 }
 
 model Session {

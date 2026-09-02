@@ -5,6 +5,8 @@ import { DashboardView } from './components/dashboard/DashboardView';
 import { Toolbar } from './components/creator/Toolbar';
 import { LoginView } from './components/auth/LoginView';
 import { RegisterView } from './components/auth/RegisterView';
+import { ForgotPasswordView } from './components/auth/ForgotPasswordView';
+import { ResetPasswordView } from './components/auth/ResetPasswordView';
 import { EventsHubView } from './components/events/EventsHubView';
 import { useSigilStore } from './state/sigilStore';
 import './index.css';
@@ -16,7 +18,19 @@ function AppShell() {
   const { state, markInvitationOpened, setGuest, setAppMode, fetchInvitationDetails } = useSigil();
   const user = useSigilStore((s) => s.user);
   const checkAuth = useSigilStore((s) => s.checkAuth);
-  const [authView, setAuthView] = useState<'login' | 'register'>('login');
+  // Password-reset entry point: read ?reset=<token> once, then strip it from the URL
+  const [resetToken] = useState<string | null>(() => {
+    const t = new URLSearchParams(window.location.search).get('reset');
+    if (!t) return null;
+    const url = new URL(window.location.href);
+    url.searchParams.delete('reset');
+    window.history.replaceState({}, '', url.pathname + url.search + url.hash);
+    return /^[a-f0-9]{64}$/i.test(t) ? t : null;
+  });
+  const [authView, setAuthView] = useState<'login' | 'register' | 'forgot' | 'reset'>(
+    resetToken ? 'reset' : 'login',
+  );
+  const [loginNotice, setLoginNotice] = useState<string | null>(null);
 
   // Check authentication on mount
   useEffect(() => {
@@ -108,12 +122,36 @@ function AppShell() {
 
   const { appMode } = state;
 
+  // A reset link takes precedence even for a signed-in browser: the reset
+  // revokes every session, so the host must re-authenticate afterwards.
+  if (authView === 'reset' && resetToken && appMode !== 'RECIPIENT') {
+    return (
+      <ResetPasswordView
+        token={resetToken}
+        onDone={() => {
+          setLoginNotice('Your password was updated. Please sign in with your new password.');
+          setAuthView('login');
+        }}
+        onRequestNew={() => setAuthView('forgot')}
+      />
+    );
+  }
+
   // Gate creator and dashboard tools behind user login
   if (appMode !== 'RECIPIENT' && !user) {
-    if (authView === 'login') {
-      return <LoginView onToggleToRegister={() => setAuthView('register')} />;
+    if (authView === 'forgot') {
+      return <ForgotPasswordView onBackToLogin={() => setAuthView('login')} />;
     }
-    return <RegisterView onToggleToLogin={() => setAuthView('login')} />;
+    if (authView === 'register') {
+      return <RegisterView onToggleToLogin={() => setAuthView('login')} />;
+    }
+    return (
+      <LoginView
+        onToggleToRegister={() => setAuthView('register')}
+        onForgotPassword={() => setAuthView('forgot')}
+        notice={loginNotice}
+      />
+    );
   }
 
   if (appMode === 'EVENTS_HUB') {
