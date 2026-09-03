@@ -14,6 +14,7 @@ export function Toolbar() {
   const currentLang = design.language || 'ES';
   const isRecipient = appMode === 'RECIPIENT';
   const isDashboard = appMode === 'DASHBOARD';
+  const isFloorPlan = appMode === 'FLOOR_PLAN';
 
   // Store actions
   const saveCurrentDesign = useSigilStore((s) => s.saveCurrentDesign);
@@ -134,7 +135,7 @@ export function Toolbar() {
       {/* ── Actions ───────────────────────────────────────────────────────── */}
       <div className="toolbar-actions">
         {/* EN / SPA language toggle switch */}
-        {!isRecipient && !isDashboard && appMode !== 'EVENTS_HUB' && (
+        {!isRecipient && !isDashboard && !isFloorPlan && appMode !== 'EVENTS_HUB' && (
           <div
             className="toolbar-lang-toggle"
             style={{
@@ -187,8 +188,8 @@ export function Toolbar() {
             </button>
           </div>
         )}
-        {/* Save/Load Layout buttons — hidden in recipient/guest/events-hub modes */}
-        {!isRecipient && !isDashboard && appMode !== 'EVENTS_HUB' && (
+        {/* Save/Load Layout buttons — hidden in recipient/guest/events-hub/floor-plan modes */}
+        {!isRecipient && !isDashboard && !isFloorPlan && appMode !== 'EVENTS_HUB' && (
           <>
             <button
               id="btn-save-layout"
@@ -252,22 +253,44 @@ export function Toolbar() {
           )
         )}
 
-        {/* Dashboard toggle — hidden in recipient and events-hub modes */}
+        {/* Mode Switcher — Studio | Dashboard | Floor Plan */}
         {!isRecipient && appMode !== 'EVENTS_HUB' && (
-          <button
-            id="btn-dashboard"
-            className={`toolbar-btn-ghost${isDashboard ? ' toolbar-btn-ghost--active' : ''}`}
-            type="button"
-            onClick={() => setAppMode(isDashboard ? 'CREATOR' : 'DASHBOARD')}
-            aria-pressed={isDashboard}
-            aria-label={isDashboard ? 'Return to Studio' : 'Open guest dashboard'}
-          >
-            {isDashboard ? '← Studio' : 'Dashboard'}
-          </button>
+          <div style={{ display: 'inline-flex', gap: '6px' }}>
+            <button
+              id="btn-studio"
+              className={`toolbar-btn-ghost${appMode === 'CREATOR' ? ' toolbar-btn-ghost--active' : ''}`}
+              type="button"
+              onClick={() => setAppMode('CREATOR')}
+              aria-pressed={appMode === 'CREATOR'}
+              aria-label="Return to Studio"
+            >
+              Studio
+            </button>
+            <button
+              id="btn-dashboard"
+              className={`toolbar-btn-ghost${isDashboard ? ' toolbar-btn-ghost--active' : ''}`}
+              type="button"
+              onClick={() => setAppMode('DASHBOARD')}
+              aria-pressed={isDashboard}
+              aria-label="Open guest dashboard"
+            >
+              Dashboard
+            </button>
+            <button
+              id="btn-floor-plan"
+              className={`toolbar-btn-ghost${isFloorPlan ? ' toolbar-btn-ghost--active' : ''}`}
+              type="button"
+              onClick={() => setAppMode('FLOOR_PLAN')}
+              aria-pressed={isFloorPlan}
+              aria-label="Open floor plan and table seating"
+            >
+              Floor Plan
+            </button>
+          </div>
         )}
 
         {/* Preview toggle — swaps between Creator and Recipient preview */}
-        {!isDashboard && appMode !== 'EVENTS_HUB' && (
+        {!isDashboard && !isFloorPlan && appMode !== 'EVENTS_HUB' && (
           <button
             id="btn-mode-toggle"
             className={`toolbar-btn-primary${isRecipient ? ' toolbar-btn-primary--exit' : ''}`}

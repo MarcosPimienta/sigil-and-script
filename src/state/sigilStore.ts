@@ -15,7 +15,15 @@ import { createDesignFromTemplate } from '../templates';
 import type { TemplateLang } from '../templates';
 import { normalizeDesign } from '../utils/normalizeDesign';
 import { createSection, isSingletonKind, type SectionLang } from '../utils/sectionDefaults';
-import type { EventType, InvitationSection, SectionKind } from '../types/sigil.types';
+import type {
+  EventType,
+  InvitationSection,
+  SectionKind,
+  TableShape,
+  FloorPlanTable,
+  FloorPlanSeat,
+} from '../types/sigil.types';
+import { createEmptySeats } from '../utils/floorPlanUtils';
 
 /** The wedding template is the historical default; see src/templates. */
 const DEFAULT_DESIGN: InvitationDesign = createDesignFromTemplate('WEDDING', 'ES');
@@ -72,6 +80,15 @@ export interface SigilState {
   reorderSections: (ids: string[]) => void;
   toggleSection: (id: string, enabled?: boolean) => void;
   updateSection: (id: string, patch: Partial<InvitationSection>) => void;
+
+  // Floor Plan actions
+  addFloorPlanTable: (table: { name?: string; shape: TableShape; seatsCount: number; x?: number; y?: number }) => string;
+  updateFloorPlanTable: (tableId: string, patch: Partial<Pick<FloorPlanTable, 'name' | 'shape' | 'seatsCount' | 'rotation'>>) => void;
+  removeFloorPlanTable: (tableId: string) => void;
+  moveFloorPlanTable: (tableId: string, x: number, y: number) => void;
+  assignFloorPlanSeat: (tableId: string, seatNumber: number, guest: { id: string; name: string; isDependent?: boolean; primaryInviteeId?: string }) => void;
+  unassignFloorPlanSeat: (tableId: string, seatNumber: number) => void;
+  clearAllFloorPlanAssignments: () => void;
 
   // Roster Actions
   addInvitee: (name: string, email?: string, guestType?: 'INDIVIDUAL' | 'FAMILY', initialDependents?: string[]) => void;
@@ -262,6 +279,208 @@ export const useSigilStore = create<SigilState>((set, get) => ({
         ),
       },
     })),
+
+  // ── Floor Plan Actions ──────────────────────────────────────────────────────
+
+  addFloorPlanTable: ({ name, shape, seatsCount, x, y }) => {
+    const tableId = crypto.randomUUID();
+    const count = Math.max(2, Math.min(24, seatsCount));
+    const currentTables = get().design.floorPlan?.tables ?? [];
+    const defaultName = name?.trim() || `Table ${currentTables.length + 1}`;
+
+    const defaultX = x !== undefined ? Math.round(x / 20) * 20 : 80 + (currentTables.length % 3) * 280;
+    const defaultY = y !== undefined ? Math.round(y / 20) * 20 : 80 + Math.floor(currentTables.length / 3) * 280;
+
+    const newTable: FloorPlanTable = {
+      id: tableId,
+      name: defaultName,
+      shape,
+      seatsCount: count,
+      x: defaultX,
+      y: defaultY,
+      rotation: 0,
+      seats: createEmptySeats(tableId, count),
+    };
+
+    set((state) => ({
+      design: {
+        ...state.design,
+        floorPlan: {
+          tables: [...(state.design.floorPlan?.tables ?? []), newTable],
+          canvasWidth: state.design.floorPlan?.canvasWidth ?? 1400,
+          canvasHeight: state.design.floorPlan?.canvasHeight ?? 900,
+        },
+      },
+    }));
+
+    return tableId;
+  },
+
+  updateFloorPlanTable: (tableId, patch) => {
+    set((state) => {
+      const currentTables = state.design.floorPlan?.tables ?? [];
+      const updatedTables = currentTables.map((tbl) => {
+        if (tbl.id !== tableId) return tbl;
+
+        const updated: FloorPlanTable = { ...tbl, ...patch };
+
+        if (patch.seatsCount !== undefined && patch.seatsCount !== tbl.seatsCount) {
+          const newCount = Math.max(2, Math.min(24, patch.seatsCount));
+          updated.seatsCount = newCount;
+          if (newCount > tbl.seats.length) {
+            const addedSeats: FloorPlanSeat[] = [];
+            for (let i = tbl.seats.length + 1; i <= newCount; i++) {
+              addedSeats.push({ id: `${tbl.id}-seat-${i}`, seatNumber: i });
+            }
+            updated.seats = [...tbl.seats, ...addedSeats];
+          } else {
+            updated.seats = tbl.seats.slice(0, newCount);
+          }
+        }
+
+        return updated;
+      });
+
+      return {
+        design: {
+          ...state.design,
+          floorPlan: {
+            tables: updatedTables,
+            canvasWidth: state.design.floorPlan?.canvasWidth ?? 1400,
+            canvasHeight: state.design.floorPlan?.canvasHeight ?? 900,
+          },
+        },
+      };
+    });
+  },
+
+  removeFloorPlanTable: (tableId) => {
+    set((state) => ({
+      design: {
+        ...state.design,
+        floorPlan: {
+          tables: (state.design.floorPlan?.tables ?? []).filter((t) => t.id !== tableId),
+          canvasWidth: state.design.floorPlan?.canvasWidth ?? 1400,
+          canvasHeight: state.design.floorPlan?.canvasHeight ?? 900,
+        },
+      },
+    }));
+  },
+
+  moveFloorPlanTable: (tableId, x, y) => {
+    const snappedX = Math.max(0, Math.round(x / 20) * 20);
+    const snappedY = Math.max(0, Math.round(y / 20) * 20);
+
+    set((state) => ({
+      design: {
+        ...state.design,
+        floorPlan: {
+          tables: (state.design.floorPlan?.tables ?? []).map((t) =>
+            t.id === tableId ? { ...t, x: snappedX, y: snappedY } : t,
+          ),
+          canvasWidth: state.design.floorPlan?.canvasWidth ?? 1400,
+          canvasHeight: state.design.floorPlan?.canvasHeight ?? 900,
+        },
+      },
+    }));
+  },
+
+  assignFloorPlanSeat: (tableId, seatNumber, guest) => {
+    set((state) => {
+      const currentTables = state.design.floorPlan?.tables ?? [];
+
+      // 1. Clear guest from any other seat across all tables (Single-seat invariant)
+      const clearedTables = currentTables.map((tbl) => ({
+        ...tbl,
+        seats: tbl.seats.map((s) => {
+          if (s.assignedGuestId === guest.id) {
+            return {
+              id: s.id,
+              seatNumber: s.seatNumber,
+            };
+          }
+          return s;
+        }),
+      }));
+
+      // 2. Assign to the specified table and seat
+      const updatedTables = clearedTables.map((tbl) => {
+        if (tbl.id !== tableId) return tbl;
+        return {
+          ...tbl,
+          seats: tbl.seats.map((s) => {
+            if (s.seatNumber === seatNumber) {
+              return {
+                ...s,
+                assignedGuestId: guest.id,
+                assignedGuestName: guest.name,
+                isDependent: guest.isDependent,
+                primaryInviteeId: guest.primaryInviteeId,
+              };
+            }
+            return s;
+          }),
+        };
+      });
+
+      return {
+        design: {
+          ...state.design,
+          floorPlan: {
+            tables: updatedTables,
+            canvasWidth: state.design.floorPlan?.canvasWidth ?? 1400,
+            canvasHeight: state.design.floorPlan?.canvasHeight ?? 900,
+          },
+        },
+      };
+    });
+  },
+
+  unassignFloorPlanSeat: (tableId, seatNumber) => {
+    set((state) => ({
+      design: {
+        ...state.design,
+        floorPlan: {
+          tables: (state.design.floorPlan?.tables ?? []).map((tbl) => {
+            if (tbl.id !== tableId) return tbl;
+            return {
+              ...tbl,
+              seats: tbl.seats.map((s) => {
+                if (s.seatNumber === seatNumber) {
+                  return {
+                    id: s.id,
+                    seatNumber: s.seatNumber,
+                  };
+                }
+                return s;
+              }),
+            };
+          }),
+          canvasWidth: state.design.floorPlan?.canvasWidth ?? 1400,
+          canvasHeight: state.design.floorPlan?.canvasHeight ?? 900,
+        },
+      },
+    }));
+  },
+
+  clearAllFloorPlanAssignments: () => {
+    set((state) => ({
+      design: {
+        ...state.design,
+        floorPlan: {
+          tables: (state.design.floorPlan?.tables ?? []).map((tbl) => ({
+            ...tbl,
+            seats: tbl.seats.map((s) => ({
+              id: s.id,
+              seatNumber: s.seatNumber,
+            })),
+          })),
+          canvasWidth: state.design.floorPlan?.canvasWidth ?? 1400,
+          canvasHeight: state.design.floorPlan?.canvasHeight ?? 900,
+        },
+      },
+    }));
+  },
 
   addInvitee: (name, email, guestType = 'INDIVIDUAL', initialDependents = []) => {
     const trimmed = name.trim();

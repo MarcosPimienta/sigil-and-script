@@ -58,6 +58,15 @@ export function EventsHubView() {
     }
   };
 
+  const handleFloorPlan = async (id: string) => {
+    try {
+      await loadDesign(id);
+      setAppMode('FLOOR_PLAN');
+    } catch (e: any) {
+      alert(`Error loading floor plan: ${e.message}`);
+    }
+  };
+
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this event invitation? This cannot be undone.')) {
       return;
@@ -205,6 +214,13 @@ export function EventsHubView() {
                     onClick={() => handleManageGuests(design.id)}
                   >
                     Guests
+                  </button>
+                  <button
+                    type="button"
+                    className="event-card-btn event-card-btn--ghost"
+                    onClick={() => handleFloorPlan(design.id)}
+                  >
+                    Floor Plan
                   </button>
                   <button
                     type="button"

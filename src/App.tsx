@@ -8,6 +8,7 @@ import { RegisterView } from './components/auth/RegisterView';
 import { ForgotPasswordView } from './components/auth/ForgotPasswordView';
 import { ResetPasswordView } from './components/auth/ResetPasswordView';
 import { EventsHubView } from './components/events/EventsHubView';
+import { FloorPlanView } from './components/floorplan/FloorPlanView';
 import { useSigilStore } from './state/sigilStore';
 import './index.css';
 import './styles/auth.css';
@@ -168,6 +169,15 @@ function AppShell() {
       <>
         <Toolbar />
         <DashboardView />
+      </>
+    );
+  }
+
+  if (appMode === 'FLOOR_PLAN') {
+    return (
+      <>
+        <Toolbar />
+        <FloorPlanView />
       </>
     );
   }

@@ -214,5 +214,45 @@ describe('Sigil & Script Backend API Tests', () => {
         .expect(403);
       expect(res.body).toHaveProperty('error', 'Access denied: missing role header');
     });
+
+    it('persists floorPlan configuration inside designData and retrieves it', async () => {
+      const canvasId = 'test-canvas-fp-' + Date.now();
+      const floorPlanData = {
+        tables: [
+          {
+            id: 'table-1',
+            name: 'Table 1',
+            shape: 'round',
+            seatsCount: 8,
+            x: 100,
+            y: 100,
+            seats: [
+              { id: 'table-1-seat-1', seatNumber: 1, assignedGuestId: 'guest-1', assignedGuestName: 'Alice' },
+            ],
+          },
+        ],
+      };
+
+      await request(app)
+        .post('/canvas')
+        .set('X-Role', 'HOST')
+        .send({
+          id: canvasId,
+          designData: {
+            title: 'Event with Floor Plan',
+            floorPlan: floorPlanData,
+          },
+        })
+        .expect(200);
+
+      const getRes = await request(app)
+        .get(`/canvas/${canvasId}`)
+        .set('X-Role', 'HOST')
+        .expect(200);
+
+      expect(getRes.body).toHaveProperty('designData');
+      const parsed = JSON.parse(getRes.body.designData);
+      expect(parsed.floorPlan).toEqual(floorPlanData);
+    });
   });
 });

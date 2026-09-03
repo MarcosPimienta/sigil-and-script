@@ -83,7 +83,7 @@ function SortHeader({
 // ── Dashboard view ────────────────────────────────────────────────────────────
 
 export function DashboardView() {
-  const { updateInvitee, removeInvitee, addDependent, refreshRoster } = useSigil();
+  const { updateInvitee, removeInvitee, addDependent, refreshRoster, setAppMode } = useSigil();
   const invitees = useSigilSelector((s) => s.guestRoster.invitees);
   const saveCurrentDesign = useSigilStore((s) => s.saveCurrentDesign);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -253,6 +253,22 @@ export function DashboardView() {
               🌳 Tree View
             </button>
           </div>
+
+          <button
+            type="button"
+            className="dashboard-action-btn"
+            onClick={() => setAppMode('FLOOR_PLAN')}
+            style={{
+              backgroundColor: '#4A5D23',
+              color: '#ffffff',
+              borderColor: 'transparent',
+              fontWeight: 600,
+              padding: '6px 14px',
+            }}
+            title="Open Floor Plan & Table Seating"
+          >
+            🗺️ Floor Plan
+          </button>
 
           <button
             type="button"

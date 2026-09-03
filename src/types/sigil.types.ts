@@ -5,7 +5,7 @@
 // ── App Mode ─────────────────────────────────────────────────────────────────
 
 /** Top-level mode: who is currently using the canvas */
-export type AppMode = 'CREATOR' | 'RECIPIENT' | 'DASHBOARD' | 'EVENTS_HUB';
+export type AppMode = 'CREATOR' | 'RECIPIENT' | 'DASHBOARD' | 'EVENTS_HUB' | 'FLOOR_PLAN';
 
 // ── Envelope / Container Styles ───────────────────────────────────────────────
 
@@ -255,6 +255,38 @@ export interface InvitationDesign {
   stickerImage?: string;
   sealSize?: number;
   musicUrl?: string;
+  /** Floor plan and seating arrangement configuration */
+  floorPlan?: FloorPlanConfig;
+}
+
+// ── Floor Plan & Seating ──────────────────────────────────────────────────────
+
+export type TableShape = 'round' | 'square' | 'rectangular';
+
+export interface FloorPlanSeat {
+  id: string;
+  seatNumber: number;
+  assignedGuestId?: string; // InviteeRecord.id or Dependent.id
+  assignedGuestName?: string;
+  isDependent?: boolean;
+  primaryInviteeId?: string;
+}
+
+export interface FloorPlanTable {
+  id: string;
+  name: string;
+  shape: TableShape;
+  seatsCount: number;
+  x: number;
+  y: number;
+  rotation?: number; // degrees, e.g. 0, 45, 90
+  seats: FloorPlanSeat[];
+}
+
+export interface FloorPlanConfig {
+  tables: FloorPlanTable[];
+  canvasWidth?: number;
+  canvasHeight?: number;
 }
 
 // ── Itinerary Schema ──────────────────────────────────────────────────────────
