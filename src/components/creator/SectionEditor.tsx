@@ -2,16 +2,35 @@ import { useState, useCallback, type ChangeEvent } from 'react';
 import { useSigil } from '../../context/SigilContext';
 import type { ItineraryItem } from '../../types/sigil.types';
 import { ImageUploadSlot, ACCEPTED_IMAGE_TYPES, MAX_IMAGE_BYTES, compressImage } from './LeftPanel';
+import { DressCodeEditor } from './editors/DressCodeEditor';
+import {
+  TextSectionEditor,
+  ImageSectionEditor,
+  VideoSectionEditor,
+  DividerSectionEditor,
+} from './editors/SectionKindEditors';
+import { SectionFontFields } from './editors/SectionFontFields';
+import { getSectionMeta } from '../../utils/sectionDefaults';
+import { useSigilStore } from '../../state/sigilStore';
+import { getPhrasing } from '../../utils/eventPhrasing';
+import { EventIcon } from '../icons/eventIcons';
+import { ITINERARY_KIND_ICON, ITINERARY_KIND_LABEL } from '../icons/iconMaps';
+import { ITINERARY_KINDS } from '../../types/sigil.types';
 import { apiFetch } from '../../utils/api';
 
 export function SectionEditor() {
   const { state, updateDesign, updateTextBlock } = useSigil();
   const design = state.design;
+  const inspectorFocus = useSigilStore((s) => s.inspectorFocus);
+  const focusInspector = useSigilStore((s) => s.focusInspector);
+  const updateSection = useSigilStore((s) => s.updateSection);
 
   const [isUploadingTitleImage, setIsUploadingTitleImage] = useState(false);
 
   const headlineBlock = design.textBlocks?.find((b) => b.id === 'tb-headline');
-  const hostNames = headlineBlock ? headlineBlock.content : 'Oscar & Rocio';
+  const hostNames = headlineBlock ? headlineBlock.content : '';
+  const lang = design.language === 'EN' ? 'EN' : 'ES';
+  const phrasing = getPhrasing(design.eventType, lang);
 
   const handleFieldChange = (key: string, value: any) => {
     updateDesign({ [key]: value });
@@ -73,11 +92,18 @@ export function SectionEditor() {
     const list = [...(design.itinerary || [])];
     list.push({
       id: `itin-${Date.now()}`,
-      title: 'Nuevo Evento',
-      locationName: 'Dirección o Lugar',
+      kind: 'CUSTOM',
+      title: lang === 'EN' ? 'New item' : 'Nuevo Evento',
+      locationName: lang === 'EN' ? 'Address or venue' : 'Dirección o Lugar',
       time: '12:00',
       mapLink: '',
     });
+    handleFieldChange('itinerary', list);
+  };
+
+  const handleItineraryKindChange = (idx: number, kind: ItineraryItem['kind']) => {
+    const list = [...(design.itinerary || [])];
+    list[idx] = { ...list[idx], kind };
     handleFieldChange('itinerary', list);
   };
 
@@ -87,8 +113,12 @@ export function SectionEditor() {
     handleFieldChange('itinerary', list);
   };
 
-  return (
-    <div className="section-editor-panel" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+  const focus = inspectorFocus;
+  const focused =
+    focus.type === 'SECTION' ? (design.sections ?? []).find((s) => s.id === focus.sectionId) : undefined;
+
+  const generalFields = (
+    <>
       {/* ── Language Switch ── */}
       <div className="lp-field">
         <label className="lp-field-label">
@@ -133,13 +163,13 @@ export function SectionEditor() {
       {/* ── Event Title ── */}
       <div className="lp-field">
         <label className="lp-field-label" htmlFor="host-names-input">
-          Título del Evento (Event Title)
+          {phrasing.hostsLabel} (Event Title)
         </label>
         <input
           id="host-names-input"
           type="text"
           className="lp-input"
-          placeholder="Ej: Oscar & Rocio / Nuestra Boda"
+          placeholder={phrasing.hostsPlaceholder}
           value={hostNames}
           onChange={(e) => updateTextBlock('tb-headline', { content: e.target.value })}
         />
@@ -181,11 +211,15 @@ export function SectionEditor() {
           />
         </div>
       )}
+    </>
+  );
 
+  const countdownFields = (
+    <>
       {/* ── Countdown ── */}
       <div className="lp-field">
         <label className="lp-field-label" htmlFor="countdown-input">
-          Fecha y Hora de la Boda (Cuenta Regresiva)
+          Fecha y Hora del Evento (Cuenta Regresiva)
         </label>
         <input
           id="countdown-input"
@@ -195,259 +229,11 @@ export function SectionEditor() {
           onChange={(e) => handleFieldChange('countdownTarget', e.target.value)}
         />
       </div>
+    </>
+  );
 
-      {/* ── Dress Code ── */}
-      <div className="lp-field">
-        <label className="lp-field-label" htmlFor="dresscode-input">
-          Dress Code
-        </label>
-        <input
-          id="dresscode-input"
-          type="text"
-          className="lp-input"
-          placeholder="Ej: Formal, Gala, Semiformal"
-          value={design.dressCodeText || ''}
-          onChange={(e) => handleFieldChange('dressCodeText', e.target.value)}
-        />
-      </div>
-
-      {/* ── Dress Code: Male ── */}
-      <div className="lp-field">
-        <label className="lp-field-label">Male Section</label>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '6px' }}>
-          <input
-            type="text"
-            className="lp-input"
-            placeholder="Heading (e.g. Ellos)"
-            value={design.dressCodeMaleHeading || ''}
-            onChange={(e) => handleFieldChange('dressCodeMaleHeading', e.target.value)}
-          />
-          <input
-            type="text"
-            className="lp-input"
-            placeholder="Text (e.g. Traje formal)"
-            value={design.dressCodeMaleText || ''}
-            onChange={(e) => handleFieldChange('dressCodeMaleText', e.target.value)}
-          />
-          <input
-            type="text"
-            className="lp-input"
-            placeholder="Subtext (e.g. Favor de evitar...)"
-            value={design.dressCodeMaleSubtext || ''}
-            onChange={(e) => handleFieldChange('dressCodeMaleSubtext', e.target.value)}
-          />
-          <div>
-            <span style={{ fontSize: '11px', color: '#666', display: 'block', marginBottom: '4px' }}>Avoid Colors</span>
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-              {(design.dressCodeMaleAvoidColors || []).map((color, idx) => (
-                <div key={idx} style={{ position: 'relative', width: '28px', height: '28px' }}>
-                  <input
-                    type="color"
-                    value={color}
-                    onChange={(e) => {
-                      const newColors = [...(design.dressCodeMaleAvoidColors || [])];
-                      newColors[idx] = e.target.value;
-                      handleFieldChange('dressCodeMaleAvoidColors', newColors);
-                    }}
-                    style={{
-                      position: 'absolute',
-                      inset: 0,
-                      opacity: 0,
-                      cursor: 'pointer',
-                      width: '100%',
-                      height: '100%',
-                    }}
-                  />
-                  <div style={{
-                    width: '100%',
-                    height: '100%',
-                    borderRadius: '50%',
-                    backgroundColor: color,
-                    border: '1px solid var(--cr-panel-border)',
-                    pointerEvents: 'none',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}>
-                    {/* Tiny X icon */}
-                    <svg width="12" height="12" viewBox="0 0 24 24" stroke="rgba(0,0,0,0.5)" strokeWidth="2">
-                      <line x1="4" y1="4" x2="20" y2="20" />
-                      <line x1="20" y1="4" x2="4" y2="20" />
-                    </svg>
-                  </div>
-                  {/* Remove button */}
-                  <button
-                    onClick={() => {
-                      const newColors = [...(design.dressCodeMaleAvoidColors || [])];
-                      newColors.splice(idx, 1);
-                      handleFieldChange('dressCodeMaleAvoidColors', newColors);
-                    }}
-                    style={{
-                      position: 'absolute',
-                      top: '-6px',
-                      right: '-6px',
-                      width: '14px',
-                      height: '14px',
-                      borderRadius: '50%',
-                      background: '#ff4d4f',
-                      color: 'white',
-                      border: 'none',
-                      fontSize: '10px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      cursor: 'pointer',
-                      padding: 0
-                    }}
-                  >
-                    ×
-                  </button>
-                </div>
-              ))}
-              <button
-                onClick={() => {
-                  const newColors = [...(design.dressCodeMaleAvoidColors || []), '#000000'];
-                  handleFieldChange('dressCodeMaleAvoidColors', newColors);
-                }}
-                style={{
-                  width: '28px',
-                  height: '28px',
-                  borderRadius: '50%',
-                  border: '1px dashed #ccc',
-                  background: 'none',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: '#666'
-                }}
-              >
-                +
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ── Dress Code: Female ── */}
-      <div className="lp-field">
-        <label className="lp-field-label">Female Section</label>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '6px' }}>
-          <input
-            type="text"
-            className="lp-input"
-            placeholder="Heading (e.g. Ellas)"
-            value={design.dressCodeFemaleHeading || ''}
-            onChange={(e) => handleFieldChange('dressCodeFemaleHeading', e.target.value)}
-          />
-          <input
-            type="text"
-            className="lp-input"
-            placeholder="Text (e.g. Vestido largo)"
-            value={design.dressCodeFemaleText || ''}
-            onChange={(e) => handleFieldChange('dressCodeFemaleText', e.target.value)}
-          />
-          <input
-            type="text"
-            className="lp-input"
-            placeholder="Subtext (e.g. Favor de evitar...)"
-            value={design.dressCodeFemaleSubtext || ''}
-            onChange={(e) => handleFieldChange('dressCodeFemaleSubtext', e.target.value)}
-          />
-          <div>
-            <span style={{ fontSize: '11px', color: '#666', display: 'block', marginBottom: '4px' }}>Avoid Colors</span>
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-              {(design.dressCodeFemaleAvoidColors || []).map((color, idx) => (
-                <div key={idx} style={{ position: 'relative', width: '28px', height: '28px' }}>
-                  <input
-                    type="color"
-                    value={color}
-                    onChange={(e) => {
-                      const newColors = [...(design.dressCodeFemaleAvoidColors || [])];
-                      newColors[idx] = e.target.value;
-                      handleFieldChange('dressCodeFemaleAvoidColors', newColors);
-                    }}
-                    style={{
-                      position: 'absolute',
-                      inset: 0,
-                      opacity: 0,
-                      cursor: 'pointer',
-                      width: '100%',
-                      height: '100%',
-                    }}
-                  />
-                  <div style={{
-                    width: '100%',
-                    height: '100%',
-                    borderRadius: '50%',
-                    backgroundColor: color,
-                    border: '1px solid var(--cr-panel-border)',
-                    pointerEvents: 'none',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}>
-                    {/* Tiny X icon */}
-                    <svg width="12" height="12" viewBox="0 0 24 24" stroke="rgba(0,0,0,0.5)" strokeWidth="2">
-                      <line x1="4" y1="4" x2="20" y2="20" />
-                      <line x1="20" y1="4" x2="4" y2="20" />
-                    </svg>
-                  </div>
-                  {/* Remove button */}
-                  <button
-                    onClick={() => {
-                      const newColors = [...(design.dressCodeFemaleAvoidColors || [])];
-                      newColors.splice(idx, 1);
-                      handleFieldChange('dressCodeFemaleAvoidColors', newColors);
-                    }}
-                    style={{
-                      position: 'absolute',
-                      top: '-6px',
-                      right: '-6px',
-                      width: '14px',
-                      height: '14px',
-                      borderRadius: '50%',
-                      background: '#ff4d4f',
-                      color: 'white',
-                      border: 'none',
-                      fontSize: '10px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      cursor: 'pointer',
-                      padding: 0
-                    }}
-                  >
-                    ×
-                  </button>
-                </div>
-              ))}
-              <button
-                onClick={() => {
-                  const newColors = [...(design.dressCodeFemaleAvoidColors || []), '#000000'];
-                  handleFieldChange('dressCodeFemaleAvoidColors', newColors);
-                }}
-                style={{
-                  width: '28px',
-                  height: '28px',
-                  borderRadius: '50%',
-                  border: '1px dashed #ccc',
-                  background: 'none',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: '#666'
-                }}
-              >
-                +
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-
+  const giftsFields = (
+    <>
       {/* ── Registry ── */}
       <div className="lp-field">
         <label className="lp-field-label" htmlFor="registry-title-input">
@@ -457,7 +243,7 @@ export function SectionEditor() {
           id="registry-title-input"
           type="text"
           className="lp-input"
-          placeholder="Mesa de Regalos"
+          placeholder={phrasing.giftsHeading}
           value={design.registryTitle || ''}
           onChange={(e) => handleFieldChange('registryTitle', e.target.value)}
         />
@@ -530,11 +316,15 @@ export function SectionEditor() {
           />
         </div>
       )}
+    </>
+  );
 
+  const itineraryFields = (
+    <>
       {/* ── Itinerary Timeline ── */}
       <div className="lp-field" style={{ borderTop: '1px dashed var(--cr-panel-border)', paddingTop: '15px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-          <span className="lp-field-label" style={{ margin: 0 }}>Itinerario (Eventos)</span>
+          <span className="lp-field-label" style={{ margin: 0 }}>{phrasing.itineraryHeading}</span>
           <button
             type="button"
             onClick={addItineraryItem}
@@ -576,9 +366,33 @@ export function SectionEditor() {
               </button>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '10px' }}>
+                <div>
+                  <span style={{ fontSize: '11px', color: '#666', display: 'block', marginBottom: '4px' }}>Tipo (Type)</span>
+                  <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                    {ITINERARY_KINDS.map((kind) => (
+                      <button
+                        key={kind}
+                        type="button"
+                        title={ITINERARY_KIND_LABEL[kind][lang]}
+                        aria-label={`${ITINERARY_KIND_LABEL[kind][lang]} — evento ${idx + 1}`}
+                        aria-pressed={(item.kind ?? 'CUSTOM') === kind}
+                        onClick={() => handleItineraryKindChange(idx, kind)}
+                        style={{
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          width: '30px', height: '30px', borderRadius: '6px', cursor: 'pointer',
+                          background: 'var(--cr-input-bg, #fff)',
+                          border: `1px solid ${(item.kind ?? 'CUSTOM') === kind ? 'var(--cr-accent, #d4af37)' : 'var(--cr-input-border, #e5e7eb)'}`,
+                          color: 'var(--cr-text, #18181b)',
+                        }}
+                      >
+                        <EventIcon id={ITINERARY_KIND_ICON[kind]} size={18} />
+                      </button>
+                    ))}
+                  </div>
+                </div>
                 <input
                   type="text"
-                  placeholder="Título (Ej: Ceremonia)"
+                  placeholder={lang === 'EN' ? 'Title (e.g. Ceremony)' : 'Título (Ej: Ceremonia)'}
                   value={item.title}
                   className="lp-input"
                   style={{ padding: '4px 8px', fontSize: '0.85rem' }}
@@ -615,7 +429,71 @@ export function SectionEditor() {
             </div>
           ))}
         </div>
+      </div>    </>
+  );
+
+  if (focused) {
+    const meta = getSectionMeta(focused.kind);
+    return (
+      <div className="section-editor-panel" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <div className="section-editor-focus-header">
+          <span className="section-editor-focus-icon"><EventIcon id={meta.icon} size={16} /></span>
+          <span>{focused.title || meta.label[lang]}</span>
+          <button type="button" className="section-editor-focus-back" onClick={() => focusInspector({ type: 'NONE' })}>
+            {lang === 'EN' ? 'Done' : 'Listo'}
+          </button>
+        </div>
+
+        <div className="lp-field">
+          <label className="lp-field-label" htmlFor={`sec-title-${focused.id}`}>
+            {lang === 'EN' ? 'Section heading (optional)' : 'Título de la sección (opcional)'}
+          </label>
+          <input
+            id={`sec-title-${focused.id}`}
+            className="lp-input"
+            type="text"
+            value={focused.title || ''}
+            placeholder={meta.label[lang]}
+            onChange={(e) => updateSection(focused.id, { title: e.target.value || undefined })}
+          />
+        </div>
+
+        <SectionFontFields section={focused} />
+
+        {focused.kind === 'TEXT' && <TextSectionEditor section={focused} />}
+        {focused.kind === 'IMAGE' && <ImageSectionEditor section={focused} />}
+        {focused.kind === 'VIDEO' && <VideoSectionEditor section={focused} />}
+        {focused.kind === 'DIVIDER' && <DividerSectionEditor section={focused} />}
+        {focused.kind === 'COUNTDOWN' && countdownFields}
+        {focused.kind === 'ITINERARY' && itineraryFields}
+        {focused.kind === 'DRESS_CODE' && <DressCodeEditor />}
+        {focused.kind === 'GIFTS' && giftsFields}
+        {focused.kind === 'AUDIO' && (
+          <p className="scm-field-hint">
+            {lang === 'EN'
+              ? 'The song is uploaded in the Custom Artwork panel. Only one music section is allowed so two songs never overlap.'
+              : 'La canción se sube en el panel de Arte Personalizado. Solo se permite una sección de música para que nunca suenen dos canciones a la vez.'}
+          </p>
+        )}
+        {focused.kind === 'RSVP' && (
+          <p className="scm-field-hint">
+            {lang === 'EN'
+              ? 'The RSVP fields are configured in the "RSVP Form Controls" panel below.'
+              : 'Los campos de confirmación se configuran en el panel "RSVP Form Controls".'}
+          </p>
+        )}
       </div>
+    );
+  }
+
+  return (
+    <div className="section-editor-panel" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      {generalFields}
+      <p className="scm-field-hint">
+        {lang === 'EN'
+          ? 'Pick a section in the Sections panel to edit its content, or click it in the preview.'
+          : 'Elige una sección en el panel de Secciones para editar su contenido, o haz clic en ella en la vista previa.'}
+      </p>
     </div>
   );
 }

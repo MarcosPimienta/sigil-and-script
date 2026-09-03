@@ -1,4 +1,10 @@
 import { Request, Response } from 'express';
+import {
+  formatEventTitleFor,
+  normalizeEventType,
+  spanishConnector,
+  type EventType,
+} from '../utils/eventPhrasing';
 import { PrismaClient } from '@prisma/client';
 import { z } from 'zod';
 import crypto from 'crypto';
@@ -28,32 +34,46 @@ function escapeHtml(str: string): string {
     .replace(/'/g, '&#039;');
 }
 
-function getEventTitleFromCanvas(designDataStr?: string | null, lang: string = 'ES'): string {
+function getEventTitleFromCanvas(
+  designDataStr?: string | null,
+  lang: string = 'ES',
+  canvasEventType?: string | null,
+): string {
   let raw = '';
+  let eventType: EventType = normalizeEventType(canvasEventType);
   if (designDataStr) {
     try {
       const data = typeof designDataStr === 'string' ? JSON.parse(designDataStr) : designDataStr;
+      if (data.eventType) eventType = normalizeEventType(data.eventType);
       if (data.hostNames && typeof data.hostNames === 'string' && data.hostNames.trim()) {
         raw = data.hostNames.trim();
-      } else if (data.title && typeof data.title === 'string' && data.title.trim()) {
-        raw = data.title.trim();
       } else if (Array.isArray(data.textBlocks)) {
         const headline = data.textBlocks.find((b: any) => b.id === 'tb-headline' || b.id === 'tb-title');
         if (headline && headline.content) {
           raw = headline.content.trim();
         }
       }
+      if (!raw && data.title && typeof data.title === 'string' && data.title.trim()) {
+        raw = data.title.trim();
+      }
     } catch (e) {
       // ignore json parse error
     }
   }
-  const isEs = lang.toUpperCase() === 'ES';
-  if (!raw) return isEs ? 'Matrimonio' : 'Wedding';
-  const lower = raw.toLowerCase();
-  if (lower.startsWith('matrimonio') || lower.startsWith('boda') || lower.startsWith('wedding')) {
-    return raw;
+  return formatEventTitleFor(raw, eventType, lang);
+}
+
+/** Event type of a canvas, for phrasing the social preview. */
+function getEventTypeFromCanvas(designDataStr?: string | null, canvasEventType?: string | null): EventType {
+  if (designDataStr) {
+    try {
+      const data = typeof designDataStr === 'string' ? JSON.parse(designDataStr) : designDataStr;
+      if (data.eventType) return normalizeEventType(data.eventType);
+    } catch {
+      // ignore
+    }
   }
-  return isEs ? `Matrimonio de ${raw}` : `Wedding of ${raw}`;
+  return normalizeEventType(canvasEventType);
 }
 
 function getClosedEnvelopeImageUrl(designDataStr?: string | null): string {
@@ -176,16 +196,16 @@ export async function getInviteByToken(req: Request, res: Response): Promise<voi
         }
       }
 
-      const eventTitle = getEventTitleFromCanvas(guest.canvas?.designData, lang);
+      const canvasEventType = (guest.canvas as { eventType?: string } | undefined)?.eventType;
+      const eventType = getEventTypeFromCanvas(guest.canvas?.designData, canvasEventType);
+      const eventTitle = getEventTitleFromCanvas(guest.canvas?.designData, lang, canvasEventType);
       const guestName = formatGuestTitleName(guest, lang);
 
       let ogTitle = '';
       let ogDesc = '';
 
       if (lang === 'ES') {
-        const lowerEv = eventTitle.toLowerCase();
-        const connector = lowerEv.startsWith('matrimonio') || lowerEv.startsWith('boda') ? 'al' : 'a';
-        ogTitle = `Invitación para ${guestName} ${connector} ${eventTitle}`;
+        ogTitle = `Invitación para ${guestName} ${spanishConnector(eventTitle, eventType)} ${eventTitle}`;
         ogDesc = 'Toca para abrir tu invitación digital personalizada.';
       } else {
         ogTitle = `Invitation for ${guestName} to ${eventTitle}`;
@@ -343,6 +363,7 @@ export async function getCanvases(req: Request, res: Response): Promise<void> {
 
       return {
         id: canvas.id,
+        eventType: normalizeEventType(designObj.eventType || canvas.eventType),
         countdownTarget: canvas.countdownTarget || designObj.countdownTarget,
         designData: JSON.stringify({
           title: designObj.title || 'Untitled Design'
@@ -382,6 +403,7 @@ export async function getCanvasById(req: Request, res: Response): Promise<void> 
 export async function saveCanvas(req: Request, res: Response): Promise<void> {
   const {
     id,
+    eventType,
     envelopeColor,
     waxSealAsset,
     musicUrl,
@@ -415,6 +437,7 @@ export async function saveCanvas(req: Request, res: Response): Promise<void> {
         canvasObj = await getPrisma().invitationCanvas.update({
           where: { id },
           data: {
+            eventType: eventType ? normalizeEventType(eventType) : existing.eventType,
             envelopeColor: envelopeColor ?? existing.envelopeColor,
             waxSealAsset: waxSealAsset ?? existing.waxSealAsset,
             musicUrl: musicUrl !== undefined ? musicUrl : existing.musicUrl,
@@ -432,6 +455,7 @@ export async function saveCanvas(req: Request, res: Response): Promise<void> {
       canvasObj = await getPrisma().invitationCanvas.create({
         data: {
           id: id || undefined,
+          eventType: normalizeEventType(eventType),
           envelopeColor: envelopeColor || '#f6ebe2',
           waxSealAsset: waxSealAsset || 'classic-red',
           musicUrl: musicUrl || null,

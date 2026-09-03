@@ -1,5 +1,6 @@
 import { useSigilSelector } from '../../context/SigilContext';
-import { getTranslation } from '../../utils/i18n';
+import { getPhrasing } from '../../utils/eventPhrasing';
+import { EventIcon } from '../icons/eventIcons';
 
 // Simple X-out circle component for "avoid colors"
 const AvoidColorCircle = ({ color }: { color: string }) => (
@@ -24,71 +25,28 @@ const AvoidColorCircle = ({ color }: { color: string }) => (
   </div>
 );
 
-// Minimalist suit icon
-const SuitIcon = () => (
-  <img 
-    src="/icons/suit.svg" 
-    alt="Traje" 
-    style={{ height: '90px', width: 'auto', filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.1))' }} 
-  />
-);
-
-// Minimalist dress icon
-const DressIcon = () => (
-  <img 
-    src="/icons/longdress.svg" 
-    alt="Vestido" 
-    style={{ height: '90px', width: 'auto', filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.1))' }} 
-  />
-);
-
 export function DressCodePanel() {
   const guestLang = useSigilSelector((s) => s.guest?.language);
   const design = useSigilSelector((s) => s.design);
   const lang = guestLang || design.language;
-  const t = getTranslation(lang);
+  const phrasing = getPhrasing(design.eventType, lang);
 
-  const hasMale = design.dressCodeMaleHeading || design.dressCodeMaleText;
-  const hasFemale = design.dressCodeFemaleHeading || design.dressCodeFemaleText;
+  const dressCode = design.dressCode;
+  const groups = dressCode?.groups ?? [];
+  if (!dressCode || (!dressCode.intro && groups.length === 0)) return null;
 
-  if (!design.dressCodeText && !hasMale && !hasFemale) return null;
-
-  const isEn = lang === 'EN';
-
-  const maleHeading = (design.dressCodeMaleHeading && design.dressCodeMaleHeading !== 'Ellos')
-    ? design.dressCodeMaleHeading
-    : (isEn ? 'Gentlemen' : 'Ellos');
-
-  const maleText = (design.dressCodeMaleText && design.dressCodeMaleText !== 'Traje formal')
-    ? design.dressCodeMaleText
-    : (isEn ? 'Formal Suit' : 'Traje formal');
-
-  const maleSubtext = (design.dressCodeMaleSubtext && design.dressCodeMaleSubtext !== 'Favor de evitar color azul marino')
-    ? design.dressCodeMaleSubtext
-    : (isEn ? 'Please avoid navy blue' : 'Favor de evitar color azul marino');
-
-  const femaleHeading = (design.dressCodeFemaleHeading && design.dressCodeFemaleHeading !== 'Ellas')
-    ? design.dressCodeFemaleHeading
-    : (isEn ? 'Ladies' : 'Ellas');
-
-  const femaleText = (design.dressCodeFemaleText && design.dressCodeFemaleText !== 'Vestido largo')
-    ? design.dressCodeFemaleText
-    : (isEn ? 'Evening Gown' : 'Vestido largo');
-
-  const femaleSubtext = (design.dressCodeFemaleSubtext && design.dressCodeFemaleSubtext !== 'Favor de evitar colores blanco, beige o colores pasteles')
-    ? design.dressCodeFemaleSubtext
-    : (isEn ? 'Please avoid white, beige, or pastel colors' : 'Favor de evitar colores blanco, beige o colores pasteles');
+  const columns = Math.min(Math.max(groups.length, 1), 3);
 
   return (
     <div className="section-dresscode" style={{
       textAlign: 'center',
       padding: '3rem 1.5rem',
       marginTop: '1.5rem',
-      fontFamily: "'Cormorant Garamond', serif",
+      fontFamily: "var(--sec-body-font, 'Cormorant Garamond', serif)",
     }}>
       {/* Main Heading */}
-      {design.dressCodeText && (
-        <div style={{ marginBottom: '2.5rem' }}>
+      {dressCode.intro && (
+        <div style={{ marginBottom: groups.length ? '2.5rem' : 0 }}>
           <h3 style={{
             fontSize: '1.8rem',
             fontStyle: 'italic',
@@ -96,7 +54,7 @@ export function DressCodePanel() {
             fontWeight: 400,
             color: '#4c4844',
           }}>
-            {t.dressCodeTitle}
+            {phrasing.dressCodeHeading}
           </h3>
           <p style={{
             fontSize: '1.2rem',
@@ -105,63 +63,51 @@ export function DressCodePanel() {
             letterSpacing: '0.05em',
             textTransform: 'uppercase',
           }}>
-            {design.dressCodeText}
+            {dressCode.intro}
           </p>
         </div>
       )}
 
-      {/* 2-Column Layout */}
-      {(hasMale || hasFemale) && (
+      {groups.length > 0 && (
         <div style={{
           display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
+          gridTemplateColumns: `repeat(${columns}, 1fr)`,
           gap: '2rem',
         }}>
-          {/* Male Column */}
-          {hasMale && (
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100%' }}>
-              <h4 style={{ fontSize: '1.5rem', margin: '0 0 1rem 0', fontStyle: 'italic', fontWeight: 400, color: '#4c4844' }}>
-                {maleHeading}
-              </h4>
-              <SuitIcon />
-              <p style={{ fontSize: '1.6rem', margin: '1rem 0 0.25rem 0', fontStyle: 'italic', color: '#333' }}>
-                {maleText}
-              </p>
-              <p style={{ fontSize: '1.1rem', margin: '0 0 1rem 0', color: '#666', fontStyle: 'italic', lineHeight: 1.3, maxWidth: '80%' }}>
-                {maleSubtext}
-              </p>
-              {design.dressCodeMaleAvoidColors && design.dressCodeMaleAvoidColors.length > 0 && (
+          {groups.map((group) => (
+            <div key={group.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100%' }}>
+              {group.label && (
+                <h4 style={{ fontSize: '1.5rem', margin: '0 0 1rem 0', fontStyle: 'italic', fontWeight: 400, color: '#4c4844' }}>
+                  {group.label}
+                </h4>
+              )}
+              {group.icon && (
+                <EventIcon
+                  id={group.icon}
+                  size={72}
+                  strokeWidth={1}
+                  style={{ color: '#4c4844', filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.1))' }}
+                />
+              )}
+              {group.text && (
+                <p style={{ fontSize: '1.6rem', margin: '1rem 0 0.25rem 0', fontStyle: 'italic', color: '#333' }}>
+                  {group.text}
+                </p>
+              )}
+              {group.subtext && (
+                <p style={{ fontSize: '1.1rem', margin: '0 0 1rem 0', color: '#666', fontStyle: 'italic', lineHeight: 1.3, maxWidth: '80%' }}>
+                  {group.subtext}
+                </p>
+              )}
+              {group.avoidColors && group.avoidColors.length > 0 && (
                 <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', justifyContent: 'center', marginTop: 'auto' }}>
-                  {design.dressCodeMaleAvoidColors.map((color, idx) => (
+                  {group.avoidColors.map((color, idx) => (
                     <AvoidColorCircle key={idx} color={color} />
                   ))}
                 </div>
               )}
             </div>
-          )}
-
-          {/* Female Column */}
-          {hasFemale && (
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100%' }}>
-              <h4 style={{ fontSize: '1.5rem', margin: '0 0 1rem 0', fontStyle: 'italic', fontWeight: 400, color: '#4c4844' }}>
-                {femaleHeading}
-              </h4>
-              <DressIcon />
-              <p style={{ fontSize: '1.6rem', margin: '1rem 0 0.25rem 0', fontStyle: 'italic', color: '#333' }}>
-                {femaleText}
-              </p>
-              <p style={{ fontSize: '1.1rem', margin: '0 0 1rem 0', color: '#666', fontStyle: 'italic', lineHeight: 1.3, maxWidth: '80%' }}>
-                {femaleSubtext}
-              </p>
-              {design.dressCodeFemaleAvoidColors && design.dressCodeFemaleAvoidColors.length > 0 && (
-                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', justifyContent: 'center', marginTop: 'auto' }}>
-                  {design.dressCodeFemaleAvoidColors.map((color, idx) => (
-                    <AvoidColorCircle key={idx} color={color} />
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
+          ))}
         </div>
       )}
     </div>

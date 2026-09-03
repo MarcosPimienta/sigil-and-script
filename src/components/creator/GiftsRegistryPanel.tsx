@@ -1,4 +1,5 @@
 import { useSigilSelector } from '../../context/SigilContext';
+import { getPhrasing } from '../../utils/eventPhrasing';
 import { getTranslation } from '../../utils/i18n';
 
 const RegistryFlourish = ({ color = 'rgba(120, 100, 80, 0.4)' }: { color?: string }) => (
@@ -19,7 +20,9 @@ export function GiftsRegistryPanel() {
   const registryImage = useSigilSelector((s) => s.design.registryImage);
   const registryImageScale = useSigilSelector((s) => s.design.registryImageScale);
   const registrySymbol = useSigilSelector((s) => s.design.registrySymbol);
+  const eventType = useSigilSelector((s) => s.design.eventType);
   const lang = useSigilSelector((s) => s.guest?.language || s.design.language);
+  const phrasing = getPhrasing(eventType, lang);
   const t = getTranslation(lang);
 
   if (!registryText && !registryLink && !registryImage) return null;
@@ -33,7 +36,7 @@ export function GiftsRegistryPanel() {
       padding: '3rem 1.5rem',
       background: 'transparent',
       marginTop: '1.5rem',
-      fontFamily: "'Cormorant Garamond', serif",
+      fontFamily: "var(--sec-body-font, 'Cormorant Garamond', serif)",
     }}>
       {/* Inner ornamented border frame with unique registry flourishes */}
       <div
@@ -59,9 +62,7 @@ export function GiftsRegistryPanel() {
           fontWeight: 400,
           color: '#4c4844',
         }}>
-          {lang === 'EN' && (registryTitle === 'Lluvia de Sobres' || !registryTitle)
-            ? 'Gift Envelopes'
-            : (registryTitle || t.registryTitle)}
+          {registryTitle || phrasing.giftsHeading}
         </h3>
         {registryText && (
           <p style={{
@@ -74,9 +75,7 @@ export function GiftsRegistryPanel() {
             textAlign: 'justify',
             textAlignLast: 'center' // Make the last line centered for better aesthetics
           }}>
-            {lang === 'EN' && (registryText === 'Su compañía es lo más important. Si desean hacernos un obsequio, lo recibiremos con mucho cariño.' || registryText.includes('Tu presencia es nuestro mejor regalo') || registryText.includes('Su compañía es lo más importante'))
-              ? 'Your presence is our present. Should you wish to honor us with a gift, a contribution towards our registry would be warmly received.'
-              : registryText}
+            {registryText}
           </p>
         )}
         

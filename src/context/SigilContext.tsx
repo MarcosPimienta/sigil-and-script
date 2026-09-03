@@ -29,82 +29,21 @@ import type {
   InviteeRecord,
   ApiStatus,
 } from '../types/sigil.types';
+import { createDesignFromTemplate } from '../templates';
 
-// ── Default Design ────────────────────────────────────────────────────────────
+// ── Defaults ─────────────────────────────────────────────────────────────────
+// The reducer here is retained for tests and legacy consumers; the live store
+// is Zustand (see useSigil below). Defaults come from the event templates so
+// there is exactly one definition of "a new invitation".
 
-const DEFAULT_DESIGN: InvitationDesign = {
-  id: 'design-default',
-  title: 'Untitled Invitation',
-  paperTexture: 'parchment',
-  paperLuminance: 'LIGHT',
-  envelopeStyle: 'CLASSIC',
-  textBlocks: [
-    {
-      id: 'tb-headline',
-      content: 'You Are Cordially Invited',
-      fontFamily: "'Cormorant Garamond', serif",
-      fontSize: 2.2,
-      fontStyle: 'italic',
-      fontWeight: 400,
-      color: 'DARK_INK',
-      textAlign: 'center',
-      letterSpacing: 0.04,
-      lineHeight: 1.25,
-      marginTop: 0,
-    },
-    {
-      id: 'tb-guest',
-      content: '{{guest_name}}',
-      fontFamily: "'Cormorant Garamond', serif",
-      fontSize: 1.6,
-      fontStyle: 'normal',
-      fontWeight: 400,
-      color: 'DARK_INK',
-      textAlign: 'center',
-      letterSpacing: 0.06,
-      lineHeight: 1.5,
-      marginTop: 2.5,
-    },
-    {
-      id: 'tb-body',
-      content:
-        'to join us for an evening of celebration\non {{event_date}} at {{event_location}}',
-      fontFamily: "'Cormorant Garamond', serif",
-      fontSize: 1.05,
-      fontStyle: 'normal',
-      fontWeight: 400,
-      color: 'DARK_INK',
-      textAlign: 'center',
-      letterSpacing: 0.02,
-      lineHeight: 1.8,
-      marginTop: 1.5,
-    },
-    {
-      id: 'tb-rsvp',
-      content: 'RSVP by {{rsvp_by}}',
-      fontFamily: "'Cormorant Garamond', serif",
-      fontSize: 0.85,
-      fontStyle: 'italic',
-      fontWeight: 400,
-      color: 'SEPIA_INK',
-      textAlign: 'center',
-      letterSpacing: 0.08,
-      lineHeight: 1.5,
-      marginTop: 4,
-    },
-  ],
-  borderStyle: 'deckled',
-  backgroundColor: 'var(--paper-parchment)',
-};
-
-// ── Default Guest Payload ─────────────────────────────────────────────────────
+const DEFAULT_DESIGN: InvitationDesign = createDesignFromTemplate('WEDDING', 'ES');
 
 const DEFAULT_GUEST: GuestPayload = {
   guestName: 'Esteemed Guest',
   additionalGuests: [],
   routingToken: 'preview',
-  rsvpBy: 'January 31st',
-  eventDate: 'February 14th, 2027',
+  rsvpBy: '',
+  eventDate: '',
   eventLocation: '',
 };
 

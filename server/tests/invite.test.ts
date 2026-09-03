@@ -110,6 +110,52 @@ describe('Sigil & Script Backend API Tests', () => {
       expect(res.text).toContain('<meta property="og:image"');
     });
 
+    it('phrases the og:title by event type and language', async () => {
+      const cases: { eventType: string; hostNames: string; lang: string; expected: string }[] = [
+        { eventType: 'WEDDING', hostNames: 'Marcos & Diana', lang: 'ES', expected: 'Invitación para Jane Smith al Matrimonio de Marcos &amp; Diana' },
+        { eventType: 'BIRTHDAY', hostNames: 'Sofía', lang: 'ES', expected: 'Invitación para Jane Smith al Cumpleaños de Sofía' },
+        { eventType: 'BIRTHDAY', hostNames: 'Sofía', lang: 'EN', expected: "Invitation for Jane Smith to Sofía&#039;s Birthday" },
+        { eventType: 'BAPTISM', hostNames: 'Mateo', lang: 'ES', expected: 'Invitación para Jane Smith al Bautizo de Mateo' },
+        { eventType: 'CORPORATE', hostNames: 'Acme Summit 2027', lang: 'ES', expected: 'Invitación para Jane Smith a Acme Summit 2027' },
+        { eventType: 'CORPORATE', hostNames: 'Acme Summit 2027', lang: 'EN', expected: 'Invitation for Jane Smith to Acme Summit 2027' },
+      ];
+
+      for (const c of cases) {
+        await prisma.invitationCanvas.update({
+          where: { id: testCanvasId },
+          data: {
+            eventType: c.eventType,
+            designData: JSON.stringify({ eventType: c.eventType, hostNames: c.hostNames }),
+          },
+        });
+        await prisma.guest.update({ where: { id: openedGuestId }, data: { language: c.lang } });
+
+        const res = await request(app)
+          .get(`/invite/${openedGuestId}`)
+          .set('Accept', 'text/html')
+          .expect(200);
+
+        expect(res.text, `${c.eventType}/${c.lang}`).toContain(`<meta property="og:title" content="${c.expected}"`);
+      }
+
+      // restore
+      await prisma.invitationCanvas.update({
+        where: { id: testCanvasId },
+        data: { eventType: 'WEDDING', designData: '{}' },
+      });
+      await prisma.guest.update({ where: { id: openedGuestId }, data: { language: 'ES' } });
+    });
+
+    it('falls back to WEDDING phrasing for a legacy canvas with no eventType', async () => {
+      await prisma.invitationCanvas.update({
+        where: { id: testCanvasId },
+        data: { designData: JSON.stringify({ hostNames: 'Marcos & Diana' }) },
+      });
+      const res = await request(app).get(`/invite/${openedGuestId}`).set('Accept', 'text/html').expect(200);
+      expect(res.text).toContain('al Matrimonio de Marcos &amp; Diana');
+      await prisma.invitationCanvas.update({ where: { id: testCanvasId }, data: { designData: '{}' } });
+    });
+
     it('should return JSON when request specifies Accept: application/json even with social crawler User-Agent', async () => {
       const res = await request(app)
         .get(`/invite/${openedGuestId}`)

@@ -89,6 +89,101 @@ export interface GuestPayload {
   dependents?: Dependent[];
 }
 
+// ── Event Types & Sections ────────────────────────────────────────────────────
+
+/** Kind of celebration. Selects a template at creation and phrasing afterwards. */
+export type EventType = 'WEDDING' | 'BIRTHDAY' | 'BAPTISM' | 'CORPORATE' | 'CUSTOM';
+
+export const EVENT_TYPES: EventType[] = ['WEDDING', 'BIRTHDAY', 'BAPTISM', 'CORPORATE', 'CUSTOM'];
+
+/** Typed itinerary entry — drives the icon; never inferred from the title at render time. */
+export type ItineraryKind =
+  | 'CEREMONY'
+  | 'RECEPTION'
+  | 'PARTY'
+  | 'DINNER'
+  | 'TALK'
+  | 'ACTIVITY'
+  | 'CUSTOM';
+
+export const ITINERARY_KINDS: ItineraryKind[] = [
+  'CEREMONY', 'RECEPTION', 'PARTY', 'DINNER', 'TALK', 'ACTIVITY', 'CUSTOM',
+];
+
+/** Icon ids available in src/components/icons/eventIcons.tsx */
+export type IconId =
+  | 'church' | 'rings' | 'toast' | 'cake' | 'balloon' | 'gift' | 'dinner'
+  | 'podium' | 'briefcase' | 'dove' | 'candle' | 'music' | 'pin'
+  | 'suit' | 'dress' | 'tie' | 'badge' | 'sparkle' | 'play' | 'eye' | 'eyeOff' | 'trash' | 'plus';
+
+export interface DressCodeGroup {
+  id: string;
+  /** "Ellos", "Ellas", "Invitados", "Team" */
+  label: string;
+  /** "Traje formal" */
+  text: string;
+  subtext?: string;
+  avoidColors?: string[];
+  icon?: IconId;
+}
+
+export interface DressCodeConfig {
+  /** Overall dress code, e.g. "Formal" (was dressCodeText) */
+  intro?: string;
+  groups: DressCodeGroup[];
+}
+
+export type SectionKind =
+  | 'AUDIO'
+  | 'VIDEO'
+  | 'COUNTDOWN'
+  | 'ITINERARY'
+  | 'DRESS_CODE'
+  | 'GIFTS'
+  | 'RSVP'
+  | 'TEXT'
+  | 'IMAGE'
+  | 'DIVIDER';
+
+/**
+ * Kinds limited to one per invitation. Only music: two songs playing at once is
+ * never wanted. Everything else may be repeated (duplicate RSVP just warns).
+ */
+export const SINGLETON_SECTION_KINDS: SectionKind[] = ['AUDIO'];
+
+export const SECTION_KINDS: SectionKind[] = [
+  'AUDIO', 'VIDEO', 'COUNTDOWN', 'ITINERARY', 'DRESS_CODE', 'GIFTS', 'RSVP', 'TEXT', 'IMAGE', 'DIVIDER',
+];
+
+/** How a video section's `src` should be played. */
+export type VideoProvider = 'FILE' | 'YOUTUBE' | 'VIMEO';
+
+export type SectionProps =
+  | { kind: 'TEXT'; content: string; fontFamily: string; fontSize: number; fontStyle: 'normal' | 'italic'; color: InkColor; textAlign: 'left' | 'center' | 'right' }
+  | { kind: 'IMAGE'; src: string; scale: number; caption?: string }
+  | { kind: 'DIVIDER'; ornament: 'flourish' | 'line' | 'dots' }
+  | { kind: 'VIDEO'; src: string; provider: VideoProvider; caption?: string; poster?: string; loop?: boolean }
+  | { kind: 'AUDIO' | 'COUNTDOWN' | 'ITINERARY' | 'DRESS_CODE' | 'GIFTS' | 'RSVP' };
+
+/** Per-section typography. Unset keys keep the invitation's default fonts. */
+export interface SectionFonts {
+  /** Display font for the section's headings. */
+  heading?: string;
+  /** Body font for the section's text. */
+  body?: string;
+}
+
+export interface InvitationSection {
+  id: string;
+  kind: SectionKind;
+  enabled: boolean;
+  /** Optional heading override; renderers fall back to phrasing / i18n. */
+  title?: string;
+  /** Optional font overrides for this section only. */
+  fonts?: SectionFonts;
+  props: SectionProps;
+}
+
 // ── Invitation Design ─────────────────────────────────────────────────────────
 
 export interface InvitationDesign {
@@ -96,6 +191,14 @@ export interface InvitationDesign {
   title: string;
   hostNames?: string;
   language?: 'ES' | 'EN';
+  /** Missing on legacy designs → treated as WEDDING by normalizeDesign */
+  eventType?: EventType;
+  /** Ordered section placements. Missing on legacy designs → built by normalizeDesign */
+  sections?: InvitationSection[];
+  /** Dress code groups. Missing on legacy designs → migrated from the legacy male/female fields */
+  dressCode?: DressCodeConfig;
+  /** Free-text RSVP deadline shown to guests (e.g. "31 de enero") */
+  rsvpDeadline?: string;
   paperTexture: PaperTexture;
   paperLuminance: PaperLuminance;
   envelopeStyle: EnvelopeStyle;
@@ -122,14 +225,23 @@ export interface InvitationDesign {
   countdownTarget?: string;
   itinerary?: ItineraryItem[];
   colorPalette?: string[];
+  /** @deprecated use dressCode.intro — read only by normalizeDesign */
   dressCodeText?: string;
+  /** @deprecated use dressCode.groups — read only by normalizeDesign */
   dressCodeMaleHeading?: string;
+  /** @deprecated */
   dressCodeMaleText?: string;
+  /** @deprecated */
   dressCodeMaleSubtext?: string;
+  /** @deprecated */
   dressCodeMaleAvoidColors?: string[];
+  /** @deprecated */
   dressCodeFemaleHeading?: string;
+  /** @deprecated */
   dressCodeFemaleText?: string;
+  /** @deprecated */
   dressCodeFemaleSubtext?: string;
+  /** @deprecated */
   dressCodeFemaleAvoidColors?: string[];
   registryLink?: string;
   registryTitle?: string;
@@ -149,6 +261,8 @@ export interface InvitationDesign {
 
 export interface ItineraryItem {
   id: string;
+  /** Missing on legacy items → inferred once by normalizeDesign */
+  kind?: ItineraryKind;
   title: string;
   locationName: string;
   time: string;
@@ -163,6 +277,8 @@ export interface RsvpFormConfig {
   requireDietaryRestrictions: boolean;
   allowPlusOnes: boolean;
   customNotesLabel: string | null;
+  /** Host-defined menu shown when requireMealPreference is on */
+  mealOptions?: string[];
 }
 
 
@@ -172,7 +288,8 @@ export interface RsvpFormConfig {
 export type InspectorFocus =
   | { type: 'NONE' }
   | { type: 'PAPER'; design: InvitationDesign }
-  | { type: 'TEXT_BLOCK'; blockId: string };
+  | { type: 'TEXT_BLOCK'; blockId: string }
+  | { type: 'SECTION'; sectionId: string };
 
 // ── Canvas Selection ──────────────────────────────────────────────────────────
 

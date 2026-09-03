@@ -1,0 +1,218 @@
+{
+  "_comment": "Single source of event-type phrasing for client (src/utils/eventPhrasing.ts) and server (server/src/utils/eventPhrasing.ts). {hosts} is replaced with the host names. 'connector' is the Spanish preposition in 'Invitación para <guest> <connector> <event>'. 'titleAliases' lists words that mean the hosts text already IS an event title (then it is used verbatim).",
+  "WEDDING": {
+    "ES": {
+      "typeLabel": "Boda",
+      "typeDescription": "Ceremonia, recepción, código de vestimenta y mesa de regalos.",
+      "eventTitle": "Matrimonio de {hosts}",
+      "eventTitleNoHosts": "Matrimonio",
+      "connector": "al",
+      "hostsLabel": "Novios",
+      "hostsPlaceholder": "Ej: Oscar & Rocio",
+      "inviteLine": "tenemos el honor de invitarte al",
+      "notesPlaceholder": "Deja una nota para los novios",
+      "itineraryHeading": "Itinerario del Evento",
+      "giftsHeading": "Mesa de Regalos",
+      "dressCodeHeading": "Código de Vestimenta",
+      "countdownHeading": "La Celebración Comienza En",
+      "rsvpHeading": "Confirmar Asistencia",
+      "songLine": "Dale play para escuchar nuestra canción",
+      "titleAliases": [
+        "matrimonio",
+        "boda"
+      ]
+    },
+    "EN": {
+      "typeLabel": "Wedding",
+      "typeDescription": "Ceremony, reception, dress code and gift registry.",
+      "eventTitle": "{hosts} Wedding",
+      "eventTitleNoHosts": "Wedding",
+      "connector": "to",
+      "hostsLabel": "The couple",
+      "hostsPlaceholder": "e.g. Oscar & Rocio",
+      "inviteLine": "we request the honor of your presence at the",
+      "notesPlaceholder": "Leave a note for the couple",
+      "itineraryHeading": "Event Itinerary",
+      "giftsHeading": "Gifts Registry",
+      "dressCodeHeading": "Dress Code",
+      "countdownHeading": "The Celebration Begins In",
+      "rsvpHeading": "RSVP Response",
+      "songLine": "Press play to listen to our song",
+      "titleAliases": [
+        "wedding"
+      ]
+    }
+  },
+  "BIRTHDAY": {
+    "ES": {
+      "typeLabel": "Cumpleaños",
+      "typeDescription": "Fiesta, quinceañera o sweet sixteen. Lista de deseos y acompañantes.",
+      "eventTitle": "Cumpleaños de {hosts}",
+      "eventTitleNoHosts": "Cumpleaños",
+      "connector": "al",
+      "hostsLabel": "Cumpleañero(a)",
+      "hostsPlaceholder": "Ej: Sofía",
+      "inviteLine": "tienes una invitación especial al",
+      "notesPlaceholder": "Deja un mensaje para {hosts}",
+      "itineraryHeading": "Programa",
+      "giftsHeading": "Lista de Deseos",
+      "dressCodeHeading": "Código de Vestimenta",
+      "countdownHeading": "La Fiesta Comienza En",
+      "rsvpHeading": "Confirmar Asistencia",
+      "songLine": "Dale play para escuchar la canción de la fiesta",
+      "titleAliases": [
+        "cumpleaños",
+        "cumpleanos",
+        "quince",
+        "xv"
+      ]
+    },
+    "EN": {
+      "typeLabel": "Birthday",
+      "typeDescription": "Party, quinceañera or sweet sixteen. Wishlist and plus-ones.",
+      "eventTitle": "{hosts}'s Birthday",
+      "eventTitleNoHosts": "Birthday",
+      "connector": "to",
+      "hostsLabel": "Guest of honour",
+      "hostsPlaceholder": "e.g. Sofía",
+      "inviteLine": "you are specially invited to",
+      "notesPlaceholder": "Leave a message for {hosts}",
+      "itineraryHeading": "Programme",
+      "giftsHeading": "Wishlist",
+      "dressCodeHeading": "Dress Code",
+      "countdownHeading": "The Party Starts In",
+      "rsvpHeading": "RSVP Response",
+      "songLine": "Press play for the party song",
+      "titleAliases": [
+        "birthday",
+        "sweet sixteen",
+        "sweet 16"
+      ]
+    }
+  },
+  "BAPTISM": {
+    "ES": {
+      "typeLabel": "Bautizo",
+      "typeDescription": "Bautizo, primera comunión o confirmación. Ceremonia, padrinos y recepción.",
+      "eventTitle": "Bautizo de {hosts}",
+      "eventTitleNoHosts": "Bautizo",
+      "connector": "al",
+      "hostsLabel": "Festejado(a)",
+      "hostsPlaceholder": "Ej: Mateo",
+      "inviteLine": "tenemos la alegría de invitarte al",
+      "notesPlaceholder": "Deja una bendición para {hosts}",
+      "itineraryHeading": "Programa",
+      "giftsHeading": "Regalos",
+      "dressCodeHeading": "Código de Vestimenta",
+      "countdownHeading": "La Celebración Comienza En",
+      "rsvpHeading": "Confirmar Asistencia",
+      "songLine": "Dale play para escuchar nuestra canción",
+      "titleAliases": [
+        "bautizo",
+        "comunión",
+        "comunion",
+        "confirmación",
+        "confirmacion"
+      ]
+    },
+    "EN": {
+      "typeLabel": "Baptism",
+      "typeDescription": "Baptism, first communion or confirmation. Ceremony, godparents and reception.",
+      "eventTitle": "{hosts}'s Baptism",
+      "eventTitleNoHosts": "Baptism",
+      "connector": "to",
+      "hostsLabel": "Celebrant",
+      "hostsPlaceholder": "e.g. Mateo",
+      "inviteLine": "we joyfully invite you to",
+      "notesPlaceholder": "Leave a blessing for {hosts}",
+      "itineraryHeading": "Programme",
+      "giftsHeading": "Gifts",
+      "dressCodeHeading": "Dress Code",
+      "countdownHeading": "The Celebration Begins In",
+      "rsvpHeading": "RSVP Response",
+      "songLine": "Press play to listen to our song",
+      "titleAliases": [
+        "baptism",
+        "christening",
+        "communion",
+        "confirmation"
+      ]
+    }
+  },
+  "CORPORATE": {
+    "ES": {
+      "typeLabel": "Corporativo",
+      "typeDescription": "Conferencia, gala o lanzamiento. Agenda y confirmación con menú.",
+      "eventTitle": "{hosts}",
+      "eventTitleNoHosts": "Evento",
+      "connector": "a",
+      "hostsLabel": "Nombre del evento",
+      "hostsPlaceholder": "Ej: Gala Anual Acme 2027",
+      "inviteLine": "tenemos el gusto de invitarte a",
+      "notesPlaceholder": "Comentarios para los organizadores",
+      "itineraryHeading": "Agenda",
+      "giftsHeading": "Regalos",
+      "dressCodeHeading": "Código de Vestimenta",
+      "countdownHeading": "El Evento Comienza En",
+      "rsvpHeading": "Confirmar Asistencia",
+      "songLine": "Dale play para escuchar",
+      "titleAliases": []
+    },
+    "EN": {
+      "typeLabel": "Corporate",
+      "typeDescription": "Conference, gala or launch. Agenda and RSVP with menu.",
+      "eventTitle": "{hosts}",
+      "eventTitleNoHosts": "Event",
+      "connector": "to",
+      "hostsLabel": "Event name",
+      "hostsPlaceholder": "e.g. Acme Annual Gala 2027",
+      "inviteLine": "we are pleased to invite you to",
+      "notesPlaceholder": "Comments for the organisers",
+      "itineraryHeading": "Agenda",
+      "giftsHeading": "Gifts",
+      "dressCodeHeading": "Dress Code",
+      "countdownHeading": "The Event Begins In",
+      "rsvpHeading": "RSVP Response",
+      "songLine": "Press play to listen",
+      "titleAliases": []
+    }
+  },
+  "CUSTOM": {
+    "ES": {
+      "typeLabel": "Otro evento",
+      "typeDescription": "Empieza en blanco: título, cuenta regresiva, programa y confirmación.",
+      "eventTitle": "{hosts}",
+      "eventTitleNoHosts": "Evento",
+      "connector": "a",
+      "hostsLabel": "Anfitrión / Título",
+      "hostsPlaceholder": "Ej: Reunión Familiar",
+      "inviteLine": "tenemos el gusto de invitarte a",
+      "notesPlaceholder": "Deja un mensaje para el anfitrión",
+      "itineraryHeading": "Programa",
+      "giftsHeading": "Regalos",
+      "dressCodeHeading": "Código de Vestimenta",
+      "countdownHeading": "El Evento Comienza En",
+      "rsvpHeading": "Confirmar Asistencia",
+      "songLine": "Dale play para escuchar nuestra canción",
+      "titleAliases": []
+    },
+    "EN": {
+      "typeLabel": "Other event",
+      "typeDescription": "Start blank: title, countdown, programme and RSVP.",
+      "eventTitle": "{hosts}",
+      "eventTitleNoHosts": "Event",
+      "connector": "to",
+      "hostsLabel": "Host / Title",
+      "hostsPlaceholder": "e.g. Family Reunion",
+      "inviteLine": "we are pleased to invite you to",
+      "notesPlaceholder": "Leave a message for the host",
+      "itineraryHeading": "Programme",
+      "giftsHeading": "Gifts",
+      "dressCodeHeading": "Dress Code",
+      "countdownHeading": "The Event Begins In",
+      "rsvpHeading": "RSVP Response",
+      "songLine": "Press play to listen to our song",
+      "titleAliases": []
+    }
+  }
+}

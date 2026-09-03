@@ -1,6 +1,9 @@
 import { useSigilSelector } from '../../context/SigilContext';
 import { getTranslation } from '../../utils/i18n';
-import { SvgColorImage } from '../common/SvgColorImage';
+import { getPhrasing } from '../../utils/eventPhrasing';
+import { EventIcon } from '../icons/eventIcons';
+import { ITINERARY_KIND_ICON } from '../icons/iconMaps';
+import { inferItineraryKind } from '../../utils/normalizeDesign';
 
 const CornerFlourish = () => (
   <svg width="45" height="45" viewBox="0 0 45 45" style={{ pointerEvents: 'none' }}>
@@ -16,36 +19,12 @@ const CornerFlourish = () => (
   </svg>
 );
 
-const ChurchIcon = () => (
-  <svg
-    width="28"
-    height="28"
-    viewBox="0 0 24 24"
-    style={{ margin: '0.2rem 0 0.4rem 0' }}
-    aria-hidden="true"
-  >
-    <path fillRule="evenodd" clipRule="evenodd" d="
-      M 11.5 0.5 H 12.5 V 3.5 H 11.5 Z
-      M 10 1.5 H 14 V 2.5 H 10 Z
-      M 12 3.5 L 9 7 H 15 Z
-      M 9.5 7 H 14.5 V 13 H 9.5 Z
-      M 9.5 13 L 3 17.5 H 4 V 23.5 H 20 V 17.5 H 21 L 14.5 13 Z
-      
-      M 11.2 11.5 H 12.8 V 9.8 A 0.8 0.8 0 0 0 11.2 9.8 Z
-      M 6.2 21.5 H 7.8 V 19.8 A 0.8 0.8 0 0 0 6.2 19.8 Z
-      M 16.2 21.5 H 17.8 V 19.8 A 0.8 0.8 0 0 0 16.2 19.8 Z
-      M 10 23.5 H 14 V 17.5 H 10 Z
-    " fill="currentColor" />
-    <path d="M 11.95 17.5 H 12.05 V 23.5 H 11.95 Z" fill="currentColor" />
-    <path d="M 11.5 20 H 11.7 V 21 H 11.5 Z" fill="currentColor" />
-    <path d="M 12.3 20 H 12.5 V 21 H 12.3 Z" fill="currentColor" />
-  </svg>
-);
-
 export function ItineraryTimeline() {
   const itinerary = useSigilSelector((s) => s.design.itinerary) || [];
+  const eventType = useSigilSelector((s) => s.design.eventType);
   const lang = useSigilSelector((s) => s.guest?.language || s.design.language);
   const t = getTranslation(lang);
+  const phrasing = getPhrasing(eventType, lang);
 
   if (itinerary.length === 0) return null;
 
@@ -57,7 +36,7 @@ export function ItineraryTimeline() {
       borderRadius: '8px',
       color: '#ffffff',
       marginTop: '1.5rem',
-      fontFamily: "'Cormorant Garamond', serif",
+      fontFamily: "var(--sec-body-font, 'Cormorant Garamond', serif)",
       boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
       filter: 'brightness(0.95)',
       boxSizing: 'border-box',
@@ -85,14 +64,14 @@ export function ItineraryTimeline() {
       <div style={{ position: 'relative', zIndex: 2, display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
         <h3 style={{
           fontSize: '2.5rem',
-          fontFamily: "'Pinyon Script', cursive",
+          fontFamily: "var(--sec-heading-font, 'Pinyon Script', cursive)",
           textAlign: 'center',
           margin: '0.5rem 0 1.5rem 0',
           fontWeight: 400,
           color: '#ffffff',
           textShadow: '0 1px 2px rgba(0,0,0,0.15)'
         }}>
-          {t.itineraryTitle}
+          {phrasing.itineraryHeading}
         </h3>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.8rem', width: '100%', alignItems: 'center' }}>
@@ -113,35 +92,21 @@ export function ItineraryTimeline() {
               {/* Cursive Title */}
               <h4 style={{ 
                 fontSize: '2rem', 
-                fontFamily: "'Pinyon Script', cursive", 
+                fontFamily: "var(--sec-heading-font, 'Pinyon Script', cursive)", 
                 margin: 0, 
                 fontWeight: 400,
                 color: '#ffffff',
                 textShadow: '0 1px 2px rgba(0,0,0,0.1)'
               }}>
-                {lang === 'EN' && item.title === 'Ceremonia Religiosa'
-                  ? 'Religious Ceremony'
-                  : lang === 'EN' && item.title === 'Recepción'
-                  ? 'Reception'
-                  : item.title}
+                {item.title}
               </h4>
 
-              {/* Church Icon below Ceremonia Religiosa */}
-              {item.title.toLowerCase().includes('ceremonia') && item.title.toLowerCase().includes('religiosa') && (
-                <ChurchIcon />
-              )}
-
-              {/* Toast Glass Icon below Recepción / Fiesta / Brindis */}
-              {(item.title.toLowerCase().includes('recepción') || item.title.toLowerCase().includes('recepcion') || item.title.toLowerCase().includes('fiesta') || item.title.toLowerCase().includes('brindis')) && (
-                <SvgColorImage
-                  src="/icons/toast-glass.svg"
-                  alt="Recepción"
-                  color="#ffffff"
-                  maxWidth={36}
-                  maxHeight={36}
-                  style={{ margin: '0.2rem 0 0.4rem 0' }}
-                />
-              )}
+              {/* Icon from the item's kind (legacy items without one are inferred once) */}
+              <EventIcon
+                id={ITINERARY_KIND_ICON[item.kind ?? inferItineraryKind(item.title)]}
+                size={32}
+                style={{ margin: '0.2rem 0 0.4rem 0', color: '#ffffff' }}
+              />
               
               {/* Address / Location details */}
               <p style={{ 
@@ -151,7 +116,7 @@ export function ItineraryTimeline() {
                 whiteSpace: 'pre-wrap', 
                 lineHeight: 1.4,
                 letterSpacing: '0.02em',
-                fontFamily: "'Cormorant Garamond', serif",
+                fontFamily: "var(--sec-body-font, 'Cormorant Garamond', serif)",
               }}>
                 {item.locationName}
               </p>
@@ -197,7 +162,7 @@ export function ItineraryTimeline() {
                 textTransform: 'uppercase',
                 fontWeight: 600,
               }}>
-                HORA: {item.time}
+                {t.timeLabel}: {item.time}
               </div>
             </div>
           ))}

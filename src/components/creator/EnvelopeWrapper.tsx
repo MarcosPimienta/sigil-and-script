@@ -3,6 +3,7 @@ import { audioEngine } from '../../utils/audioEngine';
 import { useSigilSelector } from '../../context/SigilContext';
 import { SvgColorImage } from '../common/SvgColorImage';
 import { formatFullInvitationTitle, formatEventTitle } from '../../utils/formatGuestTitle';
+import { getPhrasing } from '../../utils/eventPhrasing';
 
 interface EnvelopeWrapperProps {
   children?: React.ReactNode;
@@ -32,13 +33,14 @@ export function EnvelopeWrapper({ children, onPhaseChange, alwaysOpen }: Envelop
       const fullTitle = formatFullInvitationTitle(
         guest,
         design.hostNames || design.title,
-        guest?.language || design.language || 'ES'
+        guest?.language || design.language || 'ES',
+        design.eventType,
       );
       if (fullTitle) {
         document.title = fullTitle;
       }
     }
-  }, [guest, design.hostNames, design.title, design.language]);
+  }, [guest, design.hostNames, design.title, design.language, design.eventType]);
 
   // Expanded cinematic states
   const [phase, setPhase] = useState<
@@ -99,18 +101,23 @@ export function EnvelopeWrapper({ children, onPhaseChange, alwaysOpen }: Envelop
   };
 
   const headlineBlock = design.textBlocks?.find((b) => b.id === 'tb-headline');
-  const hostNames = headlineBlock ? headlineBlock.content : 'Marcos & Diana';
+  const hostNames = headlineBlock ? headlineBlock.content : (design.hostNames || design.title || '');
 
   const lang = guest?.language || design.language || 'ES';
   const isEn = lang === 'EN';
+  const phrasing = getPhrasing(design.eventType, lang);
+
+  /** Initials for the flap monogram — works for one, two or three hosts. */
+  const monogram = hostNames
+    .split(/[&+/]|\by\b|\band\b/i)
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .slice(0, 3)
+    .map((part) => part.charAt(0).toUpperCase())
+    .join(' & ');
 
   const getFormattedDateFields = (targetDateStr?: string) => {
-    const defaultFields = {
-      dayOfWeek: isEn ? 'Thursday' : 'Jueves',
-      dayOfMonth: '17',
-      monthName: isEn ? 'SEPTEMBER' : 'SEPTIEMBRE',
-      year: '2026'
-    };
+    const defaultFields = { dayOfWeek: '', dayOfMonth: '', monthName: '', year: '' };
     if (!targetDateStr) return defaultFields;
     try {
       const d = new Date(targetDateStr);
@@ -142,16 +149,16 @@ export function EnvelopeWrapper({ children, onPhaseChange, alwaysOpen }: Envelop
   };
 
   const formatEventDate = (target?: string) => {
-    if (!target) return '17 / 09 / 2026';
+    if (!target) return '';
     try {
       const d = new Date(target);
-      if (isNaN(d.getTime())) return '17 / 09 / 2026';
+      if (isNaN(d.getTime())) return '';
       const day = String(d.getDate()).padStart(2, '0');
       const month = String(d.getMonth() + 1).padStart(2, '0');
       const year = d.getFullYear();
       return `${day} / ${month} / ${year}`;
     } catch {
-      return '17 / 09 / 2026';
+      return '';
     }
   };
 
@@ -209,7 +216,7 @@ export function EnvelopeWrapper({ children, onPhaseChange, alwaysOpen }: Envelop
               letterSpacing: '1px',
               textTransform: 'uppercase',
             }}>
-              {hostNames.split('&').map(n => n.trim().charAt(0)).join(' & ')}
+              {monogram}
             </span>
           </div>
         )}
@@ -264,7 +271,7 @@ export function EnvelopeWrapper({ children, onPhaseChange, alwaysOpen }: Envelop
           fontWeight: 600,
           marginBottom: '0.2rem',
         }}>
-          {isEn ? 'we request the honor of your presence at the' : 'tenemos el honor de invitarte al'}
+          {phrasing.inviteLine}
         </span>
 
         <h3 className="letter-cursive-title" style={{
@@ -274,7 +281,7 @@ export function EnvelopeWrapper({ children, onPhaseChange, alwaysOpen }: Envelop
           color: '#4c4844',
           margin: '0 0 0.2rem 0',
         }}>
-          {formatEventTitle(design.title || hostNames, lang)}
+          {formatEventTitle(design.title || hostNames, lang, design.eventType)}
         </h3>
 
         <span className="letter-month-name" style={{
@@ -344,7 +351,7 @@ export function EnvelopeWrapper({ children, onPhaseChange, alwaysOpen }: Envelop
           fontWeight: 600,
           marginTop: '0.1rem',
         }}>
-          {guest?.eventLocation || (isEn ? 'San José, whose power knows how to make impossible things possible' : 'San José, cuyo poder sabe hacer posibles las cosas imposibles')}
+          {guest?.eventLocation || design.itinerary?.[0]?.locationName || ''}
         </span>
         </div>
       </div>
@@ -369,7 +376,7 @@ export function EnvelopeWrapper({ children, onPhaseChange, alwaysOpen }: Envelop
               </div>
             )}
             <h2 className="envelope-header-title">
-              {formatEventTitle(hostNames, lang)}
+              {formatEventTitle(hostNames, lang, design.eventType)}
             </h2>
             <div className="envelope-header-date">
               {dateText}

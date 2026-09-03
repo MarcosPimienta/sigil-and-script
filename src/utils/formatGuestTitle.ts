@@ -1,3 +1,6 @@
+import type { EventType } from '../types/sigil.types';
+import { formatEventTitleFor, spanishConnector } from './eventPhrasing';
+
 export interface GuestLike {
   name?: string;
   guestName?: string;
@@ -98,54 +101,26 @@ export function formatGuestTitleName(guest?: GuestLike | null, lang: string = 'E
   return `${primaryName} ${familyTag}`;
 }
 
-export function formatEventTitle(hostNames?: string | null, lang: string = 'ES'): string {
-  const clean = (hostNames || '').trim();
-  const isEs = lang.toUpperCase() === 'ES';
-
-  if (!clean) {
-    return isEs ? 'Matrimonio' : 'Wedding';
-  }
-
-  let result = clean;
-
-  if (isEs) {
-    if (/^(wedding of)\s+/i.test(result)) {
-      result = result.replace(/^(wedding of)\s+/i, 'Matrimonio de ');
-    } else if (/\s+wedding$/i.test(result)) {
-      const names = result.replace(/\s+wedding$/i, '').replace(/'s$/i, '').trim();
-      result = `Matrimonio de ${names}`;
-    } else if (!/^(matrimonio|boda)/i.test(result)) {
-      result = `Matrimonio de ${result}`;
-    }
-  } else {
-    // English translation -> "Marcos & Diana Wedding"
-    if (/^(matrimonio de|boda de)\s+/i.test(result)) {
-      const names = result.replace(/^(matrimonio de|boda de)\s+/i, '').trim();
-      result = `${names} Wedding`;
-    } else if (/^(matrimonio|boda)\s+/i.test(result)) {
-      const names = result.replace(/^(matrimonio|boda)\s+/i, '').trim();
-      result = `${names} Wedding`;
-    } else if (!/(wedding|'s wedding)$/i.test(result) && !/^wedding of/i.test(result)) {
-      result = `${result} Wedding`;
-    }
-  }
-
-  return result;
+/**
+ * Event title for the invitation's type: "Matrimonio de X", "Cumpleaños de X",
+ * verbatim for corporate/custom. See src/utils/eventPhrasing.ts.
+ */
+export function formatEventTitle(hostNames?: string | null, lang: string = 'ES', eventType: EventType = 'WEDDING'): string {
+  return formatEventTitleFor(hostNames, eventType, lang);
 }
 
 export function formatFullInvitationTitle(
   guest?: GuestLike | null,
   hostNames?: string | null,
-  lang: string = 'ES'
+  lang: string = 'ES',
+  eventType: EventType = 'WEDDING',
 ): string {
   const guestTitle = formatGuestTitleName(guest, lang);
-  const eventTitle = formatEventTitle(hostNames, lang);
+  const eventTitle = formatEventTitle(hostNames, lang, eventType);
   const isEs = lang.toUpperCase() === 'ES';
 
   if (isEs) {
-    const lowerEv = eventTitle.toLowerCase();
-    const connector = lowerEv.startsWith('matrimonio') || lowerEv.startsWith('boda') ? 'al' : 'a';
-    return `Invitación para ${guestTitle} ${connector} ${eventTitle}`;
+    return `Invitación para ${guestTitle} ${spanishConnector(eventTitle, eventType)} ${eventTitle}`;
   }
 
   return `Invitation for ${guestTitle} to ${eventTitle}`;

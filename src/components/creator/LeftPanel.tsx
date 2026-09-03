@@ -9,6 +9,8 @@ import type { InvitationDesign } from '../../types/sigil.types';
 import { FormConfiguratorPanel } from './FormConfiguratorPanel';
 import { SectionEditor } from './SectionEditor';
 import { SealCreator } from './SealCreator';
+import { SectionsPanel } from './SectionsPanel';
+import { getPhrasing } from '../../utils/eventPhrasing';
 import { apiFetch } from '../../utils/api';
 
 // ── Custom artwork uploads ───────────────────────────────────────────────────
@@ -238,6 +240,7 @@ function Divider() {
 export function LeftPanel() {
   const { state, updateDesign, setGuest } = useSigil();
   const { design, guest } = state;
+  const titlePhrasing = getPhrasing(design.eventType, design.language);
 
   const [uploadingFields, setUploadingFields] = useState<Record<string, boolean>>({});
   const [isSealCreatorOpen, setIsSealCreatorOpen] = useState(false);
@@ -388,7 +391,7 @@ export function LeftPanel() {
             className="lp-input"
             value={design.title || ''}
             onChange={(e) => updateDesign({ title: e.target.value })}
-            placeholder="Invitation Title (e.g. Oscar & Rocio)"
+            placeholder={`${titlePhrasing.hostsLabel} — ${titlePhrasing.hostsPlaceholder}`}
             style={{
               width: '100%',
               fontSize: '0.85rem',
@@ -650,6 +653,7 @@ export function LeftPanel() {
         {/* ══ RESPONSIVE SECTIONS ═══════════════════════════════════════════ */}
         <section className="lp-section" aria-labelledby="section-responsive">
           <SectionLabel>Event Sections</SectionLabel>
+          <SectionsPanel />
           <SectionEditor />
         </section>
 

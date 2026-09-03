@@ -1,5 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useSigilStore } from '../../state/sigilStore';
+import type { EventType } from '../../types/sigil.types';
+import type { TemplateLang } from '../../templates';
+import { getPhrasing } from '../../utils/eventPhrasing';
+import { EventIcon } from '../icons/eventIcons';
+import { EVENT_TYPE_ICON } from '../icons/iconMaps';
+import { EventTypePicker } from './EventTypePicker';
 import '../../styles/eventsHub.css';
 
 export function EventsHubView() {
@@ -14,6 +20,8 @@ export function EventsHubView() {
   const [designs, setDesigns] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isPickerOpen, setIsPickerOpen] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
 
   const loadDesignsList = async () => {
     setLoading(true);
@@ -64,22 +72,33 @@ export function EventsHubView() {
 
   const saveCurrentDesign = useSigilStore((s) => s.saveCurrentDesign);
 
-  const handleCreateNew = async () => {
-    resetToDefaults();
+  const handleCreateNew = async (eventType: EventType, lang: TemplateLang) => {
+    setIsCreating(true);
+    resetToDefaults(eventType, lang);
+    const phrasing = getPhrasing(eventType, lang);
     updateDesign({
       id: crypto.randomUUID(),
-      title: 'My Celebration Invitation',
+      title: phrasing.typeLabel,
     });
     try {
       await saveCurrentDesign();
     } catch (e: any) {
       console.error('Failed to save new event to backend:', e);
     }
+    setIsCreating(false);
+    setIsPickerOpen(false);
     setAppMode('CREATOR');
   };
 
   return (
     <div className="events-hub-container">
+      {isPickerOpen && (
+        <EventTypePicker
+          isCreating={isCreating}
+          onCancel={() => setIsPickerOpen(false)}
+          onSelect={handleCreateNew}
+        />
+      )}
       <div className="events-hub-header">
         <div>
           <h1 className="events-hub-title">My Event Invitations</h1>
@@ -104,7 +123,18 @@ export function EventsHubView() {
 
       <div className="events-hub-grid">
         {/* Create Card */}
-        <div className="create-event-card" onClick={handleCreateNew}>
+        <div
+          className="create-event-card"
+          onClick={() => setIsPickerOpen(true)}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              setIsPickerOpen(true);
+            }
+          }}
+        >
           <div className="create-event-icon">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <line x1="12" y1="5" x2="12" y2="19" />
@@ -143,6 +173,10 @@ export function EventsHubView() {
             return (
               <div key={design.id} className="event-card">
                 <div className="event-card-content">
+                  <span className="event-card-badge">
+                    <EventIcon id={EVENT_TYPE_ICON[(design.eventType || 'WEDDING') as EventType]} size={13} />
+                    {getPhrasing((design.eventType || 'WEDDING') as EventType, 'ES').typeLabel}
+                  </span>
                   <h2 className="event-card-title">{design.title}</h2>
                   <div className="event-card-meta">
                     <div className="event-card-meta-item">

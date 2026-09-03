@@ -55,7 +55,7 @@ export function CountdownTimer() {
         marginTop: '1.5rem',
         padding: '2.5rem 1.75rem',
         boxSizing: 'border-box',
-        fontFamily: "'Cormorant Garamond', serif",
+        fontFamily: "var(--sec-body-font, 'Cormorant Garamond', serif)",
       }}
     >
       {/* Outer decorative border */}
@@ -90,7 +90,7 @@ export function CountdownTimer() {
         <h4
           style={{
             fontSize: '1.05rem',
-            fontFamily: "'Cormorant Garamond', serif",
+            fontFamily: "var(--sec-body-font, 'Cormorant Garamond', serif)",
             fontStyle: 'italic',
             margin: '0 0 1.4rem 0',
             color: '#5a4a3a',
@@ -117,7 +117,7 @@ export function CountdownTimer() {
                   minWidth: '44px',
                   letterSpacing: '-0.02em',
                   lineHeight: 1,
-                  fontFamily: "'Cormorant Garamond', serif",
+                  fontFamily: "var(--sec-body-font, 'Cormorant Garamond', serif)",
                 }}
               >
                 {pad(unit.val)}

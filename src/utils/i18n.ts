@@ -22,9 +22,7 @@ export interface TranslationDictionary {
   noRegrettably: string;
   mealPreference: string;
   chooseMeal: string;
-  beefMeal: string;
-  salmonMeal: string;
-  vegMeal: string;
+  timeLabel: string;
   dietaryRestrictions: string;
   dietaryPlaceholder: string;
   plusOneName: string;
@@ -62,9 +60,7 @@ export const DICTIONARY: Record<Language, TranslationDictionary> = {
     noRegrettably: 'No',
     mealPreference: 'Meal Preference',
     chooseMeal: 'Choose a meal',
-    beefMeal: 'Prime Beef Tenderloin',
-    salmonMeal: 'Atlantic Salmon',
-    vegMeal: 'Truffle Wild Mushroom Risotto',
+    timeLabel: 'TIME',
     dietaryRestrictions: 'Dietary Restrictions',
     dietaryPlaceholder: 'e.g. Gluten-free, nut allergies',
     plusOneName: 'Plus-One Guest Name',
@@ -100,9 +96,7 @@ export const DICTIONARY: Record<Language, TranslationDictionary> = {
     noRegrettably: 'No',
     mealPreference: 'Preferencia de Menú',
     chooseMeal: 'Elige un menú',
-    beefMeal: 'Lomo de Res a la Parrilla',
-    salmonMeal: 'Salmón del Atlántico',
-    vegMeal: 'Risotto de Hongos Silvestres',
+    timeLabel: 'HORA',
     dietaryRestrictions: 'Restricciones Alimentarias',
     dietaryPlaceholder: 'Ej: Celíaco, alergia a frutos secos',
     plusOneName: 'Nombre del Acompañante',

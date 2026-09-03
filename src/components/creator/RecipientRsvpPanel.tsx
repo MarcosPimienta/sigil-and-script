@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSigil } from '../../context/SigilContext';
 import { formatGuestTitleName } from '../../utils/formatGuestTitle';
 import { getTranslation } from '../../utils/i18n';
+import { LEGACY_MEAL_OPTIONS } from '../../utils/normalizeDesign';
 
 // Corner flourish
 const CornerFlourish = ({ color = 'var(--rsvp-border, rgba(160, 142, 124, 0.65))' }: { color?: string }) => (
@@ -21,8 +22,10 @@ const InkUnderline = ({ color }: { color: string }) => (
   </svg>
 );
 
-export function RecipientRsvpPanel() {
+export function RecipientRsvpPanel({ idPrefix }: { idPrefix?: string } = {}) {
   const { state, submitRsvp } = useSigil();
+  // Scoped so several RSVP sections on one page keep unique element ids.
+  const fid = (name: string) => (idPrefix ? `${idPrefix}-${name}` : name);
   const { design, guest } = state;
   const lang = guest?.language || design.language;
   const t = getTranslation(lang);
@@ -86,7 +89,7 @@ export function RecipientRsvpPanel() {
   if (submitted) {
     return (
       <aside className="left-panel" style={{ padding: '2rem', color: 'var(--rsvp-input-color, #ffffff)', display: 'flex', flexDirection: 'column', gap: '1rem', justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>
-        <h2 style={{ fontSize: '1.8rem', fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic' }}>
+        <h2 style={{ fontSize: '1.8rem', fontFamily: "var(--sec-body-font, 'Cormorant Garamond', serif)", fontStyle: 'italic' }}>
           {t.thankYou}
         </h2>
         <p style={{ color: 'var(--rsvp-text-secondary, rgba(255, 255, 255, 0.7))', fontSize: '0.9rem' }}>
@@ -123,7 +126,7 @@ export function RecipientRsvpPanel() {
     <aside className="left-panel" style={{ overflowY: 'auto' }}>
       <div className="lp-inner" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
         <div className="lp-header" style={{ textAlign: 'center' }}>
-          <h1 className="lp-title" style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: '1.8rem', color: 'var(--rsvp-input-color, #ffffff)' }}>
+          <h1 className="lp-title" style={{ fontFamily: "var(--sec-body-font, 'Cormorant Garamond', serif)", fontStyle: 'italic', fontSize: '1.8rem', color: 'var(--rsvp-input-color, #ffffff)' }}>
             {t.rsvpTitle}
           </h1>
           <p style={{ color: 'var(--rsvp-text-secondary, rgba(255, 255, 255, 0.5))', fontSize: '0.8rem' }}>
@@ -164,7 +167,7 @@ export function RecipientRsvpPanel() {
             <div style={{ display: 'flex', gap: '2rem', marginTop: '0.5rem', position: 'relative', zIndex: 2 }}>
               <button
                 type="button"
-                id="rsvp-yes-btn"
+                id={fid("rsvp-yes-btn")}
                 onClick={() => setRsvpStatus('YES')}
                 style={{
                   position: 'relative',
@@ -174,7 +177,7 @@ export function RecipientRsvpPanel() {
                   cursor: 'pointer',
                   fontWeight: 400,
                   fontSize: '1.2rem',
-                  fontFamily: "'Cormorant Garamond', serif",
+                  fontFamily: "var(--sec-body-font, 'Cormorant Garamond', serif)",
                   fontStyle: 'italic',
                   padding: '4px 8px',
                   transition: 'opacity 0.2s',
@@ -187,7 +190,7 @@ export function RecipientRsvpPanel() {
               
               <button
                 type="button"
-                id="rsvp-no-btn"
+                id={fid("rsvp-no-btn")}
                 onClick={() => setRsvpStatus('NO')}
                 style={{
                   position: 'relative',
@@ -197,7 +200,7 @@ export function RecipientRsvpPanel() {
                   cursor: 'pointer',
                   fontWeight: 400,
                   fontSize: '1.2rem',
-                  fontFamily: "'Cormorant Garamond', serif",
+                  fontFamily: "var(--sec-body-font, 'Cormorant Garamond', serif)",
                   fontStyle: 'italic',
                   padding: '4px 8px',
                   transition: 'opacity 0.2s',
@@ -214,11 +217,11 @@ export function RecipientRsvpPanel() {
             <>
               {config.requireMealPreference && (
                 <div className="lp-field">
-                  <label className="lp-field-label" htmlFor="meal-preference">
+                  <label className="lp-field-label" htmlFor={fid("meal-preference")}>
                     {t.mealPreference}
                   </label>
                   <select
-                    id="meal-preference"
+                    id={fid("meal-preference")}
                     value={mealPref}
                     onChange={(e) => setMealPref(e.target.value)}
                     required
@@ -233,20 +236,25 @@ export function RecipientRsvpPanel() {
                     }}
                   >
                     <option value="" disabled style={{ background: 'var(--rsvp-select-option-bg, #222)' }}>{t.chooseMeal}</option>
-                    <option value="Beef" style={{ background: 'var(--rsvp-select-option-bg, #222)' }}>{t.beefMeal}</option>
-                    <option value="Fish" style={{ background: 'var(--rsvp-select-option-bg, #222)' }}>{t.salmonMeal}</option>
-                    <option value="Vegetarian" style={{ background: 'var(--rsvp-select-option-bg, #222)' }}>{t.vegMeal}</option>
+                    {(config.mealOptions && config.mealOptions.length > 0
+                      ? config.mealOptions
+                      : LEGACY_MEAL_OPTIONS[lang === 'EN' ? 'EN' : 'ES']
+                    ).map((option) => (
+                      <option key={option} value={option} style={{ background: 'var(--rsvp-select-option-bg, #222)' }}>
+                        {option}
+                      </option>
+                    ))}
                   </select>
                 </div>
               )}
 
               {config.requireDietaryRestrictions && (
                 <div className="lp-field">
-                  <label className="lp-field-label" htmlFor="dietary-restrictions">
+                  <label className="lp-field-label" htmlFor={fid("dietary-restrictions")}>
                     {t.dietaryRestrictions}
                   </label>
                   <input
-                    id="dietary-restrictions"
+                    id={fid("dietary-restrictions")}
                     className="lp-input"
                     type="text"
                     value={dietary}
@@ -260,11 +268,11 @@ export function RecipientRsvpPanel() {
 
               {config.allowPlusOnes && (
                 <div className="lp-field">
-                  <label className="lp-field-label" htmlFor="plus-one-name">
+                  <label className="lp-field-label" htmlFor={fid("plus-one-name")}>
                     {t.plusOneName}
                   </label>
                   <input
-                    id="plus-one-name"
+                    id={fid("plus-one-name")}
                     className="lp-input"
                     type="text"
                     value={plusOne}
@@ -314,11 +322,11 @@ export function RecipientRsvpPanel() {
 
               {config.customNotesLabel && (
                 <div className="lp-field">
-                  <label className="lp-field-label" htmlFor="custom-notes-input">
+                  <label className="lp-field-label" htmlFor={fid("custom-notes-input")}>
                     {config.customNotesLabel}
                   </label>
                   <input
-                    id="custom-notes-input"
+                    id={fid("custom-notes-input")}
                     className="lp-input"
                     type="text"
                     value={notes}
@@ -333,7 +341,7 @@ export function RecipientRsvpPanel() {
 
           <button
             type="submit"
-            id="rsvp-submit-btn"
+            id={fid("rsvp-submit-btn")}
             disabled={!rsvpStatus}
             style={{
               padding: '12px',

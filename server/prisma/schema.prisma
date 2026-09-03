@@ -10,6 +10,8 @@ generator client {
 
 model InvitationCanvas {
   id              String   @id @default(uuid())
+  /** WEDDING | BIRTHDAY | BAPTISM | CORPORATE | CUSTOM (legacy rows default to WEDDING) */
+  eventType       String   @default("WEDDING")
   envelopeColor   String
   waxSealAsset    String
   musicUrl        String?

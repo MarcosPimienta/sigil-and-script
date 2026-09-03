@@ -1,13 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Toolbar } from './Toolbar';
 import { LeftPanel } from './LeftPanel';
-import { RecipientRsvpPanel } from './RecipientRsvpPanel';
 import { EnvelopeWrapper } from './EnvelopeWrapper';
-import { CountdownTimer } from './CountdownTimer';
-import { ItineraryTimeline } from './ItineraryTimeline';
-import { DressCodePanel } from './DressCodePanel';
-import { GiftsRegistryPanel } from './GiftsRegistryPanel';
-import { AudioControls } from './AudioControls';
+import { SectionStack } from './sections/SectionStack';
+import { getPhrasing } from '../../utils/eventPhrasing';
 import { AudioToggle } from '../shared/AudioToggle';
 import { useSigil } from '../../context/SigilContext';
 import { formatGuestTitleName } from '../../utils/formatGuestTitle';
@@ -90,28 +86,7 @@ export function CreatorCanvas() {
                     onPhaseChange={setEnvelopePhase}
                     alwaysOpen={false}
                   >
-                    <div className="recipient-invite-details state-visible" style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '2rem', alignItems: 'center' }}>
-                      <AudioControls musicUrl={state.design.musicUrl} />
-                      <CountdownTimer />
-                      <ItineraryTimeline />
-                      <DressCodePanel />
-                      <GiftsRegistryPanel />
-
-                      {/* RSVP at the bottom */}
-                      <div style={{ marginTop: '1.5rem', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                        <h3 style={{
-                          fontSize: '1.8rem',
-                          fontStyle: 'italic',
-                          textAlign: 'center',
-                          margin: '0 0 1rem 0',
-                          fontFamily: "'Cormorant Garamond', serif",
-                          color: '#4c4844',
-                        }}>
-                          {(state.guest?.language || state.design.language) === 'EN' ? 'RSVP Response' : 'Confirmar Asistencia'}
-                        </h3>
-                        <RecipientRsvpPanel />
-                      </div>
-                    </div>
+                    <SectionStack mode="recipient" />
                   </EnvelopeWrapper>
                   
                   {(envelopePhase === 'CLOSED' || envelopePhase === 'CRACKING') ? (
@@ -231,39 +206,14 @@ export function CreatorCanvas() {
                       fontFamily: "'Cormorant Garamond', serif",
                       fontWeight: 500,
                     }}>
-                      {(state.guest?.language || state.design.language) === 'EN' ? 'Press play to listen to our song' : 'Dale play para escuchar nuestra canción'}
+                      {getPhrasing(state.design.eventType, state.guest?.language || state.design.language).songLine}
                     </p>
                   </div>
                 </>
               )}
 
-              {/* Additional wedding sections, only visible during host editing */}
-              {!isRecipient && (
-                <div className="recipient-invite-details state-visible">
-
-
-                  <AudioControls musicUrl={state.design.musicUrl} />
-                  <CountdownTimer />
-                  <ItineraryTimeline />
-                  <DressCodePanel />
-                  <GiftsRegistryPanel />
-
-                  {/* RSVP at the bottom */}
-                  <div style={{ marginTop: '1.5rem', width: '100%' }}>
-                    <h3 style={{
-                      fontSize: '1.8rem',
-                      fontStyle: 'italic',
-                      textAlign: 'center',
-                      margin: '0 0 1rem 0',
-                      fontFamily: "'Cormorant Garamond', serif",
-                      color: '#ffffff',
-                    }}>
-                      {(state.guest?.language || state.design.language) === 'EN' ? 'RSVP Response' : 'Confirmar Asistencia'}
-                    </h3>
-                    <RecipientRsvpPanel />
-                  </div>
-                </div>
-              )}
+              {/* Host editing preview — same renderer as the guest view */}
+              {!isRecipient && <SectionStack mode="host" />}
             </div>
              <AudioToggle />
           </div>

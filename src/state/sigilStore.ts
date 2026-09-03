@@ -11,86 +11,32 @@ import type {
   ApiStatus,
 } from '../types/sigil.types';
 import { apiFetch } from '../utils/api';
+import { createDesignFromTemplate } from '../templates';
+import type { TemplateLang } from '../templates';
+import { normalizeDesign } from '../utils/normalizeDesign';
+import { createSection, isSingletonKind, type SectionLang } from '../utils/sectionDefaults';
+import type { EventType, InvitationSection, SectionKind } from '../types/sigil.types';
 
-const DEFAULT_DESIGN: InvitationDesign = {
-  id: 'design-default',
-  title: 'Untitled Invitation',
-  paperTexture: 'parchment',
-  paperLuminance: 'LIGHT',
-  envelopeStyle: 'CLASSIC',
-  textBlocks: [
-    {
-      id: 'tb-headline',
-      content: 'Oscar & Rocio',
-      fontFamily: "'Cormorant Garamond', serif",
-      fontSize: 2.2,
-      fontStyle: 'italic',
-      fontWeight: 400,
-      color: 'DARK_INK',
-      textAlign: 'center',
-      letterSpacing: 0.04,
-      lineHeight: 1.25,
-      marginTop: 0,
-    },
-  ],
-  borderStyle: 'deckled',
-  backgroundColor: 'var(--paper-parchment)',
-  rsvpFormConfig: {
-    requireMealPreference: false,
-    requireDietaryRestrictions: false,
-    allowPlusOnes: false,
-    customNotesLabel: null,
-  },
-  countdownTarget: '2026-09-17T18:00:00',
-  itinerary: [
-    {
-      id: 'itin-1',
-      title: 'Ceremonia Religiosa',
-      locationName: 'Parroquia Nuestra Señora de Aránzazu, Constitución 950, San Fernando',
-      time: '18:00',
-      mapLink: 'https://maps.google.com',
-    },
-    {
-      id: 'itin-2',
-      title: 'Recepción',
-      locationName: 'Palacio Sans Souci, Paz 705',
-      time: '19:00',
-      mapLink: 'https://maps.google.com',
-    },
-  ],
-  colorPalette: ['#4f5d47', '#a08e7c', '#4c4844', '#dfb88e', '#e8e5c8'],
-  dressCodeText: 'Formal',
-  dressCodeMaleHeading: 'Ellos',
-  dressCodeMaleText: 'Traje formal',
-  dressCodeMaleSubtext: 'Favor de evitar color azul marino',
-  dressCodeMaleAvoidColors: ['#003366'],
-  dressCodeFemaleHeading: 'Ellas',
-  dressCodeFemaleText: 'Vestido largo',
-  dressCodeFemaleSubtext: 'Favor de evitar colores blanco, beige o colores pasteles',
-  dressCodeFemaleAvoidColors: ['#ffffff', '#f5f5dc', '#ffd1dc'],
-  registryText: 'Su compañía es lo más importante. Si desean hacernos un obsequio, lo recibiremos con mucho cariño.',
-  registryLink: '',
-  registryImageScale: 100,
-  closedEnvelopeImage: '',
-  headerImageScale: 100,
-  openedEnvelopeImage: '',
-  openedEnvelopeImageScale: 100,
-  stickerImage: '',
-  sealSize: 75,
-  musicUrl: '',
-  paperSaturate: 1.0,
-  language: 'ES',
-};
+/** The wedding template is the historical default; see src/templates. */
+const DEFAULT_DESIGN: InvitationDesign = createDesignFromTemplate('WEDDING', 'ES');
 
 const DEFAULT_GUEST: GuestPayload = {
   guestName: 'Esteemed Guest',
   additionalGuests: [],
   routingToken: 'preview',
-  rsvpBy: 'January 31st',
-  eventDate: 'February 14th, 2027',
+  rsvpBy: '',
+  eventDate: '',
   eventLocation: '',
   dependents: [],
 };
+
+/** Human date for {{event_date}} derived from the countdown target. */
+function formatEventDateForGuest(countdownTarget: string | undefined, lang: string | undefined): string {
+  if (!countdownTarget) return '';
+  const d = new Date(countdownTarget);
+  if (Number.isNaN(d.getTime())) return '';
+  return d.toLocaleDateString(lang === 'EN' ? 'en-US' : 'es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
+}
 
 export interface SigilState {
   appMode: AppMode;
@@ -117,7 +63,15 @@ export interface SigilState {
   updateDesign: (updates: Partial<InvitationDesign>) => void;
   updateTextBlock: (blockId: string, updates: Partial<import('../types/sigil.types').TextBlockConfig>) => void;
   setGuest: (payload: Partial<GuestPayload>) => void;
-  resetToDefaults: () => void;
+  resetToDefaults: (eventType?: EventType, lang?: TemplateLang) => void;
+
+  // Section builder actions
+  addSection: (kind: SectionKind, atIndex?: number) => string | null;
+  removeSection: (id: string) => void;
+  moveSection: (id: string, direction: 'up' | 'down') => void;
+  reorderSections: (ids: string[]) => void;
+  toggleSection: (id: string, enabled?: boolean) => void;
+  updateSection: (id: string, patch: Partial<InvitationSection>) => void;
 
   // Roster Actions
   addInvitee: (name: string, email?: string, guestType?: 'INDIVIDUAL' | 'FAMILY', initialDependents?: string[]) => void;
@@ -141,7 +95,7 @@ export interface SigilState {
   saveCurrentDesign: () => Promise<void>;
   refreshRoster: () => Promise<void>;
   loadDesign: (designId: string) => Promise<void>;
-  fetchSavedDesigns: () => Promise<{ id: string; title: string; countdownTarget: string }[]>;
+  fetchSavedDesigns: () => Promise<{ id: string; title: string; countdownTarget: string; eventType: EventType }[]>;
   deleteSavedDesign: (designId: string) => Promise<void>;
 
   // CSV Batch Ingest Action
@@ -207,7 +161,7 @@ export const useSigilStore = create<SigilState>((set, get) => ({
   setIsEditingText: (isEditing) => set({ isEditingText: isEditing }),
 
   updateDesign: (updates) =>
-    set((state) => ({ design: { ...state.design, ...updates } })),
+    set((state) => ({ design: normalizeDesign({ ...state.design, ...updates }) })),
 
   updateTextBlock: (blockId, updates) =>
     set((state) => ({
@@ -222,12 +176,92 @@ export const useSigilStore = create<SigilState>((set, get) => ({
   setGuest: (payload) =>
     set((state) => ({ guest: { ...state.guest, ...payload } })),
 
-  resetToDefaults: () =>
+  resetToDefaults: (eventType = 'WEDDING', lang = 'ES') =>
     set({
-      design: DEFAULT_DESIGN,
+      design: createDesignFromTemplate(eventType, lang),
       guest: DEFAULT_GUEST,
       guestRoster: { invitees: [] },
     }),
+
+  // ── Section builder ────────────────────────────────────────────────────────
+
+  addSection: (kind, atIndex) => {
+    const state = get();
+    const sections = state.design.sections ?? [];
+    // Music is the one kind that must never appear twice.
+    if (isSingletonKind(kind) && sections.some((s) => s.kind === kind)) return null;
+
+    const lang: SectionLang = state.design.language === 'EN' ? 'EN' : 'ES';
+    const section = createSection(kind, lang);
+    const next = [...sections];
+    const index = atIndex === undefined ? next.length : Math.max(0, Math.min(atIndex, next.length));
+    next.splice(index, 0, section);
+
+    set({
+      design: { ...state.design, sections: next },
+      inspectorFocus: { type: 'SECTION', sectionId: section.id },
+    });
+    return section.id;
+  },
+
+  removeSection: (id) =>
+    set((state) => {
+      const sections = (state.design.sections ?? []).filter((s) => s.id !== id);
+      const focus = state.inspectorFocus;
+      return {
+        design: { ...state.design, sections },
+        inspectorFocus:
+          focus.type === 'SECTION' && focus.sectionId === id ? { type: 'NONE' } : focus,
+      };
+    }),
+
+  moveSection: (id, direction) =>
+    set((state) => {
+      const sections = [...(state.design.sections ?? [])];
+      const index = sections.findIndex((s) => s.id === id);
+      if (index === -1) return {};
+      const target = direction === 'up' ? index - 1 : index + 1;
+      if (target < 0 || target >= sections.length) return {};
+      [sections[index], sections[target]] = [sections[target], sections[index]];
+      return { design: { ...state.design, sections } };
+    }),
+
+  reorderSections: (ids) =>
+    set((state) => {
+      const sections = state.design.sections ?? [];
+      const byId = new Map(sections.map((s) => [s.id, s]));
+      const next: InvitationSection[] = [];
+      for (const id of ids) {
+        const found = byId.get(id);
+        if (found) {
+          next.push(found);
+          byId.delete(id);
+        }
+      }
+      // Anything not mentioned keeps its relative order at the end.
+      for (const s of sections) if (byId.has(s.id)) next.push(s);
+      return { design: { ...state.design, sections: next } };
+    }),
+
+  toggleSection: (id, enabled) =>
+    set((state) => ({
+      design: {
+        ...state.design,
+        sections: (state.design.sections ?? []).map((s) =>
+          s.id === id ? { ...s, enabled: enabled === undefined ? !s.enabled : enabled } : s,
+        ),
+      },
+    })),
+
+  updateSection: (id, patch) =>
+    set((state) => ({
+      design: {
+        ...state.design,
+        sections: (state.design.sections ?? []).map((s) =>
+          s.id === id ? { ...s, ...patch, id: s.id, kind: s.kind } : s,
+        ),
+      },
+    })),
 
   addInvitee: (name, email, guestType = 'INDIVIDUAL', initialDependents = []) => {
     const trimmed = name.trim();
@@ -446,8 +480,8 @@ export const useSigilStore = create<SigilState>((set, get) => ({
         guestType: (data.guestType as 'INDIVIDUAL' | 'FAMILY') || 'INDIVIDUAL',
         additionalGuests,
         routingToken: data.id,
-        rsvpBy: 'January 31st',
-        eventDate: 'February 14th, 2027',
+        rsvpBy: '',
+        eventDate: '',
         eventLocation: '',
         dependents: dependentsList,
       };
@@ -467,12 +501,18 @@ export const useSigilStore = create<SigilState>((set, get) => ({
             ...parsedDesign,
             language: effectiveLang || parsedDesign.language || 'ES',
             id: data.canvas.id,
+            eventType: parsedDesign.eventType || data.canvas.eventType,
             musicUrl: data.canvas.musicUrl || parsedDesign.musicUrl || '',
           };
         } catch (e) {
           console.error("Failed to parse designData", e);
         }
       }
+
+      design = normalizeDesign(design);
+      guest.rsvpBy = design.rsvpDeadline || '';
+      guest.eventDate = formatEventDateForGuest(design.countdownTarget, guest.language || design.language);
+      guest.eventLocation = design.itinerary?.[0]?.locationName || '';
 
       set({ apiStatus: 'success', guest, design });
     } catch (error: any) {
@@ -533,6 +573,7 @@ export const useSigilStore = create<SigilState>((set, get) => ({
 
       const body = {
         id: isDefaultId ? undefined : design.id,
+        eventType: design.eventType || 'WEDDING',
         envelopeColor: design.backgroundColor,
         waxSealAsset: design.stickerImage || 'classic-red',
         musicUrl: finalMusicUrl,
@@ -639,7 +680,9 @@ export const useSigilStore = create<SigilState>((set, get) => ({
         countdownTarget: canvas.countdownTarget || loadedDesign.countdownTarget || DEFAULT_DESIGN.countdownTarget,
         itinerary: canvas.itinerary ? JSON.parse(canvas.itinerary) : (loadedDesign.itinerary || DEFAULT_DESIGN.itinerary),
         musicUrl: canvas.musicUrl || loadedDesign.musicUrl || '',
+        eventType: loadedDesign.eventType || canvas.eventType,
       };
+      const normalizedDesign = normalizeDesign(mergedDesign);
 
       let loadedInvitees: InviteeRecord[] = [];
       if (Array.isArray(canvas.invitees)) {
@@ -677,7 +720,7 @@ export const useSigilStore = create<SigilState>((set, get) => ({
 
       set({
         apiStatus: 'success',
-        design: mergedDesign,
+        design: normalizedDesign,
         guestRoster: roster,
       });
     } catch (error: any) {
@@ -702,10 +745,18 @@ export const useSigilStore = create<SigilState>((set, get) => ({
         } catch {
           // ignore
         }
+        let eventType: EventType = 'WEDDING';
+        try {
+          const parsed = canvas.designData ? JSON.parse(canvas.designData) : {};
+          eventType = (parsed.eventType || canvas.eventType || 'WEDDING') as EventType;
+        } catch {
+          // ignore
+        }
         return {
           id: canvas.id,
           title,
           countdownTarget: canvas.countdownTarget,
+          eventType,
         };
       });
     } catch (error: any) {

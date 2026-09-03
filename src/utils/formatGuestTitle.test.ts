@@ -77,4 +77,16 @@ describe('formatFullInvitationTitle', () => {
     const title = formatFullInvitationTitle(guest, 'Marcos & Diana', 'EN');
     expect(title).toBe('Invitation for Oscar & Diana to Marcos & Diana Wedding');
   });
+
+  it('phrases other event types', () => {
+    const guest = { name: 'Oscar', dependents: [] };
+    expect(formatFullInvitationTitle(guest, 'Sofía', 'ES', 'BIRTHDAY')).toBe('Invitación para Oscar al Cumpleaños de Sofía');
+    expect(formatFullInvitationTitle(guest, 'Sofía', 'EN', 'BIRTHDAY')).toBe("Invitation for Oscar to Sofía's Birthday");
+    expect(formatFullInvitationTitle(guest, 'Mateo', 'ES', 'BAPTISM')).toBe('Invitación para Oscar al Bautizo de Mateo');
+    // Spanish grammar: a title that itself begins with a feminine event noun takes "a la"
+    expect(formatFullInvitationTitle(guest, 'Gala Anual', 'ES', 'CORPORATE')).toBe('Invitación para Oscar a la Gala Anual');
+    expect(formatFullInvitationTitle(guest, 'Acme Summit 2027', 'ES', 'CORPORATE')).toBe('Invitación para Oscar a Acme Summit 2027');
+    expect(formatFullInvitationTitle(guest, 'Boda de Ana y Luis', 'ES', 'WEDDING')).toBe('Invitación para Oscar a la Boda de Ana y Luis');
+    expect(formatFullInvitationTitle(guest, '', 'ES', 'CUSTOM')).toBe('Invitación para Oscar a Evento');
+  });
 });
