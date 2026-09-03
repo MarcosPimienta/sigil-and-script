@@ -3,7 +3,7 @@
 ## 1. Data model
 
 - [x] 1.1 Add `PasswordResetToken` model and `User.resetTokens` relation to `server/prisma/schema.prisma` (see design.md).
-- [ ] 1.2 Run `npm --prefix server run db:push` locally (and against the deployed database when releasing); confirm `prisma generate` picks up the new model.
+- [x] 1.2 Run `npm --prefix server run db:push` locally (and against the deployed database when releasing); confirm `prisma generate` picks up the new model.
 
 ## 2. Mailer service
 
@@ -46,9 +46,9 @@
 
 - [x] 7.1 `npm run build` and `npm run lint` on the frontend: no new errors.
 - [x] 7.2 `npm test` (frontend) and `npm --prefix server test` pass.
-- [ ] 7.3 Manual end-to-end without Resend: start both servers, click "Forgot password?", submit a registered email, copy the link from the server console, open it, set a new password, confirm old sessions are logged out and the new password works.
-- [ ] 7.4 With `RESEND_API_KEY` set: repeat 7.3 and confirm the email arrives with a working link.
-- [ ] 7.5 On archive: add milestone `M9_PASSWORD_RECOVERY` to `openspec/specs/sigil_and_script_spec.json`, extend the `User` data contract with `resetTokens`, and merge the delta spec.
+- [x] 7.3 Manual end-to-end without Resend: start both servers, click "Forgot password?", submit a registered email, copy the link from the server console, open it, set a new password, confirm old sessions are logged out and the new password works.
+- [x] 7.4 With `RESEND_API_KEY` set: repeat 7.3 and confirm the email arrives with a working link.
+- [x] 7.5 On archive: add milestone `M9_PASSWORD_RECOVERY` to `openspec/specs/sigil_and_script_spec.json`, extend the `User` data contract with `resetTokens`, and merge the delta spec.
 
 ## Implementation notes (2026-09-02)
 

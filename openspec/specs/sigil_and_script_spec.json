@@ -61,7 +61,16 @@
         "id": "uuid-v4",
         "email": "string",
         "password": "string (hashed)",
-        "name": "string (optional)"
+        "name": "string (optional)",
+        "resetTokens": "PasswordResetToken[]"
+      },
+      "PasswordResetToken": {
+        "id": "uuid-v4",
+        "tokenHash": "string (sha256 hex)",
+        "userId": "uuid-v4",
+        "expiresAt": "string (ISO-8601)",
+        "usedAt": "string (ISO-8601 | Null)",
+        "createdAt": "string (ISO-8601)"
       },
       "Session": {
         "id": "uuid-v4",
@@ -150,6 +159,24 @@
           "Construct grid card dashboard containing CRUD action buttons",
           "Support back-navigation routing inside header toolbar",
           "Initialize randomized UUIDs to isolate template creations"
+        ]
+      },
+      {
+        "id": "M8_PHYSICAL_SEAL_SHADING",
+        "name": "Physically Shaded Wax Seal Relief Engine",
+        "tasks": [
+          "Implement height-map based wax rendering with directional lighting, specular gloss and AO",
+          "Create procedural wax blank generator and registry",
+          "Integrate relief controls (emboss/deboss, light angle, matte/metallic finish) into SealCreator"
+        ]
+      },
+      {
+        "id": "M9_PASSWORD_RECOVERY",
+        "name": "Password Recovery and Reset Infrastructure",
+        "tasks": [
+          "Implement forgot-password and reset-password backend API endpoints with Resend email delivery",
+          "Add token rate-limiting, single-use invalidation, and session revocation on password update",
+          "Build ForgotPasswordView and ResetPasswordView frontend interfaces"
         ]
       }
     ]
