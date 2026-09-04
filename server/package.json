@@ -11,6 +11,7 @@
     "test": "vitest run",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
+    "db:secure": "node scripts/enable-rls.js",
     "postinstall": "prisma generate",
     "dev:quick": "tsc && node --env-file-if-exists=.env dist/src/index.js"
   },
