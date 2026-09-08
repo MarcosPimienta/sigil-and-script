@@ -7,8 +7,12 @@ import {
   getTableLayout,
   calculateSeatingStats,
   createEmptySeats,
+  generateTableSeatingManifest,
+  generateGuestSeatingDirectory,
+  generateSeatingManifestCSVContent,
+  formatSeatingManifestPlainText,
 } from './floorPlanUtils';
-import type { InviteeRecord, FloorPlanConfig } from '../types/sigil.types';
+import type { InviteeRecord, FloorPlanConfig, FloorPlanTable } from '../types/sigil.types';
 
 describe('floorPlanUtils', () => {
   describe('getConfirmedAttendees', () => {
@@ -182,6 +186,107 @@ describe('floorPlanUtils', () => {
       expect(seats).toHaveLength(5);
       expect(seats[0]).toEqual({ id: 'tbl-100-seat-1', seatNumber: 1 });
       expect(seats[4]).toEqual({ id: 'tbl-100-seat-5', seatNumber: 5 });
+    });
+  });
+
+  describe('Manifest & Directory Utilities', () => {
+    const mockAttendees = [
+      { id: 'att-1', name: 'Zoe Smith', isDependent: false, primaryInviteeId: 'att-1', primaryInviteeName: 'Zoe Smith' },
+      { id: 'att-2', name: 'Adam Jones', isDependent: false, primaryInviteeId: 'att-2', primaryInviteeName: 'Adam Jones' },
+      { id: 'att-3', name: 'Betty Jones', isDependent: true, primaryInviteeId: 'att-2', primaryInviteeName: 'Adam Jones' },
+      { id: 'att-4', name: 'Carl Miller', isDependent: false, primaryInviteeId: 'att-4', primaryInviteeName: 'Carl Miller' },
+    ];
+
+    const mockTables: FloorPlanTable[] = [
+      {
+        id: 't-1',
+        name: 'VIP Table',
+        shape: 'round',
+        seatsCount: 3,
+        x: 0,
+        y: 0,
+        seats: [
+          { id: 't-1-s-1', seatNumber: 1, assignedGuestId: 'att-2', assignedGuestName: 'Adam Jones' },
+          { id: 't-1-s-2', seatNumber: 2, assignedGuestId: 'att-3', assignedGuestName: 'Betty Jones', isDependent: true, primaryInviteeId: 'att-2' },
+          { id: 't-1-s-3', seatNumber: 3 }, // empty
+        ],
+      },
+      {
+        id: 't-2',
+        name: 'Family Table',
+        shape: 'rectangular',
+        seatsCount: 2,
+        x: 100,
+        y: 100,
+        seats: [
+          { id: 't-2-s-1', seatNumber: 1, assignedGuestId: 'att-1', assignedGuestName: 'Zoe Smith' },
+          { id: 't-2-s-2', seatNumber: 2 }, // empty
+        ],
+      },
+    ];
+
+    it('generates table seating manifest correctly', () => {
+      const manifest = generateTableSeatingManifest(mockTables, mockAttendees);
+      expect(manifest).toHaveLength(2);
+
+      const vip = manifest[0];
+      expect(vip.tableName).toBe('VIP Table');
+      expect(vip.totalSeats).toBe(3);
+      expect(vip.occupiedCount).toBe(2);
+      expect(vip.emptyCount).toBe(1);
+      expect(vip.seats[0].guestName).toBe('Adam Jones');
+      expect(vip.seats[0].isOccupied).toBe(true);
+      expect(vip.seats[1].guestName).toBe('Betty Jones');
+      expect(vip.seats[1].isDependent).toBe(true);
+      expect(vip.seats[1].primaryInviteeName).toBe('Adam Jones');
+      expect(vip.seats[2].isOccupied).toBe(false);
+      expect(vip.seats[2].guestName).toBeUndefined();
+    });
+
+    it('generates guest seating directory sorted alphabetically', () => {
+      const directory = generateGuestSeatingDirectory(mockTables, mockAttendees);
+      expect(directory).toHaveLength(4);
+
+      // Alphabetical order: Adam Jones, Betty Jones, Carl Miller, Zoe Smith
+      expect(directory[0].guestName).toBe('Adam Jones');
+      expect(directory[0].isSeated).toBe(true);
+      expect(directory[0].tableName).toBe('VIP Table');
+      expect(directory[0].seatNumber).toBe(1);
+
+      expect(directory[1].guestName).toBe('Betty Jones');
+      expect(directory[1].isDependent).toBe(true);
+      expect(directory[1].primaryInviteeName).toBe('Adam Jones');
+      expect(directory[1].tableName).toBe('VIP Table');
+      expect(directory[1].seatNumber).toBe(2);
+
+      expect(directory[2].guestName).toBe('Carl Miller');
+      expect(directory[2].isSeated).toBe(false);
+      expect(directory[2].tableName).toBeUndefined();
+
+      expect(directory[3].guestName).toBe('Zoe Smith');
+      expect(directory[3].isSeated).toBe(true);
+      expect(directory[3].tableName).toBe('Family Table');
+    });
+
+    it('generates RFC 4180 CSV content with escaped fields', () => {
+      const csv = generateSeatingManifestCSVContent(mockTables, mockAttendees);
+      expect(csv).toContain('Table Name,Seat Number,Guest Name,Guest Type,Primary Contact,Seat Status');
+      expect(csv).toContain('VIP Table,1,Adam Jones,Primary Guest,Adam Jones,Seated');
+      expect(csv).toContain('VIP Table,2,Betty Jones,Dependent / Plus-One,Adam Jones,Seated');
+      expect(csv).toContain('VIP Table,3,,,,Empty Seat');
+      expect(csv).toContain('--- UNASSIGNED ATTENDEES ---');
+      expect(csv).toContain('Unassigned,-,Carl Miller,Primary Guest,Carl Miller,Unseated');
+    });
+
+    it('formats plain text manifest for clipboard', () => {
+      const text = formatSeatingManifestPlainText(mockTables, mockAttendees);
+      expect(text).toContain('=== SEATING MANIFEST ===');
+      expect(text).toContain('TABLE: VIP Table (ROUND, 2/3 occupied)');
+      expect(text).toContain('Seat 1: Adam Jones');
+      expect(text).toContain('Seat 2: Betty Jones (with Adam Jones)');
+      expect(text).toContain('Seat 3: [Empty Seat]');
+      expect(text).toContain('=== UNASSIGNED GUESTS (1) ===');
+      expect(text).toContain('• Carl Miller');
     });
   });
 });

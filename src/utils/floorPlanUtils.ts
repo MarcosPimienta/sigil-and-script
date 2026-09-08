@@ -2,6 +2,7 @@ import type {
   InviteeRecord,
   FloorPlanConfig,
   FloorPlanSeat,
+  FloorPlanTable,
   TableShape,
 } from '../types/sigil.types';
 
@@ -330,3 +331,255 @@ export function createEmptySeats(tableId: string, seatsCount: number): FloorPlan
   }
   return seats;
 }
+
+// ── Seating Manifest Types & Utilities ───────────────────────────────────────
+
+export interface ManifestSeat {
+  seatNumber: number;
+  isOccupied: boolean;
+  guestId?: string;
+  guestName?: string;
+  isDependent?: boolean;
+  primaryInviteeId?: string;
+  primaryInviteeName?: string;
+}
+
+export interface TableManifestItem {
+  tableId: string;
+  tableName: string;
+  shape: TableShape;
+  totalSeats: number;
+  occupiedCount: number;
+  emptyCount: number;
+  seats: ManifestSeat[];
+}
+
+export interface GuestDirectoryItem {
+  guestId: string;
+  guestName: string;
+  isDependent: boolean;
+  primaryInviteeId: string;
+  primaryInviteeName: string;
+  isSeated: boolean;
+  tableId?: string;
+  tableName?: string;
+  seatNumber?: number;
+}
+
+/**
+ * Generates a structured seating manifest grouped by table.
+ * Includes seat-by-seat breakdown with guest details and empty slots.
+ */
+export function generateTableSeatingManifest(
+  tables: FloorPlanTable[] = [],
+  confirmedAttendees: ConfirmedAttendee[] = []
+): TableManifestItem[] {
+  const attendeeMap = new Map<string, ConfirmedAttendee>();
+  for (const a of confirmedAttendees) {
+    attendeeMap.set(a.id, a);
+  }
+
+  return tables.map((table) => {
+    const seats: ManifestSeat[] = (table.seats || [])
+      .slice()
+      .sort((a, b) => a.seatNumber - b.seatNumber)
+      .map((seat) => {
+        const attendee = seat.assignedGuestId ? attendeeMap.get(seat.assignedGuestId) : undefined;
+        const isOccupied = Boolean(seat.assignedGuestId);
+        return {
+          seatNumber: seat.seatNumber,
+          isOccupied,
+          guestId: seat.assignedGuestId,
+          guestName: seat.assignedGuestName || attendee?.name,
+          isDependent: seat.isDependent ?? attendee?.isDependent ?? false,
+          primaryInviteeId: seat.primaryInviteeId ?? attendee?.primaryInviteeId,
+          primaryInviteeName: attendee?.primaryInviteeName,
+        };
+      });
+
+    const occupiedCount = seats.filter((s) => s.isOccupied).length;
+    const totalSeats = seats.length;
+    const emptyCount = Math.max(0, totalSeats - occupiedCount);
+
+    return {
+      tableId: table.id,
+      tableName: table.name,
+      shape: table.shape,
+      totalSeats,
+      occupiedCount,
+      emptyCount,
+      seats,
+    };
+  });
+}
+
+/**
+ * Compiles an alphabetical directory of all confirmed attendees,
+ * cross-referencing their assigned table and seat (or marking as unseated).
+ */
+export function generateGuestSeatingDirectory(
+  tables: FloorPlanTable[] = [],
+  confirmedAttendees: ConfirmedAttendee[] = []
+): GuestDirectoryItem[] {
+  const seatMap = new Map<string, { tableId: string; tableName: string; seatNumber: number }>();
+  for (const table of tables) {
+    for (const seat of table.seats || []) {
+      if (seat.assignedGuestId) {
+        seatMap.set(seat.assignedGuestId, {
+          tableId: table.id,
+          tableName: table.name,
+          seatNumber: seat.seatNumber,
+        });
+      }
+    }
+  }
+
+  return confirmedAttendees
+    .map((attendee) => {
+      const seatInfo = seatMap.get(attendee.id);
+      return {
+        guestId: attendee.id,
+        guestName: attendee.name,
+        isDependent: attendee.isDependent,
+        primaryInviteeId: attendee.primaryInviteeId,
+        primaryInviteeName: attendee.primaryInviteeName,
+        isSeated: Boolean(seatInfo),
+        tableId: seatInfo?.tableId,
+        tableName: seatInfo?.tableName,
+        seatNumber: seatInfo?.seatNumber,
+      };
+    })
+    .sort((a, b) => a.guestName.localeCompare(b.guestName));
+}
+
+/**
+ * Escapes a string value according to RFC 4180 CSV specifications.
+ */
+function escapeCSVValue(val: string | number | boolean | null | undefined): string {
+  if (val === null || val === undefined) return '';
+  const str = String(val);
+  if (str.includes(',') || str.includes('"') || str.includes('\n') || str.includes('\r')) {
+    return `"${str.replace(/"/g, '""')}"`;
+  }
+  return str;
+}
+
+/**
+ * Generates an RFC 4180-compliant CSV string representing the table seating manifest.
+ */
+export function generateSeatingManifestCSVContent(
+  tables: FloorPlanTable[] = [],
+  confirmedAttendees: ConfirmedAttendee[] = []
+): string {
+  const manifest = generateTableSeatingManifest(tables, confirmedAttendees);
+  const rows: string[][] = [
+    ['Table Name', 'Seat Number', 'Guest Name', 'Guest Type', 'Primary Contact', 'Seat Status'],
+  ];
+
+  for (const table of manifest) {
+    for (const seat of table.seats) {
+      if (seat.isOccupied) {
+        const guestType = seat.isDependent ? 'Dependent / Plus-One' : 'Primary Guest';
+        const primaryContact = seat.isDependent ? (seat.primaryInviteeName || '') : seat.guestName || '';
+        rows.push([
+          table.tableName,
+          String(seat.seatNumber),
+          seat.guestName || '',
+          guestType,
+          primaryContact,
+          'Seated',
+        ]);
+      } else {
+        rows.push([
+          table.tableName,
+          String(seat.seatNumber),
+          '',
+          '',
+          '',
+          'Empty Seat',
+        ]);
+      }
+    }
+  }
+
+  // Also append unseated confirmed attendees at the end of the CSV
+  const directory = generateGuestSeatingDirectory(tables, confirmedAttendees);
+  const unseated = directory.filter((d) => !d.isSeated);
+  if (unseated.length > 0) {
+    rows.push([]);
+    rows.push(['--- UNASSIGNED ATTENDEES ---', '', '', '', '', '']);
+    for (const guest of unseated) {
+      const guestType = guest.isDependent ? 'Dependent / Plus-One' : 'Primary Guest';
+      const primaryContact = guest.isDependent ? guest.primaryInviteeName : guest.guestName;
+      rows.push([
+        'Unassigned',
+        '-',
+        guest.guestName,
+        guestType,
+        primaryContact,
+        'Unseated',
+      ]);
+    }
+  }
+
+  return rows.map((row) => row.map(escapeCSVValue).join(',')).join('\r\n');
+}
+
+/**
+ * Triggers a browser download of the seating manifest CSV.
+ */
+export function downloadSeatingManifestCSV(
+  tables: FloorPlanTable[] = [],
+  confirmedAttendees: ConfirmedAttendee[] = [],
+  filename: string = 'seating-manifest.csv'
+): void {
+  const csvContent = generateSeatingManifestCSVContent(tables, confirmedAttendees);
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.setAttribute('href', url);
+  link.setAttribute('download', filename);
+  link.style.display = 'none';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+/**
+ * Formats a clean plain-text summary of the seating manifest suitable for clipboard copying.
+ */
+export function formatSeatingManifestPlainText(
+  tables: FloorPlanTable[] = [],
+  confirmedAttendees: ConfirmedAttendee[] = []
+): string {
+  const manifest = generateTableSeatingManifest(tables, confirmedAttendees);
+  const lines: string[] = ['=== SEATING MANIFEST ===', ''];
+
+  for (const table of manifest) {
+    lines.push(`TABLE: ${table.tableName} (${table.shape.toUpperCase()}, ${table.occupiedCount}/${table.totalSeats} occupied)`);
+    for (const seat of table.seats) {
+      if (seat.isOccupied) {
+        const depTag = seat.isDependent ? ` (with ${seat.primaryInviteeName || 'Party'})` : '';
+        lines.push(`  Seat ${seat.seatNumber}: ${seat.guestName}${depTag}`);
+      } else {
+        lines.push(`  Seat ${seat.seatNumber}: [Empty Seat]`);
+      }
+    }
+    lines.push('');
+  }
+
+  const directory = generateGuestSeatingDirectory(tables, confirmedAttendees);
+  const unseated = directory.filter((d) => !d.isSeated);
+  if (unseated.length > 0) {
+    lines.push(`=== UNASSIGNED GUESTS (${unseated.length}) ===`);
+    for (const guest of unseated) {
+      const depTag = guest.isDependent ? ` (with ${guest.primaryInviteeName})` : '';
+      lines.push(`  • ${guest.guestName}${depTag}`);
+    }
+    lines.push('');
+  }
+
+  return lines.join('\n');
+}
+

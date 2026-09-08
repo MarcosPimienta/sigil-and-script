@@ -951,3 +951,429 @@
   padding-top: 10px;
   border-top: 1px solid rgba(40, 30, 20, 0.08);
 }
+
+/* ── Seating Manifest & Guest Directory ───────────────────────────────────────── */
+
+.seating-manifest-overlay {
+  z-index: 120;
+}
+
+.seating-manifest-modal {
+  width: 92vw;
+  max-width: 980px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.seating-manifest-header {
+  padding: 14px 20px;
+  background: #ffffff;
+}
+
+.seating-manifest-stats {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: #5c534c;
+  margin-top: 4px;
+}
+
+.seating-manifest-toolbar {
+  padding: 10px 20px;
+  background: #faf8f5;
+  border-bottom: 1px solid rgba(40, 30, 20, 0.08);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.seating-manifest-tabs {
+  display: flex;
+  gap: 4px;
+  background: rgba(40, 30, 20, 0.06);
+  padding: 3px;
+  border-radius: 8px;
+}
+
+.seating-manifest-tab {
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: #5c534c;
+  transition: all 0.15s ease;
+}
+
+.seating-manifest-tab.active {
+  background: #ffffff;
+  color: #2d2a26;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.seating-manifest-search-wrapper {
+  position: relative;
+  flex: 1;
+  min-width: 180px;
+  max-width: 320px;
+}
+
+.seating-manifest-search-icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.8rem;
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+.seating-manifest-search-input {
+  width: 100%;
+  padding: 6px 28px 6px 30px;
+  font-size: 0.85rem;
+  border: 1px solid rgba(40, 30, 20, 0.18);
+  border-radius: 6px;
+  background: #ffffff;
+  color: #2d2a26;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.seating-manifest-search-input:focus {
+  border-color: #a67c52;
+}
+
+.seating-manifest-search-clear {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  font-size: 1.1rem;
+  line-height: 1;
+  color: #8c7d73;
+  cursor: pointer;
+}
+
+.seating-manifest-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.seating-manifest-action-btn {
+  padding: 6px 12px;
+  font-size: 0.82rem;
+}
+
+.seating-manifest-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  background: #fdfbf7;
+}
+
+.seating-manifest-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: #8c7d73;
+  font-style: italic;
+  font-size: 0.95rem;
+}
+
+/* ── By Table Grid ── */
+
+.seating-manifest-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.seating-manifest-card {
+  background: #ffffff;
+  border-radius: 10px;
+  border: 1px solid rgba(40, 30, 20, 0.12);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+.seating-manifest-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.seating-manifest-card-title {
+  font-size: 1rem;
+  color: #2d2a26;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.seating-manifest-shape-icon {
+  font-size: 0.9rem;
+}
+
+.seating-manifest-shape-tag {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #8c7d73;
+}
+
+.seating-manifest-capacity-badge {
+  font-size: 0.8rem;
+  background: rgba(40, 30, 20, 0.05);
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-weight: 500;
+  color: #4a423b;
+}
+
+.seating-manifest-progress-bar {
+  height: 4px;
+  background: rgba(40, 30, 20, 0.08);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.seating-manifest-progress-fill {
+  height: 100%;
+  transition: width 0.3s ease;
+}
+
+.seating-manifest-seats-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.seating-manifest-seat-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  font-size: 0.84rem;
+}
+
+.seating-manifest-seat-row.occupied {
+  background: rgba(235, 230, 222, 0.45);
+}
+
+.seating-manifest-seat-row.empty {
+  background: transparent;
+  border: 1px dashed rgba(40, 30, 20, 0.16);
+  color: #8c7d73;
+}
+
+.seating-manifest-seat-num {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #8c7d73;
+  min-width: 24px;
+}
+
+.seating-manifest-guest-info {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.seating-manifest-guest-name {
+  font-weight: 600;
+  color: #2d2a26;
+}
+
+.seating-manifest-dep-tag {
+  font-size: 0.7rem;
+  background: rgba(100, 116, 139, 0.12);
+  color: #475569;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.seating-manifest-empty-slot {
+  font-style: italic;
+  font-size: 0.8rem;
+}
+
+/* ── By Guest Directory View ── */
+
+.seating-manifest-unseated-banner {
+  background: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffeeba;
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+}
+
+.seating-manifest-table-wrapper {
+  background: #ffffff;
+  border-radius: 10px;
+  border: 1px solid rgba(40, 30, 20, 0.12);
+  overflow-x: auto;
+}
+
+.seating-manifest-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.seating-manifest-table th {
+  background: #f7f5f0;
+  padding: 10px 14px;
+  text-align: left;
+  font-weight: 600;
+  color: #4a423b;
+  border-bottom: 1px solid rgba(40, 30, 20, 0.1);
+  white-space: nowrap;
+}
+
+.seating-manifest-table td {
+  padding: 9px 14px;
+  border-bottom: 1px solid rgba(40, 30, 20, 0.06);
+  color: #2d2a26;
+  vertical-align: middle;
+}
+
+.seating-manifest-table tbody tr:hover {
+  background: rgba(245, 240, 232, 0.5);
+}
+
+.manifest-type-pill {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.manifest-type-pill.primary {
+  background: rgba(42, 157, 143, 0.12);
+  color: #2a9d8f;
+}
+
+.manifest-type-pill.dep {
+  background: rgba(108, 117, 125, 0.12);
+  color: #495057;
+}
+
+.manifest-table-assigned {
+  font-weight: 600;
+  color: #2d2a26;
+}
+
+.manifest-table-none {
+  color: #8c7d73;
+}
+
+.manifest-seat-badge {
+  background: rgba(40, 30, 20, 0.08);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.manifest-status-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.manifest-status-badge.seated {
+  background: rgba(42, 157, 143, 0.15);
+  color: #2a9d8f;
+}
+
+.manifest-status-badge.unseated {
+  background: rgba(230, 57, 70, 0.12);
+  color: #e63946;
+}
+
+/* ── Print Optimization ─────────────────────────────────────────────────────── */
+
+@media print {
+  /* Hide background canvas, header, and floating panels */
+  .floorplan-header,
+  .floorplan-canvas-viewport,
+  .floorplan-reference-controls-panel,
+  .fp-unassigned-drawer,
+  .fp-modal-close,
+  .seating-manifest-toolbar,
+  .seating-manifest-actions {
+    display: none !important;
+  }
+
+  /* Expand modal cleanly across the printed page */
+  .seating-manifest-overlay {
+    position: static !important;
+    background: none !important;
+    backdrop-filter: none !important;
+    padding: 0 !important;
+  }
+
+  .seating-manifest-modal {
+    position: static !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: #ffffff !important;
+  }
+
+  .seating-manifest-body {
+    padding: 0 !important;
+    background: #ffffff !important;
+  }
+
+  .seating-manifest-card {
+    border: 1px solid #444 !important;
+    box-shadow: none !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    margin-bottom: 12px !important;
+  }
+
+  .seating-manifest-table {
+    border: 1px solid #444 !important;
+    font-size: 9pt !important;
+  }
+
+  .seating-manifest-table th,
+  .seating-manifest-table td {
+    border-color: #666 !important;
+    padding: 6px 8px !important;
+  }
+}
+

@@ -7,6 +7,7 @@ import { AddTableModal } from './AddTableModal';
 import { SeatAssignmentModal } from './SeatAssignmentModal';
 import { UnassignedGuestsDrawer } from './UnassignedGuestsDrawer';
 import { FloorPlanReferenceControls } from './FloorPlanReferenceControls';
+import { SeatingManifestModal } from './SeatingManifestModal';
 import '../../styles/floorPlan.css';
 
 export function FloorPlanView() {
@@ -23,11 +24,13 @@ export function FloorPlanView() {
   const updateFloorPlanReferenceLayer = useSigilStore((s) => s.updateFloorPlanReferenceLayer);
   const clearFloorPlanReferenceLayer = useSigilStore((s) => s.clearFloorPlanReferenceLayer);
   const saveCurrentDesign = useSigilStore((s) => s.saveCurrentDesign);
+  const designTitle = useSigilStore((s) => s.design.title);
 
   // Modals, Reference panel, and Drawer state
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isReferencePanelOpen, setIsReferencePanelOpen] = useState(false);
+  const [isManifestOpen, setIsManifestOpen] = useState(false);
   const [activeSeat, setActiveSeat] = useState<{ table: FloorPlanTable; seatNumber: number } | null>(null);
 
   // Persistence status
@@ -148,6 +151,15 @@ export function FloorPlanView() {
 
           <button
             type="button"
+            className={`floorplan-btn floorplan-btn--secondary ${isManifestOpen ? 'active' : ''}`}
+            onClick={() => setIsManifestOpen(true)}
+            data-testid="toggle-seating-manifest-btn"
+          >
+            📜 Seating Manifest
+          </button>
+
+          <button
+            type="button"
             className="floorplan-btn floorplan-btn--save"
             onClick={handleSave}
             disabled={isSaving}
@@ -217,6 +229,15 @@ export function FloorPlanView() {
           removeFloorPlanSeat(tableId, seatNum);
         }}
         onClose={() => setActiveSeat(null)}
+      />
+
+      {/* ── Seating Manifest & Guest Directory Modal ── */}
+      <SeatingManifestModal
+        isOpen={isManifestOpen}
+        onClose={() => setIsManifestOpen(false)}
+        tables={tables}
+        confirmedAttendees={confirmedAttendees}
+        eventTitle={designTitle}
       />
     </div>
   );

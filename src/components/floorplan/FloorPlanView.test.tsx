@@ -301,4 +301,24 @@ describe('FloorPlanView Component', () => {
     expect(layer?.invert).toBe(false);
     expect(layer?.rotation).toBe(0);
   });
+
+  it('toggles the Seating Manifest modal from the header action button', () => {
+    render(<FloorPlanView />);
+
+    // Initially modal is not open
+    expect(screen.queryByTestId('seating-manifest-modal')).not.toBeInTheDocument();
+
+    // Click "📜 Seating Manifest" button
+    const manifestBtn = screen.getByTestId('toggle-seating-manifest-btn');
+    expect(manifestBtn).toBeInTheDocument();
+    fireEvent.click(manifestBtn);
+
+    // Modal is now open
+    expect(screen.getByTestId('seating-manifest-modal')).toBeInTheDocument();
+    expect(screen.getByText(/Seating Manifest & Guest Directory/i)).toBeInTheDocument();
+
+    // Close modal
+    fireEvent.click(screen.getByTestId('close-manifest-btn'));
+    expect(screen.queryByTestId('seating-manifest-modal')).not.toBeInTheDocument();
+  });
 });
