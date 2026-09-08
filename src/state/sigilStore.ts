@@ -22,6 +22,7 @@ import type {
   TableShape,
   FloorPlanTable,
   FloorPlanSeat,
+  FloorPlanReferenceLayer,
 } from '../types/sigil.types';
 import { createEmptySeats } from '../utils/floorPlanUtils';
 
@@ -88,7 +89,11 @@ export interface SigilState {
   moveFloorPlanTable: (tableId: string, x: number, y: number) => void;
   assignFloorPlanSeat: (tableId: string, seatNumber: number, guest: { id: string; name: string; isDependent?: boolean; primaryInviteeId?: string }) => void;
   unassignFloorPlanSeat: (tableId: string, seatNumber: number) => void;
+  removeFloorPlanSeat: (tableId: string, seatNumber: number) => void;
   clearAllFloorPlanAssignments: () => void;
+  setFloorPlanReferenceLayer: (layer: FloorPlanReferenceLayer | undefined) => void;
+  updateFloorPlanReferenceLayer: (patch: Partial<FloorPlanReferenceLayer>) => void;
+  clearFloorPlanReferenceLayer: () => void;
 
   // Roster Actions
   addInvitee: (name: string, email?: string, guestType?: 'INDIVIDUAL' | 'FAMILY', initialDependents?: string[]) => void;
@@ -309,6 +314,7 @@ export const useSigilStore = create<SigilState>((set, get) => ({
           tables: [...(state.design.floorPlan?.tables ?? []), newTable],
           canvasWidth: state.design.floorPlan?.canvasWidth ?? 1400,
           canvasHeight: state.design.floorPlan?.canvasHeight ?? 900,
+          referenceLayer: state.design.floorPlan?.referenceLayer,
         },
       },
     }));
@@ -348,6 +354,7 @@ export const useSigilStore = create<SigilState>((set, get) => ({
             tables: updatedTables,
             canvasWidth: state.design.floorPlan?.canvasWidth ?? 1400,
             canvasHeight: state.design.floorPlan?.canvasHeight ?? 900,
+            referenceLayer: state.design.floorPlan?.referenceLayer,
           },
         },
       };
@@ -362,6 +369,7 @@ export const useSigilStore = create<SigilState>((set, get) => ({
           tables: (state.design.floorPlan?.tables ?? []).filter((t) => t.id !== tableId),
           canvasWidth: state.design.floorPlan?.canvasWidth ?? 1400,
           canvasHeight: state.design.floorPlan?.canvasHeight ?? 900,
+          referenceLayer: state.design.floorPlan?.referenceLayer,
         },
       },
     }));
@@ -380,6 +388,7 @@ export const useSigilStore = create<SigilState>((set, get) => ({
           ),
           canvasWidth: state.design.floorPlan?.canvasWidth ?? 1400,
           canvasHeight: state.design.floorPlan?.canvasHeight ?? 900,
+          referenceLayer: state.design.floorPlan?.referenceLayer,
         },
       },
     }));
@@ -430,6 +439,7 @@ export const useSigilStore = create<SigilState>((set, get) => ({
             tables: updatedTables,
             canvasWidth: state.design.floorPlan?.canvasWidth ?? 1400,
             canvasHeight: state.design.floorPlan?.canvasHeight ?? 900,
+            referenceLayer: state.design.floorPlan?.referenceLayer,
           },
         },
       };
@@ -458,9 +468,51 @@ export const useSigilStore = create<SigilState>((set, get) => ({
           }),
           canvasWidth: state.design.floorPlan?.canvasWidth ?? 1400,
           canvasHeight: state.design.floorPlan?.canvasHeight ?? 900,
+          referenceLayer: state.design.floorPlan?.referenceLayer,
         },
       },
     }));
+  },
+
+  removeFloorPlanSeat: (tableId, seatNumber) => {
+    set((state) => {
+      const currentPlan = state.design.floorPlan;
+      if (!currentPlan) return state;
+
+      const updatedTables = currentPlan.tables.map((tbl) => {
+        if (tbl.id !== tableId) return tbl;
+
+        // Minimum capacity is 2 seats
+        if (tbl.seats.length <= 2) return tbl;
+
+        const remainingSeats = tbl.seats.filter((s) => s.seatNumber !== seatNumber);
+
+        // Renumber remaining seats 1 ... N
+        const renumberedSeats: FloorPlanSeat[] = remainingSeats.map((s, idx) => ({
+          ...s,
+          id: `${tbl.id}-seat-${idx + 1}`,
+          seatNumber: idx + 1,
+        }));
+
+        return {
+          ...tbl,
+          seatsCount: renumberedSeats.length,
+          seats: renumberedSeats,
+        };
+      });
+
+      return {
+        design: {
+          ...state.design,
+          floorPlan: {
+            tables: updatedTables,
+            canvasWidth: currentPlan.canvasWidth ?? 1400,
+            canvasHeight: currentPlan.canvasHeight ?? 900,
+            referenceLayer: currentPlan.referenceLayer,
+          },
+        },
+      };
+    });
   },
 
   clearAllFloorPlanAssignments: () => {
@@ -477,6 +529,58 @@ export const useSigilStore = create<SigilState>((set, get) => ({
           })),
           canvasWidth: state.design.floorPlan?.canvasWidth ?? 1400,
           canvasHeight: state.design.floorPlan?.canvasHeight ?? 900,
+          referenceLayer: state.design.floorPlan?.referenceLayer,
+        },
+      },
+    }));
+  },
+
+  setFloorPlanReferenceLayer: (layer) => {
+    set((state) => ({
+      design: {
+        ...state.design,
+        floorPlan: {
+          tables: state.design.floorPlan?.tables ?? [],
+          canvasWidth: state.design.floorPlan?.canvasWidth ?? 1400,
+          canvasHeight: state.design.floorPlan?.canvasHeight ?? 900,
+          referenceLayer: layer,
+        },
+      },
+    }));
+  },
+
+  updateFloorPlanReferenceLayer: (patch) => {
+    set((state) => {
+      const currentPlan = state.design.floorPlan;
+      const currentLayer = currentPlan?.referenceLayer;
+      if (!currentLayer || !currentPlan) return state;
+
+      return {
+        design: {
+          ...state.design,
+          floorPlan: {
+            tables: currentPlan.tables,
+            canvasWidth: currentPlan.canvasWidth ?? 1400,
+            canvasHeight: currentPlan.canvasHeight ?? 900,
+            referenceLayer: {
+              ...currentLayer,
+              ...patch,
+            },
+          },
+        },
+      };
+    });
+  },
+
+  clearFloorPlanReferenceLayer: () => {
+    set((state) => ({
+      design: {
+        ...state.design,
+        floorPlan: {
+          tables: state.design.floorPlan?.tables ?? [],
+          canvasWidth: state.design.floorPlan?.canvasWidth ?? 1400,
+          canvasHeight: state.design.floorPlan?.canvasHeight ?? 900,
+          referenceLayer: undefined,
         },
       },
     }));

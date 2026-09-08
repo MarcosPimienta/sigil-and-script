@@ -7,6 +7,7 @@ interface FloorPlanTableNodeProps {
   onSeatClick: (table: FloorPlanTable, seatNumber: number) => void;
   onDeleteTable: (tableId: string) => void;
   onMoveTable: (tableId: string, x: number, y: number) => void;
+  onUpdateTable?: (tableId: string, patch: Partial<Pick<FloorPlanTable, 'name' | 'shape' | 'seatsCount' | 'rotation'>>) => void;
   zoom?: number;
 }
 
@@ -15,6 +16,7 @@ export function FloorPlanTableNode({
   onSeatClick,
   onDeleteTable,
   onMoveTable,
+  onUpdateTable,
   zoom = 1,
 }: FloorPlanTableNodeProps) {
   const [isDragging, setIsDragging] = useState(false);
@@ -27,6 +29,7 @@ export function FloorPlanTableNode({
   });
 
   const layout = getTableLayout(table.shape, table.seatsCount);
+  const rotation = table.rotation || 0;
 
   // Map seat records by seatNumber
   const seatMap = new Map<number, FloorPlanSeat>();
@@ -37,8 +40,8 @@ export function FloorPlanTableNode({
   // Pointer dragging handlers
   const handlePointerDown = useCallback(
     (e: React.PointerEvent<HTMLDivElement>) => {
-      // Don't drag if clicking seat or action buttons
-      if ((e.target as HTMLElement).closest('.fp-seat-node, .fp-table-actions-menu')) {
+      // Don't drag if clicking seat, action buttons, or stepper
+      if ((e.target as HTMLElement).closest('.fp-seat-node, .fp-table-actions-menu, .fp-table-stepper-row')) {
         return;
       }
       e.currentTarget.setPointerCapture(e.pointerId);
@@ -81,6 +84,26 @@ export function FloorPlanTableNode({
     [isDragging, dragOffset, onMoveTable, table.id]
   );
 
+  const handleRotate = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const nextRotation = ((table.rotation || 0) + 45) % 360;
+    onUpdateTable?.(table.id, { rotation: nextRotation });
+  };
+
+  const handleDecreaseSeats = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (table.seatsCount > 2) {
+      onUpdateTable?.(table.id, { seatsCount: table.seatsCount - 1 });
+    }
+  };
+
+  const handleIncreaseSeats = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (table.seatsCount < 24) {
+      onUpdateTable?.(table.id, { seatsCount: table.seatsCount + 1 });
+    }
+  };
+
   const posX = table.x + (isDragging ? dragOffset.x : 0);
   const posY = table.y + (isDragging ? dragOffset.y : 0);
 
@@ -99,89 +122,145 @@ export function FloorPlanTableNode({
       onPointerCancel={handlePointerUp}
       data-testid={`table-node-${table.id}`}
     >
-      {/* ── Table Surface ── */}
+      {/* ── Rotatable Inner Container ── */}
       <div
-        className={`fp-table-surface fp-table-surface--${table.shape}`}
+        className="fp-table-rotatable-inner"
         style={{
-          left: `${layout.tableX}px`,
-          top: `${layout.tableY}px`,
-          width: `${layout.tableWidth}px`,
-          height: `${layout.tableHeight}px`,
+          width: '100%',
+          height: '100%',
+          position: 'relative',
+          transform: `rotate(${rotation}deg)`,
+          transformOrigin: 'center center',
+          transition: isDragging ? 'none' : 'transform 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
         }}
       >
-        <h3 className="fp-table-name" title={table.name}>
-          {table.name}
-        </h3>
-        <span className="fp-table-sub">
-          {occupiedSeatsCount} / {table.seatsCount} seats
-        </span>
+        {/* ── Table Surface ── */}
+        <div
+          className={`fp-table-surface fp-table-surface--${table.shape}`}
+          style={{
+            left: `${layout.tableX}px`,
+            top: `${layout.tableY}px`,
+            width: `${layout.tableWidth}px`,
+            height: `${layout.tableHeight}px`,
+          }}
+        >
+          <h3 className="fp-table-name" title={table.name}>
+            {table.name}
+          </h3>
 
-        <div className="fp-table-actions-menu">
-          <button
-            type="button"
-            className="fp-table-action-icon-btn"
-            onClick={(e) => {
-              e.stopPropagation();
-              if (window.confirm(`Delete ${table.name}?`)) {
-                onDeleteTable(table.id);
-              }
-            }}
-            title="Delete table"
-            aria-label={`Delete ${table.name}`}
-          >
-            🗑
-          </button>
+          {/* Stepper with +/- controls */}
+          <div className="fp-table-stepper-row" data-testid={`table-stepper-${table.id}`}>
+            <button
+              type="button"
+              className="fp-table-step-btn"
+              onClick={handleDecreaseSeats}
+              disabled={table.seatsCount <= 2}
+              title="Remove 1 seat"
+              aria-label={`Decrease seats for ${table.name}`}
+              data-testid={`decrease-seats-${table.id}`}
+            >
+              &minus;
+            </button>
+            <span className="fp-table-sub">
+              {occupiedSeatsCount} / {table.seatsCount}
+            </span>
+            <button
+              type="button"
+              className="fp-table-step-btn"
+              onClick={handleIncreaseSeats}
+              disabled={table.seatsCount >= 24}
+              title="Add 1 seat"
+              aria-label={`Increase seats for ${table.name}`}
+              data-testid={`increase-seats-${table.id}`}
+            >
+              +
+            </button>
+          </div>
+
+          <div className="fp-table-actions-menu">
+            <button
+              type="button"
+              className="fp-table-action-icon-btn"
+              onClick={handleRotate}
+              title={`Rotate table (current: ${rotation}°)`}
+              aria-label={`Rotate ${table.name}`}
+              data-testid={`rotate-table-${table.id}`}
+            >
+              🔄
+            </button>
+            <button
+              type="button"
+              className="fp-table-action-icon-btn fp-table-action-icon-btn--delete"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (window.confirm(`Delete ${table.name}?`)) {
+                  onDeleteTable(table.id);
+                }
+              }}
+              title="Delete table"
+              aria-label={`Delete ${table.name}`}
+              data-testid={`delete-table-${table.id}`}
+            >
+              🗑
+            </button>
+          </div>
         </div>
+
+        {/* ── Perimeter Seats ── */}
+        {layout.seats.map((seatCoord) => {
+          const seat = seatMap.get(seatCoord.seatNumber);
+          const isOccupied = Boolean(seat?.assignedGuestId);
+          const guestName = seat?.assignedGuestName || '';
+
+          // Derive short initials for avatar
+          const initials = guestName
+            ? guestName
+                .split(' ')
+                .map((w) => w[0])
+                .filter(Boolean)
+                .slice(0, 2)
+                .join('')
+                .toUpperCase()
+            : String(seatCoord.seatNumber);
+
+          return (
+            <button
+              key={seatCoord.seatNumber}
+              type="button"
+              className={`fp-seat-node ${
+                isOccupied ? 'fp-seat-node--occupied' : 'fp-seat-node--vacant'
+              }`}
+              style={{
+                left: `${seatCoord.x}px`,
+                top: `${seatCoord.y}px`,
+              }}
+              onClick={(e) => {
+                e.stopPropagation();
+                onSeatClick(table, seatCoord.seatNumber);
+              }}
+              aria-label={`Table ${table.name}, Seat ${seatCoord.seatNumber}: ${
+                isOccupied ? guestName : 'Empty'
+              }`}
+              data-testid={`seat-node-${table.id}-${seatCoord.seatNumber}`}
+            >
+              {/* Counter-rotate text so initials remain upright */}
+              <span style={{ transform: `rotate(-${rotation}deg)`, display: 'inline-block' }}>
+                {initials}
+              </span>
+
+              {isOccupied && (
+                <div
+                  className="fp-seat-tooltip"
+                  style={{ transform: `rotate(-${rotation}deg)` }}
+                >
+                  <strong>{guestName}</strong>
+                  {seat?.isDependent && <span style={{ opacity: 0.8 }}> (Dependent)</span>}
+                </div>
+              )}
+            </button>
+          );
+        })}
       </div>
-
-      {/* ── Perimeter Seats ── */}
-      {layout.seats.map((seatCoord) => {
-        const seat = seatMap.get(seatCoord.seatNumber);
-        const isOccupied = Boolean(seat?.assignedGuestId);
-        const guestName = seat?.assignedGuestName || '';
-
-        // Derive short initials for avatar
-        const initials = guestName
-          ? guestName
-              .split(' ')
-              .map((w) => w[0])
-              .filter(Boolean)
-              .slice(0, 2)
-              .join('')
-              .toUpperCase()
-          : String(seatCoord.seatNumber);
-
-        return (
-          <button
-            key={seatCoord.seatNumber}
-            type="button"
-            className={`fp-seat-node ${
-              isOccupied ? 'fp-seat-node--occupied' : 'fp-seat-node--vacant'
-            }`}
-            style={{
-              left: `${seatCoord.x}px`,
-              top: `${seatCoord.y}px`,
-            }}
-            onClick={(e) => {
-              e.stopPropagation();
-              onSeatClick(table, seatCoord.seatNumber);
-            }}
-            aria-label={`Table ${table.name}, Seat ${seatCoord.seatNumber}: ${
-              isOccupied ? guestName : 'Empty'
-            }`}
-            data-testid={`seat-node-${table.id}-${seatCoord.seatNumber}`}
-          >
-            <span>{initials}</span>
-
-            {isOccupied && (
-              <div className="fp-seat-tooltip">
-                <strong>{guestName}</strong>
-                {seat?.isDependent && <span style={{ opacity: 0.8 }}> (Dependent)</span>}
-              </div>
-            )}
-          </button>
-        );
-      })}
     </div>
   );
 }

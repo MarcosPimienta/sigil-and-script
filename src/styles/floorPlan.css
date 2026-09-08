@@ -580,3 +580,374 @@
   font-weight: 600;
   color: #2d2a26;
 }
+
+/* ── Floor Plan Blueprint Reference Layer ───────────────────────────────────── */
+
+.floorplan-reference-layer {
+  transition: opacity 0.15s ease;
+  user-select: none;
+}
+
+.floorplan-reference-layer.repositioning {
+  outline: 2px dashed #4A5D23;
+  outline-offset: 4px;
+  background: rgba(74, 93, 35, 0.03);
+}
+
+.floorplan-reference-layer.repositioning:active {
+  cursor: grabbing !important;
+}
+
+.floorplan-reference-drag-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  background: rgba(45, 42, 38, 0.88);
+  backdrop-filter: blur(4px);
+  color: #ffffff;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  pointer-events: none;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  z-index: 5;
+}
+
+/* ── Blueprint Controls Floating Panel ──────────────────────────────────────── */
+
+.fp-reference-controls-panel {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  width: 320px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(40, 30, 20, 0.18);
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12), 0 2px 6px rgba(0, 0, 0, 0.04);
+  z-index: 25;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  animation: fpPanelSlideIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes fpPanelSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.fp-reference-controls-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.fp-reference-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 1.15rem;
+  color: #2d2a26;
+}
+
+.fp-reference-close-btn {
+  background: none;
+  border: none;
+  font-size: 1.4rem;
+  line-height: 1;
+  color: #8c7d73;
+  cursor: pointer;
+  padding: 0 4px;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+}
+
+.fp-reference-close-btn:hover {
+  color: #2d2a26;
+  background: rgba(40, 30, 20, 0.06);
+}
+
+.fp-reference-empty {
+  text-align: center;
+  padding: 8px 4px 4px;
+}
+
+.fp-reference-empty-desc {
+  font-size: 0.84rem;
+  color: #73675c;
+  line-height: 1.45;
+  margin: 0 0 16px 0;
+}
+
+.fp-reference-upload-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.fp-reference-empty-hints {
+  display: block;
+  font-size: 0.72rem;
+  color: #9a8c80;
+  margin-top: 8px;
+}
+
+.fp-reference-uploading {
+  padding: 24px 12px;
+  text-align: center;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #4A5D23;
+}
+
+.fp-reference-error {
+  background: rgba(230, 57, 70, 0.08);
+  border: 1px solid rgba(230, 57, 70, 0.25);
+  color: #e63946;
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+}
+
+.fp-reference-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.fp-reference-info-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(40, 30, 20, 0.08);
+}
+
+.fp-reference-filename {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #3a322c;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 125px;
+}
+
+.fp-reference-toggle-group {
+  display: flex;
+  gap: 6px;
+}
+
+.fp-reference-icon-btn {
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(40, 30, 20, 0.15);
+  background: #ffffff;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  color: #5c534c;
+  transition: all 0.15s ease;
+}
+
+.fp-reference-icon-btn:hover {
+  background: rgba(40, 30, 20, 0.05);
+}
+
+.fp-reference-icon-btn.active {
+  background: rgba(74, 93, 35, 0.12);
+  border-color: rgba(74, 93, 35, 0.35);
+  color: #4A5D23;
+}
+
+.fp-reference-icon-btn.active-warning {
+  background: rgba(230, 150, 20, 0.12);
+  border-color: rgba(230, 150, 20, 0.4);
+  color: #b06500;
+}
+
+.fp-reference-control-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.fp-reference-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #5c534c;
+}
+
+.fp-reference-val {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #2d2a26;
+}
+
+.fp-reference-slider {
+  width: 100%;
+  accent-color: #4A5D23;
+  cursor: pointer;
+}
+
+.fp-reference-sub-btn {
+  background: none;
+  border: 1px solid rgba(40, 30, 20, 0.15);
+  border-radius: 4px;
+  font-size: 0.7rem;
+  padding: 1px 6px;
+  cursor: pointer;
+  color: #5c534c;
+  transition: all 0.12s ease;
+}
+
+.fp-reference-sub-btn:hover {
+  background: rgba(40, 30, 20, 0.08);
+  color: #2d2a26;
+}
+
+.fp-reference-offsets-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.75rem;
+}
+
+.fp-reference-offset-tag {
+  background: rgba(40, 30, 20, 0.06);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: monospace;
+  color: #443c36;
+}
+
+.fp-reference-drag-hint {
+  font-size: 0.72rem;
+  color: #b06500;
+  font-weight: 500;
+}
+
+.fp-reference-footer-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(40, 30, 20, 0.08);
+}
+
+.fp-reference-action-btn {
+  font-size: 0.78rem !important;
+  padding: 5px 10px !important;
+}
+
+.fp-reference-delete-btn {
+  background: none;
+  border: 1px solid rgba(230, 57, 70, 0.3);
+  color: #e63946;
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.fp-reference-delete-btn:hover {
+  background: rgba(230, 57, 70, 0.08);
+  border-color: #e63946;
+}
+
+/* ── Inline Table Stepper ────────────────────────────────────────────────────── */
+
+.fp-table-stepper-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.fp-table-step-btn {
+  background: rgba(40, 30, 20, 0.07);
+  border: 1px solid rgba(40, 30, 20, 0.15);
+  border-radius: 4px;
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1;
+  color: #4A5D23;
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.12s ease;
+}
+
+.fp-table-step-btn:hover:not(:disabled) {
+  background: #4A5D23;
+  color: #ffffff;
+  border-color: #4A5D23;
+}
+
+.fp-table-step-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.fp-table-action-icon-btn--delete:hover {
+  background: rgba(230, 57, 70, 0.18) !important;
+  color: #e63946 !important;
+}
+
+/* ── Modal Seat Removal Button ──────────────────────────────────────────────── */
+
+.fp-seat-remove-btn {
+  background: none;
+  border: 1px solid rgba(230, 57, 70, 0.3);
+  color: #e63946;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.fp-seat-remove-btn:hover:not(:disabled) {
+  background: rgba(230, 57, 70, 0.08);
+  border-color: #e63946;
+}
+
+.fp-seat-remove-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* ── Blueprint Adjustments Section ──────────────────────────────────────────── */
+
+.fp-reference-adjustments-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(40, 30, 20, 0.08);
+}

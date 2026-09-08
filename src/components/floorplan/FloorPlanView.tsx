@@ -6,6 +6,7 @@ import { FloorPlanCanvas } from './FloorPlanCanvas';
 import { AddTableModal } from './AddTableModal';
 import { SeatAssignmentModal } from './SeatAssignmentModal';
 import { UnassignedGuestsDrawer } from './UnassignedGuestsDrawer';
+import { FloorPlanReferenceControls } from './FloorPlanReferenceControls';
 import '../../styles/floorPlan.css';
 
 export function FloorPlanView() {
@@ -14,13 +15,19 @@ export function FloorPlanView() {
   const addFloorPlanTable = useSigilStore((s) => s.addFloorPlanTable);
   const removeFloorPlanTable = useSigilStore((s) => s.removeFloorPlanTable);
   const moveFloorPlanTable = useSigilStore((s) => s.moveFloorPlanTable);
+  const updateFloorPlanTable = useSigilStore((s) => s.updateFloorPlanTable);
   const assignFloorPlanSeat = useSigilStore((s) => s.assignFloorPlanSeat);
   const unassignFloorPlanSeat = useSigilStore((s) => s.unassignFloorPlanSeat);
+  const removeFloorPlanSeat = useSigilStore((s) => s.removeFloorPlanSeat);
+  const setFloorPlanReferenceLayer = useSigilStore((s) => s.setFloorPlanReferenceLayer);
+  const updateFloorPlanReferenceLayer = useSigilStore((s) => s.updateFloorPlanReferenceLayer);
+  const clearFloorPlanReferenceLayer = useSigilStore((s) => s.clearFloorPlanReferenceLayer);
   const saveCurrentDesign = useSigilStore((s) => s.saveCurrentDesign);
 
-  // Modals and Drawer state
+  // Modals, Reference panel, and Drawer state
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isReferencePanelOpen, setIsReferencePanelOpen] = useState(false);
   const [activeSeat, setActiveSeat] = useState<{ table: FloorPlanTable; seatNumber: number } | null>(null);
 
   // Persistence status
@@ -28,6 +35,7 @@ export function FloorPlanView() {
   const [savedToast, setSavedToast] = useState(false);
 
   const tables = floorPlan?.tables || [];
+  const referenceLayer = floorPlan?.referenceLayer;
 
   // Resolve confirmed attendees
   const confirmedAttendees = useMemo(() => {
@@ -110,6 +118,16 @@ export function FloorPlanView() {
         </div>
 
         <div className="floorplan-header-actions">
+          {/* Reference Blueprint Toggle */}
+          <button
+            type="button"
+            className={`floorplan-btn floorplan-btn--secondary ${isReferencePanelOpen ? 'active' : ''}`}
+            onClick={() => setIsReferencePanelOpen((v) => !v)}
+            data-testid="toggle-reference-controls-btn"
+          >
+            <span>📐</span> Blueprint {referenceLayer ? (referenceLayer.visible ? '(Active)' : '(Hidden)') : ''}
+          </button>
+
           <button
             type="button"
             className="floorplan-btn floorplan-btn--primary"
@@ -140,14 +158,27 @@ export function FloorPlanView() {
         </div>
       </header>
 
-      {/* ── Workspace with Map and optional Drawer ── */}
-      <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+      {/* ── Workspace with Map, Reference Controls, and optional Drawer ── */}
+      <div style={{ display: 'flex', flex: 1, overflow: 'hidden', position: 'relative' }}>
         <FloorPlanCanvas
           tables={tables}
+          referenceLayer={referenceLayer}
           onSeatClick={handleSeatClick}
           onDeleteTable={removeFloorPlanTable}
           onMoveTable={moveFloorPlanTable}
           onAddTableClick={() => setIsAddModalOpen(true)}
+          onMoveReferenceLayer={(x, y) => updateFloorPlanReferenceLayer({ x, y })}
+          onUpdateTable={updateFloorPlanTable}
+        />
+
+        {/* Floating Blueprint Controls Panel */}
+        <FloorPlanReferenceControls
+          isOpen={isReferencePanelOpen}
+          onClose={() => setIsReferencePanelOpen(false)}
+          referenceLayer={referenceLayer}
+          onUpdateLayer={updateFloorPlanReferenceLayer}
+          onSetLayer={setFloorPlanReferenceLayer}
+          onClearLayer={clearFloorPlanReferenceLayer}
         />
 
         <UnassignedGuestsDrawer
@@ -181,6 +212,9 @@ export function FloorPlanView() {
           if (activeSeat) {
             unassignFloorPlanSeat(activeSeat.table.id, activeSeat.seatNumber);
           }
+        }}
+        onRemoveSeat={(tableId, seatNum) => {
+          removeFloorPlanSeat(tableId, seatNum);
         }}
         onClose={() => setActiveSeat(null)}
       />

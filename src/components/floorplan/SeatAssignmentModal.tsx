@@ -10,6 +10,7 @@ interface SeatAssignmentModalProps {
   allTables: FloorPlanTable[];
   onAssign: (guest: ConfirmedAttendee) => void;
   onUnseat: () => void;
+  onRemoveSeat?: (tableId: string, seatNumber: number) => void;
   onClose: () => void;
 }
 
@@ -21,6 +22,7 @@ export function SeatAssignmentModal({
   allTables,
   onAssign,
   onUnseat,
+  onRemoveSeat,
   onClose,
 }: SeatAssignmentModalProps) {
   const [searchQuery, setSearchQuery] = useState('');
@@ -48,6 +50,26 @@ export function SeatAssignmentModal({
       attendee.primaryInviteeName.toLowerCase().includes(query)
     );
   });
+
+  const handleRemoveSeat = () => {
+    if (!table || seatNumber === null) return;
+    if (table.seats.length <= 2) {
+      alert('Tables must have at least 2 seats.');
+      return;
+    }
+    if (isOccupied) {
+      const occupantName = currentSeat?.assignedGuestName || 'the assigned guest';
+      if (
+        !window.confirm(
+          `Seat ${seatNumber} is occupied by ${occupantName}. Removing this seat will return them to the unassigned guest pool. Continue?`
+        )
+      ) {
+        return;
+      }
+    }
+    onRemoveSeat?.(table.id, seatNumber);
+    onClose();
+  };
 
   return (
     <div className="fp-modal-overlay" onClick={onClose} data-testid="seat-modal-overlay">
@@ -113,6 +135,7 @@ export function SeatAssignmentModal({
                   onUnseat();
                   onClose();
                 }}
+                data-testid="unseat-guest-btn"
               >
                 Unseat Guest
               </button>
@@ -132,6 +155,7 @@ export function SeatAssignmentModal({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               autoFocus
+              data-testid="seat-guest-search-input"
             />
           </div>
 
@@ -221,9 +245,22 @@ export function SeatAssignmentModal({
         </div>
 
         {/* Footer */}
-        <div className="fp-modal-footer">
+        <div className="fp-modal-footer" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          {onRemoveSeat ? (
+            <button
+              type="button"
+              className="fp-seat-remove-btn"
+              onClick={handleRemoveSeat}
+              disabled={table.seats.length <= 2}
+              title={table.seats.length <= 2 ? 'Tables must have at least 2 seats' : 'Remove this seat slot from the table'}
+              data-testid="remove-seat-from-table-btn"
+            >
+              🗑️ Remove Seat from Table
+            </button>
+          ) : <div />}
+
           <button type="button" className="floorplan-btn floorplan-btn--secondary" onClick={onClose}>
-            Cancel
+            Close
           </button>
         </div>
       </div>

@@ -283,10 +283,27 @@ export interface FloorPlanTable {
   seats: FloorPlanSeat[];
 }
 
+export interface FloorPlanReferenceLayer {
+  url: string;
+  opacity: number;
+  scale: number;
+  x: number;
+  y: number;
+  visible: boolean;
+  locked?: boolean;
+  fileName?: string;
+  brightness?: number; // e.g. 0.4 to 2.0 (default: 1.0)
+  contrast?: number;   // e.g. 0.4 to 2.5 (default: 1.0)
+  saturate?: number;   // e.g. 0.0 to 2.0 (default: 1.0)
+  invert?: boolean;    // e.g. true for Dark CAD blueprint inversion
+  rotation?: number;   // e.g. 0, 90, 180, 270 degrees
+}
+
 export interface FloorPlanConfig {
   tables: FloorPlanTable[];
   canvasWidth?: number;
   canvasHeight?: number;
+  referenceLayer?: FloorPlanReferenceLayer;
 }
 
 // ── Itinerary Schema ──────────────────────────────────────────────────────────
