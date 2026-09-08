@@ -75,11 +75,30 @@ describe('computeStats', () => {
     ];
 
     const stats = computeStats(invitees);
-    // Total invited capacity
-    expect(stats.total).toBe(3 + 3); // (1 + 2) + 3 = 6
+    // Total invited capacity: (1 + 2) + (1 + 3) = 7
+    expect(stats.total).toBe(7);
     expect(stats.dependents).toBe(5);
-    // Attending headcount: Individual (1 primary + 1 checked) = 2, Family (2 checked members) = 2 -> 4 total attending
-    expect(stats.attending).toBe(4);
+    // Attending headcount: Individual (1 primary + 1 checked = 2) + Family (1 primary + 2 checked = 3) -> 5 total attending
+    expect(stats.attending).toBe(5);
+  });
+
+  it('counts primary guest plus confirmed dependents consistently for family entries', () => {
+    const invitees: InviteeRecord[] = [
+      {
+        id: '1',
+        name: 'Marcos Pimienta',
+        guestType: 'FAMILY',
+        dependents: [
+          { id: 'd1', name: 'Diana Patricia de Pimienta', included: true },
+        ],
+        status: 'RSVP_YES',
+      },
+    ];
+
+    const stats = computeStats(invitees);
+    expect(stats.total).toBe(2);
+    expect(stats.dependents).toBe(1);
+    expect(stats.attending).toBe(2); // Marcos (1) + Diana (1) = 2
   });
 });
 

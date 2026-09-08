@@ -37,9 +37,7 @@ export function CreatorCanvas() {
   const showRosterDetails = envelopePhase === 'FADING_OUT' || envelopePhase === 'COMPLETED';
 
   const depsCount = Math.max(state.guest.additionalGuests?.length || 0, state.guest.dependents?.length || 0);
-  const reservedSeats = state.guest.guestType === 'FAMILY'
-    ? (depsCount > 0 ? depsCount : 1)
-    : 1 + depsCount;
+  const reservedSeats = 1 + depsCount;
 
   return (
     <div
