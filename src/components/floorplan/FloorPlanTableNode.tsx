@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useMemo } from 'react';
 import type { FloorPlanTable, FloorPlanSeat } from '../../types/sigil.types';
 import { getTableLayout } from '../../utils/floorPlanUtils';
 
@@ -8,6 +8,8 @@ interface FloorPlanTableNodeProps {
   onDeleteTable: (tableId: string) => void;
   onMoveTable: (tableId: string, x: number, y: number) => void;
   onUpdateTable?: (tableId: string, patch: Partial<Pick<FloorPlanTable, 'name' | 'shape' | 'seatsCount' | 'rotation'>>) => void;
+  onMoveSeat?: (tableId: string, seatNumber: number, angle: number) => void;
+  onResetSeats?: (tableId: string) => void;
   zoom?: number;
 }
 
@@ -17,6 +19,8 @@ export function FloorPlanTableNode({
   onDeleteTable,
   onMoveTable,
   onUpdateTable,
+  onMoveSeat,
+  onResetSeats,
   zoom = 1,
 }: FloorPlanTableNodeProps) {
   const [isDragging, setIsDragging] = useState(false);
@@ -28,7 +32,27 @@ export function FloorPlanTableNode({
     tableY: table.y,
   });
 
-  const layout = getTableLayout(table.shape, table.seatsCount);
+  const rotatableInnerRef = useRef<HTMLDivElement>(null);
+
+  // Live seat dragging preview state
+  const [draggingSeat, setDraggingSeat] = useState<{ seatNumber: number; angle: number } | null>(null);
+  const justDraggedRef = useRef<boolean>(false);
+  const seatDragRef = useRef<{
+    seatNumber: number;
+    startX: number;
+    startY: number;
+    hasMoved: boolean;
+    currentAngle: number;
+  } | null>(null);
+
+  const effectiveSeats = useMemo(() => {
+    if (!draggingSeat) return table.seats;
+    return table.seats.map((s) =>
+      s.seatNumber === draggingSeat.seatNumber ? { ...s, angle: draggingSeat.angle } : s
+    );
+  }, [table.seats, draggingSeat]);
+
+  const layout = getTableLayout(table.shape, table.seatsCount, effectiveSeats);
   const rotation = table.rotation || 0;
 
   // Map seat records by seatNumber
@@ -36,15 +60,22 @@ export function FloorPlanTableNode({
   table.seats.forEach((s) => seatMap.set(s.seatNumber, s));
 
   const occupiedSeatsCount = table.seats.filter((s) => Boolean(s.assignedGuestId)).length;
+  const hasCustomAngles = table.seats.some((s) => s.angle !== undefined);
 
-  // Pointer dragging handlers
+  // Pointer dragging handlers for the TABLE
   const handlePointerDown = useCallback(
     (e: React.PointerEvent<HTMLDivElement>) => {
-      // Don't drag if clicking seat, action buttons, or stepper
+      // Don't drag table if clicking seat, action buttons, or stepper
       if ((e.target as HTMLElement).closest('.fp-seat-node, .fp-table-actions-menu, .fp-table-stepper-row')) {
         return;
       }
-      e.currentTarget.setPointerCapture(e.pointerId);
+      if (typeof e.currentTarget.setPointerCapture === 'function') {
+        try {
+          e.currentTarget.setPointerCapture(e.pointerId);
+        } catch {
+          // Safe fallback
+        }
+      }
       setIsDragging(true);
       startPosRef.current = {
         pointerX: e.clientX,
@@ -71,10 +102,12 @@ export function FloorPlanTableNode({
     (e: React.PointerEvent<HTMLDivElement>) => {
       if (!isDragging) return;
       setIsDragging(false);
-      try {
-        e.currentTarget.releasePointerCapture(e.pointerId);
-      } catch {
-        // Safe fallback
+      if (typeof e.currentTarget.releasePointerCapture === 'function') {
+        try {
+          e.currentTarget.releasePointerCapture(e.pointerId);
+        } catch {
+          // Safe fallback
+        }
       }
       const finalX = startPosRef.current.tableX + dragOffset.x;
       const finalY = startPosRef.current.tableY + dragOffset.y;
@@ -83,6 +116,79 @@ export function FloorPlanTableNode({
     },
     [isDragging, dragOffset, onMoveTable, table.id]
   );
+
+  // Seat dragging handlers (individual seat perimeter move vs click)
+  const handleSeatPointerDown = (e: React.PointerEvent<HTMLButtonElement>, seatNumber: number) => {
+    e.stopPropagation();
+    if (typeof e.currentTarget.setPointerCapture === 'function') {
+      try {
+        e.currentTarget.setPointerCapture(e.pointerId);
+      } catch {
+        // Safe fallback
+      }
+    }
+
+    const seat = seatMap.get(seatNumber);
+    const defaultAngle = ((seatNumber - 1) / table.seatsCount) * 360;
+    const initialAngle = seat?.angle ?? defaultAngle;
+
+    seatDragRef.current = {
+      seatNumber,
+      startX: e.clientX,
+      startY: e.clientY,
+      hasMoved: false,
+      currentAngle: initialAngle,
+    };
+  };
+
+  const handleSeatPointerMove = (e: React.PointerEvent<HTMLButtonElement>) => {
+    if (!seatDragRef.current) return;
+    const dx = e.clientX - seatDragRef.current.startX;
+    const dy = e.clientY - seatDragRef.current.startY;
+    const dist = Math.hypot(dx, dy);
+
+    if (!seatDragRef.current.hasMoved && dist < 5) {
+      return; // Below 5px threshold, treat as potential click
+    }
+
+    seatDragRef.current.hasMoved = true;
+
+    if (rotatableInnerRef.current) {
+      const rect = rotatableInnerRef.current.getBoundingClientRect();
+      const screenCenterX = rect.width > 0 ? rect.left + rect.width / 2 : table.x + layout.containerWidth / 2;
+      const screenCenterY = rect.height > 0 ? rect.top + rect.height / 2 : table.y + layout.containerHeight / 2;
+
+      const screenAngleRad = Math.atan2(e.clientY - screenCenterY, e.clientX - screenCenterX);
+      const tableRotationRad = ((table.rotation || 0) * Math.PI) / 180;
+      const localAngleRad = screenAngleRad - tableRotationRad;
+
+      const deg = (localAngleRad * 180) / Math.PI;
+      const clockDeg = Math.round(((((deg + 90) % 360) + 360) % 360) * 10) / 10;
+
+      seatDragRef.current.currentAngle = clockDeg;
+      setDraggingSeat({ seatNumber: seatDragRef.current.seatNumber, angle: clockDeg });
+    }
+  };
+
+  const handleSeatPointerUp = (e: React.PointerEvent<HTMLButtonElement>, seatNumber: number) => {
+    if (!seatDragRef.current) return;
+    if (typeof e.currentTarget.releasePointerCapture === 'function') {
+      try {
+        e.currentTarget.releasePointerCapture(e.pointerId);
+      } catch {
+        // Safe fallback
+      }
+    }
+
+    const { hasMoved, currentAngle } = seatDragRef.current;
+    seatDragRef.current = null;
+    setDraggingSeat(null);
+
+    if (hasMoved) {
+      justDraggedRef.current = true;
+      onMoveSeat?.(table.id, seatNumber, currentAngle);
+    }
+  };
 
   const handleRotate = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -124,6 +230,7 @@ export function FloorPlanTableNode({
     >
       {/* ── Rotatable Inner Container ── */}
       <div
+        ref={rotatableInnerRef}
         className="fp-table-rotatable-inner"
         style={{
           width: '100%',
@@ -180,6 +287,19 @@ export function FloorPlanTableNode({
           <div className="fp-table-actions-menu">
             <button
               type="button"
+              className={`fp-table-action-icon-btn ${hasCustomAngles ? 'fp-table-action-icon-btn--active' : ''}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                onResetSeats?.(table.id);
+              }}
+              title={hasCustomAngles ? "Reset custom seat spacing to uniform" : "Seats are uniformly spaced"}
+              aria-label={`Reset seat spacing for ${table.name}`}
+              data-testid={`reset-seats-${table.id}`}
+            >
+              📐
+            </button>
+            <button
+              type="button"
               className="fp-table-action-icon-btn"
               onClick={handleRotate}
               title={`Rotate table (current: ${rotation}°)`}
@@ -211,6 +331,7 @@ export function FloorPlanTableNode({
           const seat = seatMap.get(seatCoord.seatNumber);
           const isOccupied = Boolean(seat?.assignedGuestId);
           const guestName = seat?.assignedGuestName || '';
+          const isSeatDragging = draggingSeat?.seatNumber === seatCoord.seatNumber;
 
           // Derive short initials for avatar
           const initials = guestName
@@ -229,13 +350,21 @@ export function FloorPlanTableNode({
               type="button"
               className={`fp-seat-node ${
                 isOccupied ? 'fp-seat-node--occupied' : 'fp-seat-node--vacant'
-              }`}
+              } ${isSeatDragging ? 'fp-seat-node--dragging' : ''}`}
               style={{
                 left: `${seatCoord.x}px`,
                 top: `${seatCoord.y}px`,
               }}
+              onPointerDown={(e) => handleSeatPointerDown(e, seatCoord.seatNumber)}
+              onPointerMove={handleSeatPointerMove}
+              onPointerUp={(e) => handleSeatPointerUp(e, seatCoord.seatNumber)}
+              onPointerCancel={(e) => handleSeatPointerUp(e, seatCoord.seatNumber)}
               onClick={(e) => {
                 e.stopPropagation();
+                if (justDraggedRef.current) {
+                  justDraggedRef.current = false;
+                  return;
+                }
                 onSeatClick(table, seatCoord.seatNumber);
               }}
               aria-label={`Table ${table.name}, Seat ${seatCoord.seatNumber}: ${

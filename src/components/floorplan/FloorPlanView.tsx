@@ -20,6 +20,8 @@ export function FloorPlanView() {
   const assignFloorPlanSeat = useSigilStore((s) => s.assignFloorPlanSeat);
   const unassignFloorPlanSeat = useSigilStore((s) => s.unassignFloorPlanSeat);
   const removeFloorPlanSeat = useSigilStore((s) => s.removeFloorPlanSeat);
+  const moveFloorPlanSeat = useSigilStore((s) => s.moveFloorPlanSeat);
+  const resetFloorPlanTableSeats = useSigilStore((s) => s.resetFloorPlanTableSeats);
   const setFloorPlanReferenceLayer = useSigilStore((s) => s.setFloorPlanReferenceLayer);
   const updateFloorPlanReferenceLayer = useSigilStore((s) => s.updateFloorPlanReferenceLayer);
   const clearFloorPlanReferenceLayer = useSigilStore((s) => s.clearFloorPlanReferenceLayer);
@@ -181,6 +183,8 @@ export function FloorPlanView() {
           onAddTableClick={() => setIsAddModalOpen(true)}
           onMoveReferenceLayer={(x, y) => updateFloorPlanReferenceLayer({ x, y })}
           onUpdateTable={updateFloorPlanTable}
+          onMoveSeat={moveFloorPlanSeat}
+          onResetSeats={resetFloorPlanTableSeats}
         />
 
         {/* Floating Blueprint Controls Panel */}

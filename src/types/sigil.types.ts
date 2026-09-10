@@ -270,6 +270,8 @@ export interface FloorPlanSeat {
   assignedGuestName?: string;
   isDependent?: boolean;
   primaryInviteeId?: string;
+  /** Custom angle in degrees [0, 360) along the table perimeter relative to table center (0 = 12 o'clock) */
+  angle?: number;
 }
 
 export interface FloorPlanTable {

@@ -90,6 +90,8 @@ export interface SigilState {
   assignFloorPlanSeat: (tableId: string, seatNumber: number, guest: { id: string; name: string; isDependent?: boolean; primaryInviteeId?: string }) => void;
   unassignFloorPlanSeat: (tableId: string, seatNumber: number) => void;
   removeFloorPlanSeat: (tableId: string, seatNumber: number) => void;
+  moveFloorPlanSeat: (tableId: string, seatNumber: number, angle: number) => void;
+  resetFloorPlanTableSeats: (tableId: string) => void;
   clearAllFloorPlanAssignments: () => void;
   setFloorPlanReferenceLayer: (layer: FloorPlanReferenceLayer | undefined) => void;
   updateFloorPlanReferenceLayer: (patch: Partial<FloorPlanReferenceLayer>) => void;
@@ -509,6 +511,63 @@ export const useSigilStore = create<SigilState>((set, get) => ({
             canvasWidth: currentPlan.canvasWidth ?? 1400,
             canvasHeight: currentPlan.canvasHeight ?? 900,
             referenceLayer: currentPlan.referenceLayer,
+          },
+        },
+      };
+    });
+  },
+
+  moveFloorPlanSeat: (tableId, seatNumber, angle) => {
+    set((state) => {
+      const currentPlan = state.design.floorPlan;
+      if (!currentPlan) return state;
+
+      const normalizedAngle = Math.round((((angle % 360) + 360) % 360) * 10) / 10;
+
+      const updatedTables = currentPlan.tables.map((tbl) => {
+        if (tbl.id !== tableId) return tbl;
+        return {
+          ...tbl,
+          seats: tbl.seats.map((seat) =>
+            seat.seatNumber === seatNumber ? { ...seat, angle: normalizedAngle } : seat
+          ),
+        };
+      });
+
+      return {
+        design: {
+          ...state.design,
+          floorPlan: {
+            ...currentPlan,
+            tables: updatedTables,
+          },
+        },
+      };
+    });
+  },
+
+  resetFloorPlanTableSeats: (tableId) => {
+    set((state) => {
+      const currentPlan = state.design.floorPlan;
+      if (!currentPlan) return state;
+
+      const updatedTables = currentPlan.tables.map((tbl) => {
+        if (tbl.id !== tableId) return tbl;
+        return {
+          ...tbl,
+          seats: tbl.seats.map((seat) => {
+            const { angle: _unused, ...cleanSeat } = seat;
+            return cleanSeat;
+          }),
+        };
+      });
+
+      return {
+        design: {
+          ...state.design,
+          floorPlan: {
+            ...currentPlan,
+            tables: updatedTables,
           },
         },
       };

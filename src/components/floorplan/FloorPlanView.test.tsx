@@ -321,4 +321,50 @@ describe('FloorPlanView Component', () => {
     fireEvent.click(screen.getByTestId('close-manifest-btn'));
     expect(screen.queryByTestId('seating-manifest-modal')).not.toBeInTheDocument();
   });
+
+  it('differentiates click from drag on seat nodes and allows dragging seats', () => {
+    // Setup a table
+    const tableId = useSigilStore.getState().addFloorPlanTable({
+      name: 'Round Table',
+      shape: 'round',
+      seatsCount: 4,
+    });
+
+    render(<FloorPlanView />);
+
+    const seatBtn = screen.getByTestId(`seat-node-${tableId}-1`);
+    expect(seatBtn).toBeInTheDocument();
+
+    // 1. Quick click (< 5px movement) -> Opens SeatAssignmentModal
+    fireEvent.pointerDown(seatBtn, { clientX: 100, clientY: 100, pointerId: 1 });
+    fireEvent.pointerMove(seatBtn, { clientX: 102, clientY: 101, pointerId: 1 }); // 2px delta
+    fireEvent.pointerUp(seatBtn, { pointerId: 1 });
+    fireEvent.click(seatBtn);
+
+    expect(screen.getByText('Seat Assignment')).toBeInTheDocument();
+    fireEvent.click(screen.getAllByRole('button', { name: 'Close' })[0]);
+    expect(screen.queryByText('Seat Assignment')).not.toBeInTheDocument();
+
+    // 2. Drag (>= 5px movement) -> Updates angle in store without opening modal
+    fireEvent.pointerDown(seatBtn, { clientX: 100, clientY: 100, pointerId: 1 });
+    // Move significantly
+    fireEvent.pointerMove(seatBtn, { clientX: 200, clientY: 150, pointerId: 1 });
+    fireEvent.pointerUp(seatBtn, { pointerId: 1 });
+    fireEvent.click(seatBtn);
+
+    // Modal did NOT open
+    expect(screen.queryByText('Seat Assignment')).not.toBeInTheDocument();
+
+    // Store now has custom angle for seat 1
+    const table = useSigilStore.getState().design.floorPlan?.tables.find((t) => t.id === tableId);
+    expect(table?.seats[0].angle).toBeDefined();
+
+    // 3. Reset seat spacing
+    const resetBtn = screen.getByTestId(`reset-seats-${tableId}`);
+    expect(resetBtn).toBeInTheDocument();
+    fireEvent.click(resetBtn);
+
+    const resetTable = useSigilStore.getState().design.floorPlan?.tables.find((t) => t.id === tableId);
+    expect(resetTable?.seats[0].angle).toBeUndefined();
+  });
 });

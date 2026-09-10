@@ -11,8 +11,10 @@ import {
   generateGuestSeatingDirectory,
   generateSeatingManifestCSVContent,
   formatSeatingManifestPlainText,
+  projectAngleToPerimeterBox,
+  getAngleFromPerimeterPoint,
 } from './floorPlanUtils';
-import type { InviteeRecord, FloorPlanConfig, FloorPlanTable } from '../types/sigil.types';
+import type { InviteeRecord, FloorPlanConfig, FloorPlanTable, FloorPlanSeat } from '../types/sigil.types';
 
 describe('floorPlanUtils', () => {
   describe('getConfirmedAttendees', () => {
@@ -127,6 +129,81 @@ describe('floorPlanUtils', () => {
 
       const rect = getTableLayout('rectangular', 6);
       expect(rect.seats).toHaveLength(6);
+    });
+
+    it('positions round table seats at custom angles when specified', () => {
+      const seats: FloorPlanSeat[] = [
+        { id: 's1', seatNumber: 1, angle: 0 },   // Top
+        { id: 's2', seatNumber: 2, angle: 90 },  // Right
+        { id: 's3', seatNumber: 3, angle: 180 }, // Bottom
+        { id: 's4', seatNumber: 4, angle: 270 }, // Left
+      ];
+      const layout = calculateRoundTableLayout(4, seats);
+      const center = layout.containerWidth / 2;
+
+      // Seat 1 (0 deg = top): x == center, y < center
+      expect(layout.seats[0].x).toBe(center);
+      expect(layout.seats[0].y).toBeLessThan(center);
+
+      // Seat 2 (90 deg = right): x > center, y == center
+      expect(layout.seats[1].x).toBeGreaterThan(center);
+      expect(layout.seats[1].y).toBe(center);
+
+      // Seat 3 (180 deg = bottom): x == center, y > center
+      expect(layout.seats[2].x).toBe(center);
+      expect(layout.seats[2].y).toBeGreaterThan(center);
+
+      // Seat 4 (270 deg = left): x < center, y == center
+      expect(layout.seats[3].x).toBeLessThan(center);
+      expect(layout.seats[3].y).toBe(center);
+    });
+
+    it('projects rays to rectangular perimeter correctly using projectAngleToPerimeterBox', () => {
+      const cx = 100;
+      const cy = 100;
+      const hw = 50;
+      const hh = 30;
+
+      // 0 deg = North (top): x = cx, y = cy - hh
+      const top = projectAngleToPerimeterBox(cx, cy, hw, hh, 0);
+      expect(top).toEqual({ x: 100, y: 70 });
+
+      // 90 deg = East (right): x = cx + hw, y = cy
+      const right = projectAngleToPerimeterBox(cx, cy, hw, hh, 90);
+      expect(right).toEqual({ x: 150, y: 100 });
+
+      // 180 deg = South (bottom): x = cx, y = cy + hh
+      const bottom = projectAngleToPerimeterBox(cx, cy, hw, hh, 180);
+      expect(bottom).toEqual({ x: 100, y: 130 });
+
+      // 270 deg = West (left): x = cx - hw, y = cy
+      const left = projectAngleToPerimeterBox(cx, cy, hw, hh, 270);
+      expect(left).toEqual({ x: 50, y: 100 });
+    });
+
+    it('computes clock-facing angle from perimeter point correctly', () => {
+      const cx = 100;
+      const cy = 100;
+
+      expect(getAngleFromPerimeterPoint(cx, cy, 100, 50)).toBe(0);   // Top
+      expect(getAngleFromPerimeterPoint(cx, cy, 150, 100)).toBe(90);  // Right
+      expect(getAngleFromPerimeterPoint(cx, cy, 100, 150)).toBe(180); // Bottom
+      expect(getAngleFromPerimeterPoint(cx, cy, 50, 100)).toBe(270);  // Left
+    });
+
+    it('supports custom seat angles on square and rectangular tables via getTableLayout', () => {
+      const seats: FloorPlanSeat[] = [
+        { id: 's1', seatNumber: 1, angle: 0 },
+        { id: 's2', seatNumber: 2, angle: 180 },
+      ];
+
+      const squareLayout = getTableLayout('square', 2, seats);
+      expect(squareLayout.seats[0].x).toBe(squareLayout.containerWidth / 2);
+      expect(squareLayout.seats[1].x).toBe(squareLayout.containerWidth / 2);
+
+      const rectLayout = getTableLayout('rectangular', 2, seats);
+      expect(rectLayout.seats[0].x).toBe(rectLayout.containerWidth / 2);
+      expect(rectLayout.seats[1].x).toBe(rectLayout.containerWidth / 2);
     });
   });
 

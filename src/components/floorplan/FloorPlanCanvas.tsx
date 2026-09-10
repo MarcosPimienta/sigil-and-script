@@ -11,6 +11,8 @@ interface FloorPlanCanvasProps {
   onAddTableClick: () => void;
   onMoveReferenceLayer?: (x: number, y: number) => void;
   onUpdateTable?: (tableId: string, patch: Partial<Pick<FloorPlanTable, 'name' | 'shape' | 'seatsCount' | 'rotation'>>) => void;
+  onMoveSeat?: (tableId: string, seatNumber: number, angle: number) => void;
+  onResetSeats?: (tableId: string) => void;
 }
 
 export function FloorPlanCanvas({
@@ -22,6 +24,8 @@ export function FloorPlanCanvas({
   onAddTableClick,
   onMoveReferenceLayer,
   onUpdateTable,
+  onMoveSeat,
+  onResetSeats,
 }: FloorPlanCanvasProps) {
   const [zoom, setZoom] = useState(1);
 
@@ -187,6 +191,8 @@ export function FloorPlanCanvas({
             onDeleteTable={onDeleteTable}
             onMoveTable={onMoveTable}
             onUpdateTable={onUpdateTable}
+            onMoveSeat={onMoveSeat}
+            onResetSeats={onResetSeats}
             zoom={zoom}
           />
         ))}

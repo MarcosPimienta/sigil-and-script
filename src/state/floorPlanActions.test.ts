@@ -164,4 +164,40 @@ describe('Floor Plan Store Actions', () => {
     table = useSigilStore.getState().design.floorPlan?.tables.find((t) => t.id === tblId);
     expect(table?.seats[1].assignedGuestId).toBeUndefined();
   });
+
+  it('moves a floor plan seat by updating its custom angle', () => {
+    const store = useSigilStore.getState();
+    const tblId = store.addFloorPlanTable({ shape: 'round', seatsCount: 4 });
+
+    // Move seat 2 to 135.4 degrees
+    useSigilStore.getState().moveFloorPlanSeat(tblId, 2, 135.4);
+
+    let table = useSigilStore.getState().design.floorPlan?.tables.find((t) => t.id === tblId);
+    expect(table?.seats[1].angle).toBe(135.4);
+    expect(table?.seats[0].angle).toBeUndefined();
+
+    // Move seat 2 past 360 degrees (normalization check: 405 -> 45)
+    useSigilStore.getState().moveFloorPlanSeat(tblId, 2, 405);
+    table = useSigilStore.getState().design.floorPlan?.tables.find((t) => t.id === tblId);
+    expect(table?.seats[1].angle).toBe(45);
+  });
+
+  it('resets custom seat angles on a table back to default spacing', () => {
+    const store = useSigilStore.getState();
+    const tblId = store.addFloorPlanTable({ shape: 'square', seatsCount: 4 });
+
+    useSigilStore.getState().moveFloorPlanSeat(tblId, 1, 45);
+    useSigilStore.getState().moveFloorPlanSeat(tblId, 2, 180);
+
+    let table = useSigilStore.getState().design.floorPlan?.tables.find((t) => t.id === tblId);
+    expect(table?.seats[0].angle).toBe(45);
+    expect(table?.seats[1].angle).toBe(180);
+
+    // Reset layout
+    useSigilStore.getState().resetFloorPlanTableSeats(tblId);
+
+    table = useSigilStore.getState().design.floorPlan?.tables.find((t) => t.id === tblId);
+    expect(table?.seats[0].angle).toBeUndefined();
+    expect(table?.seats[1].angle).toBeUndefined();
+  });
 });

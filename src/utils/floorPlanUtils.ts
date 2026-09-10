@@ -78,9 +78,54 @@ export interface TableLayout {
 const SEAT_MARGIN = 26; // Distance from table edge to seat center
 
 /**
+ * Projects a ray from center (cx, cy) at angleDeg (where 0 deg is 12 o'clock / top, clockwise)
+ * onto the perimeter rectangle boundary defined by half-width hw and half-height hh.
+ */
+export function projectAngleToPerimeterBox(
+  cx: number,
+  cy: number,
+  hw: number,
+  hh: number,
+  angleDeg: number
+): { x: number; y: number } {
+  const normDeg = ((angleDeg % 360) + 360) % 360;
+  const rad = ((normDeg - 90) * Math.PI) / 180;
+  const cos = Math.cos(rad);
+  const sin = Math.sin(rad);
+
+  const sx = Math.abs(cos) > 1e-7 ? hw / Math.abs(cos) : Infinity;
+  const sy = Math.abs(sin) > 1e-7 ? hh / Math.abs(sin) : Infinity;
+  const s = Math.min(sx, sy);
+
+  return {
+    x: Math.round(cx + s * cos),
+    y: Math.round(cy + s * sin),
+  };
+}
+
+/**
+ * Calculates the clock-facing angle in degrees [0, 360) from table center (cx, cy) to a given point (px, py),
+ * where 0 deg is 12 o'clock (top) and increases clockwise.
+ */
+export function getAngleFromPerimeterPoint(
+  cx: number,
+  cy: number,
+  px: number,
+  py: number
+): number {
+  const rad = Math.atan2(py - cy, px - cx);
+  const deg = (rad * 180) / Math.PI;
+  const clockDeg = ((deg + 90) % 360 + 360) % 360;
+  return Math.round(clockDeg * 10) / 10;
+}
+
+/**
  * Calculates table bounding box and seat coordinates for a round table.
  */
-export function calculateRoundTableLayout(seatsCount: number): TableLayout {
+export function calculateRoundTableLayout(
+  seatsCount: number,
+  seats?: FloorPlanSeat[]
+): TableLayout {
   const count = Math.max(2, Math.min(24, seatsCount));
   const tableRadius = Math.max(45, 25 + count * 6.5);
   const tableDiameter = tableRadius * 2;
@@ -88,13 +133,36 @@ export function calculateRoundTableLayout(seatsCount: number): TableLayout {
   const containerSize = (seatRadius + 22) * 2;
   const center = containerSize / 2;
 
-  const seats: SeatCoordinate[] = [];
+  const seatAngleMap = new Map<number, number>();
+  if (seats) {
+    for (const s of seats) {
+      if (s.angle !== undefined) {
+        seatAngleMap.set(s.seatNumber, s.angle);
+      }
+    }
+  }
+
+  const seatCoords: SeatCoordinate[] = [];
   for (let i = 0; i < count; i++) {
-    const angle = (2 * Math.PI * i) / count - Math.PI / 2;
-    seats.push({
-      seatNumber: i + 1,
-      x: Math.round(center + seatRadius * Math.cos(angle)),
-      y: Math.round(center + seatRadius * Math.sin(angle)),
+    const seatNumber = i + 1;
+    const customAngle = seatAngleMap.get(seatNumber);
+    let x: number;
+    let y: number;
+
+    if (customAngle !== undefined) {
+      const rad = ((customAngle - 90) * Math.PI) / 180;
+      x = Math.round(center + seatRadius * Math.cos(rad));
+      y = Math.round(center + seatRadius * Math.sin(rad));
+    } else {
+      const angle = (2 * Math.PI * i) / count - Math.PI / 2;
+      x = Math.round(center + seatRadius * Math.cos(angle));
+      y = Math.round(center + seatRadius * Math.sin(angle));
+    }
+
+    seatCoords.push({
+      seatNumber,
+      x,
+      y,
     });
   }
 
@@ -105,19 +173,35 @@ export function calculateRoundTableLayout(seatsCount: number): TableLayout {
     tableY: center - tableRadius,
     tableWidth: tableDiameter,
     tableHeight: tableDiameter,
-    seats,
+    seats: seatCoords,
   };
 }
 
 /**
  * Calculates table bounding box and seat coordinates for a square table.
  */
-export function calculateSquareTableLayout(seatsCount: number): TableLayout {
+export function calculateSquareTableLayout(
+  seatsCount: number,
+  seats?: FloorPlanSeat[]
+): TableLayout {
   const count = Math.max(2, Math.min(24, seatsCount));
   const perSide = Math.ceil(count / 4);
   const tableSize = Math.max(90, 40 + perSide * 40);
   const containerSize = tableSize + (SEAT_MARGIN + 22) * 2;
   const offset = (containerSize - tableSize) / 2;
+
+  const center = containerSize / 2;
+  const hw = tableSize / 2 + SEAT_MARGIN;
+  const hh = tableSize / 2 + SEAT_MARGIN;
+
+  const seatAngleMap = new Map<number, number>();
+  if (seats) {
+    for (const s of seats) {
+      if (s.angle !== undefined) {
+        seatAngleMap.set(s.seatNumber, s.angle);
+      }
+    }
+  }
 
   // Distribute seats across 4 edges: Top (0), Right (1), Bottom (2), Left (3)
   const edgeCounts = [0, 0, 0, 0];
@@ -125,52 +209,82 @@ export function calculateSquareTableLayout(seatsCount: number): TableLayout {
     edgeCounts[i % 4]++;
   }
 
-  const seats: SeatCoordinate[] = [];
+  const seatCoords: SeatCoordinate[] = [];
   let seatNum = 1;
 
   // 0: Top edge (left to right)
   const topCount = edgeCounts[0];
   for (let i = 0; i < topCount; i++) {
-    const step = tableSize / (topCount + 1);
-    seats.push({
-      seatNumber: seatNum++,
-      x: Math.round(offset + step * (i + 1)),
-      y: Math.round(offset - SEAT_MARGIN),
-    });
+    const sNum = seatNum++;
+    const customAngle = seatAngleMap.get(sNum);
+    if (customAngle !== undefined) {
+      const pos = projectAngleToPerimeterBox(center, center, hw, hh, customAngle);
+      seatCoords.push({ seatNumber: sNum, x: pos.x, y: pos.y });
+    } else {
+      const step = tableSize / (topCount + 1);
+      seatCoords.push({
+        seatNumber: sNum,
+        x: Math.round(offset + step * (i + 1)),
+        y: Math.round(offset - SEAT_MARGIN),
+      });
+    }
   }
 
   // 1: Right edge (top to bottom)
   const rightCount = edgeCounts[1];
   for (let i = 0; i < rightCount; i++) {
-    const step = tableSize / (rightCount + 1);
-    seats.push({
-      seatNumber: seatNum++,
-      x: Math.round(offset + tableSize + SEAT_MARGIN),
-      y: Math.round(offset + step * (i + 1)),
-    });
+    const sNum = seatNum++;
+    const customAngle = seatAngleMap.get(sNum);
+    if (customAngle !== undefined) {
+      const pos = projectAngleToPerimeterBox(center, center, hw, hh, customAngle);
+      seatCoords.push({ seatNumber: sNum, x: pos.x, y: pos.y });
+    } else {
+      const step = tableSize / (rightCount + 1);
+      seatCoords.push({
+        seatNumber: sNum,
+        x: Math.round(offset + tableSize + SEAT_MARGIN),
+        y: Math.round(offset + step * (i + 1)),
+      });
+    }
   }
 
   // 2: Bottom edge (right to left)
   const bottomCount = edgeCounts[2];
   for (let i = 0; i < bottomCount; i++) {
-    const step = tableSize / (bottomCount + 1);
-    seats.push({
-      seatNumber: seatNum++,
-      x: Math.round(offset + tableSize - step * (i + 1)),
-      y: Math.round(offset + tableSize + SEAT_MARGIN),
-    });
+    const sNum = seatNum++;
+    const customAngle = seatAngleMap.get(sNum);
+    if (customAngle !== undefined) {
+      const pos = projectAngleToPerimeterBox(center, center, hw, hh, customAngle);
+      seatCoords.push({ seatNumber: sNum, x: pos.x, y: pos.y });
+    } else {
+      const step = tableSize / (bottomCount + 1);
+      seatCoords.push({
+        seatNumber: sNum,
+        x: Math.round(offset + tableSize - step * (i + 1)),
+        y: Math.round(offset + tableSize + SEAT_MARGIN),
+      });
+    }
   }
 
   // 3: Left edge (bottom to top)
   const leftCount = edgeCounts[3];
   for (let i = 0; i < leftCount; i++) {
-    const step = tableSize / (leftCount + 1);
-    seats.push({
-      seatNumber: seatNum++,
-      x: Math.round(offset - SEAT_MARGIN),
-      y: Math.round(offset + tableSize - step * (i + 1)),
-    });
+    const sNum = seatNum++;
+    const customAngle = seatAngleMap.get(sNum);
+    if (customAngle !== undefined) {
+      const pos = projectAngleToPerimeterBox(center, center, hw, hh, customAngle);
+      seatCoords.push({ seatNumber: sNum, x: pos.x, y: pos.y });
+    } else {
+      const step = tableSize / (leftCount + 1);
+      seatCoords.push({
+        seatNumber: sNum,
+        x: Math.round(offset - SEAT_MARGIN),
+        y: Math.round(offset + tableSize - step * (i + 1)),
+      });
+    }
   }
+
+  seatCoords.sort((a, b) => a.seatNumber - b.seatNumber);
 
   return {
     containerWidth: containerSize,
@@ -179,14 +293,17 @@ export function calculateSquareTableLayout(seatsCount: number): TableLayout {
     tableY: offset,
     tableWidth: tableSize,
     tableHeight: tableSize,
-    seats,
+    seats: seatCoords,
   };
 }
 
 /**
  * Calculates table bounding box and seat coordinates for a rectangular table.
  */
-export function calculateRectangularTableLayout(seatsCount: number): TableLayout {
+export function calculateRectangularTableLayout(
+  seatsCount: number,
+  seats?: FloorPlanSeat[]
+): TableLayout {
   const count = Math.max(2, Math.min(24, seatsCount));
 
   // Determine seats on long sides vs ends
@@ -206,46 +323,90 @@ export function calculateRectangularTableLayout(seatsCount: number): TableLayout
   const offsetX = padX;
   const offsetY = padY;
 
-  const seats: SeatCoordinate[] = [];
+  const cx = containerWidth / 2;
+  const cy = containerHeight / 2;
+  const hw = tableWidth / 2 + SEAT_MARGIN;
+  const hh = tableHeight / 2 + SEAT_MARGIN;
+
+  const seatAngleMap = new Map<number, number>();
+  if (seats) {
+    for (const s of seats) {
+      if (s.angle !== undefined) {
+        seatAngleMap.set(s.seatNumber, s.angle);
+      }
+    }
+  }
+
+  const seatCoords: SeatCoordinate[] = [];
   let seatNum = 1;
 
   // Top side (left to right)
   for (let i = 0; i < topCount; i++) {
-    const step = tableWidth / (topCount + 1);
-    seats.push({
-      seatNumber: seatNum++,
-      x: Math.round(offsetX + step * (i + 1)),
-      y: Math.round(offsetY - SEAT_MARGIN),
-    });
+    const sNum = seatNum++;
+    const customAngle = seatAngleMap.get(sNum);
+    if (customAngle !== undefined) {
+      const pos = projectAngleToPerimeterBox(cx, cy, hw, hh, customAngle);
+      seatCoords.push({ seatNumber: sNum, x: pos.x, y: pos.y });
+    } else {
+      const step = tableWidth / (topCount + 1);
+      seatCoords.push({
+        seatNumber: sNum,
+        x: Math.round(offsetX + step * (i + 1)),
+        y: Math.round(offsetY - SEAT_MARGIN),
+      });
+    }
   }
 
   // Right end (if present)
   if (hasEnds) {
-    seats.push({
-      seatNumber: seatNum++,
-      x: Math.round(offsetX + tableWidth + SEAT_MARGIN),
-      y: Math.round(offsetY + tableHeight / 2),
-    });
+    const sNum = seatNum++;
+    const customAngle = seatAngleMap.get(sNum);
+    if (customAngle !== undefined) {
+      const pos = projectAngleToPerimeterBox(cx, cy, hw, hh, customAngle);
+      seatCoords.push({ seatNumber: sNum, x: pos.x, y: pos.y });
+    } else {
+      seatCoords.push({
+        seatNumber: sNum,
+        x: Math.round(offsetX + tableWidth + SEAT_MARGIN),
+        y: Math.round(offsetY + tableHeight / 2),
+      });
+    }
   }
 
   // Bottom side (right to left)
   for (let i = 0; i < bottomCount; i++) {
-    const step = tableWidth / (bottomCount + 1);
-    seats.push({
-      seatNumber: seatNum++,
-      x: Math.round(offsetX + tableWidth - step * (i + 1)),
-      y: Math.round(offsetY + tableHeight + SEAT_MARGIN),
-    });
+    const sNum = seatNum++;
+    const customAngle = seatAngleMap.get(sNum);
+    if (customAngle !== undefined) {
+      const pos = projectAngleToPerimeterBox(cx, cy, hw, hh, customAngle);
+      seatCoords.push({ seatNumber: sNum, x: pos.x, y: pos.y });
+    } else {
+      const step = tableWidth / (bottomCount + 1);
+      seatCoords.push({
+        seatNumber: sNum,
+        x: Math.round(offsetX + tableWidth - step * (i + 1)),
+        y: Math.round(offsetY + tableHeight + SEAT_MARGIN),
+      });
+    }
   }
 
   // Left end (if present)
   if (hasEnds) {
-    seats.push({
-      seatNumber: seatNum++,
-      x: Math.round(offsetX - SEAT_MARGIN),
-      y: Math.round(offsetY + tableHeight / 2),
-    });
+    const sNum = seatNum++;
+    const customAngle = seatAngleMap.get(sNum);
+    if (customAngle !== undefined) {
+      const pos = projectAngleToPerimeterBox(cx, cy, hw, hh, customAngle);
+      seatCoords.push({ seatNumber: sNum, x: pos.x, y: pos.y });
+    } else {
+      seatCoords.push({
+        seatNumber: sNum,
+        x: Math.round(offsetX - SEAT_MARGIN),
+        y: Math.round(offsetY + tableHeight / 2),
+      });
+    }
   }
+
+  seatCoords.sort((a, b) => a.seatNumber - b.seatNumber);
 
   return {
     containerWidth,
@@ -254,23 +415,27 @@ export function calculateRectangularTableLayout(seatsCount: number): TableLayout
     tableY: offsetY,
     tableWidth,
     tableHeight,
-    seats,
+    seats: seatCoords,
   };
 }
 
 /**
  * Returns layout geometry for any table shape.
  */
-export function getTableLayout(shape: TableShape, seatsCount: number): TableLayout {
+export function getTableLayout(
+  shape: TableShape,
+  seatsCount: number,
+  seats?: FloorPlanSeat[]
+): TableLayout {
   switch (shape) {
     case 'round':
-      return calculateRoundTableLayout(seatsCount);
+      return calculateRoundTableLayout(seatsCount, seats);
     case 'square':
-      return calculateSquareTableLayout(seatsCount);
+      return calculateSquareTableLayout(seatsCount, seats);
     case 'rectangular':
-      return calculateRectangularTableLayout(seatsCount);
+      return calculateRectangularTableLayout(seatsCount, seats);
     default:
-      return calculateRoundTableLayout(seatsCount);
+      return calculateRoundTableLayout(seatsCount, seats);
   }
 }
 
