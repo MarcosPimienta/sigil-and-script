@@ -30,7 +30,7 @@ describe('ResetPasswordView', () => {
     fill('secret1', 'secret2');
     expect(screen.getByText(/passwords do not match/i)).toBeInTheDocument();
     fill('abc', 'abc');
-    expect(screen.getByText(/at least 6 characters/i)).toBeInTheDocument();
+    expect(screen.getByText(/at least 12 characters/i)).toBeInTheDocument();
     expect(mockReset).not.toHaveBeenCalled();
   });
 
@@ -38,8 +38,8 @@ describe('ResetPasswordView', () => {
     mockReset.mockResolvedValue(true);
     const onDone = vi.fn();
     render(<ResetPasswordView token={TOKEN} onDone={onDone} onRequestNew={() => {}} />);
-    fill('new-secret', 'new-secret');
-    expect(mockReset).toHaveBeenCalledWith(TOKEN, 'new-secret');
+    fill('new-secret-123', 'new-secret-123');
+    expect(mockReset).toHaveBeenCalledWith(TOKEN, 'new-secret-123');
     await waitFor(() => expect(screen.getByRole('status')).toBeInTheDocument());
     fireEvent.click(screen.getByRole('button', { name: /sign in/i }));
     expect(onDone).toHaveBeenCalled();

@@ -12,6 +12,7 @@
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:secure": "node scripts/enable-rls.js",
+    "cleanup:pentest": "node --env-file-if-exists=.env scripts/cleanup-pentest-artifacts.js",
     "postinstall": "prisma generate",
     "dev:quick": "tsc && node --env-file-if-exists=.env dist/src/index.js"
   },
@@ -19,13 +20,17 @@
     "@prisma/client": "^6.2.1",
     "cors": "^2.8.5",
     "express": "^4.21.2",
+    "express-rate-limit": "^8.7.0",
+    "helmet": "^8.3.0",
     "resend": "^6.25.0",
+    "sanitize-html": "^2.17.7",
     "zod": "^3.24.1"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.0",
     "@types/node": "^22.10.7",
+    "@types/sanitize-html": "^2.16.1",
     "@types/supertest": "^6.0.2",
     "prisma": "^6.2.1",
     "supertest": "^7.0.0",

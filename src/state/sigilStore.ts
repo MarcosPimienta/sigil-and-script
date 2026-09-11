@@ -1191,7 +1191,15 @@ export const useSigilStore = create<SigilState>((set, get) => ({
         method: 'POST',
         body: JSON.stringify({ email, password, name }),
       });
-      return await get().login(email, password);
+      const loginSuccess = await get().login(email, password);
+      if (!loginSuccess) {
+        set({
+          authStatus: 'error',
+          authError: 'Account already exists. Please log in with your existing password or reset it.',
+        });
+        return false;
+      }
+      return true;
     } catch (e: any) {
       set({ authStatus: 'error', authError: e.message || 'Registration failed' });
       return false;

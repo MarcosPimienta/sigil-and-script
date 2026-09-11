@@ -19,13 +19,7 @@
     <meta name="twitter:description" content="Toca para abrir tu invitación digital personalizada." />
     <meta name="twitter:image" content="https://sigil-and-script-frontend.vercel.app/envelope-with-seal.png" />
 
-    <!-- Security headers (supplemented by server-side headers in production) -->
-    <!--
-      TODO(security): In production, move this CSP to a server-sent header.
-      The meta-tag CSP cannot block all attack vectors (e.g. navigation to data: URLs).
-      Nonces are not supported in meta-tag CSP, so we use 'self' for script-src.
-      X-Frame-Options and X-Content-Type-Options MUST be set server-side.
-    -->
+    <!-- Security headers: Primary CSP and frame protections are served via HTTP response headers in vercel.json -->
     <meta
       http-equiv="Content-Security-Policy"
       content="
@@ -34,9 +28,9 @@
         style-src   'self' 'unsafe-inline' https://fonts.googleapis.com;
         font-src    'self' https://fonts.gstatic.com;
         img-src     'self' data: blob: https://images.unsplash.com https://*.supabase.co;
-        media-src   'self' data: blob: https:;
+        media-src   'self' data: blob: https://*.supabase.co;
         frame-src   https://www.youtube-nocookie.com https://www.youtube.com https://player.vimeo.com;
-        connect-src 'self' https: http://localhost:5001 ws://localhost:* http://localhost:*;
+        connect-src 'self' https://sigil-and-script-backend.vercel.app https://*.supabase.co http://localhost:5001 ws://localhost:*;
         object-src  'none';
       "
     />

@@ -15,14 +15,6 @@ export async function apiFetch<T = any>(path: string, options: RequestInit = {})
     headers.set('Authorization', `Bearer ${token}`);
   }
 
-  if (!headers.has('X-Role')) {
-    const method = options.method ? options.method.toUpperCase() : 'GET';
-    if (method !== 'GET') {
-      headers.set('X-Role', 'HOST');
-    } else {
-      headers.set('X-Role', 'GUEST');
-    }
-  }
 
   try {
     const response = await fetch(url, {

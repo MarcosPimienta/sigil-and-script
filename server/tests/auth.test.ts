@@ -34,7 +34,10 @@ describe('Password recovery', () => {
       .post('/auth/register')
       .send({ email: TEST_EMAIL, password: ORIGINAL_PASSWORD, name: 'Reset Tester' });
     expect(res.status).toBe(201);
-    userId = res.body.user.id;
+    expect(res.body).toHaveProperty('success', true);
+    const user = await prisma.user.findUnique({ where: { email: TEST_EMAIL.toLowerCase() } });
+    expect(user).not.toBeNull();
+    userId = user!.id;
   });
 
   afterAll(async () => {
@@ -148,9 +151,13 @@ describe('Password recovery', () => {
       await request(app).post('/auth/forgot-password').send({ email: TEST_EMAIL });
       const token = lastEmailedToken();
 
-      const weak = await request(app).post('/auth/reset-password').send({ token, password: '123' });
-      expect(weak.status).toBe(400);
-      expect(weak.body.error).toMatch(/at least 6 characters/);
+      const shortPwd = await request(app).post('/auth/reset-password').send({ token, password: 'short' });
+      expect(shortPwd.status).toBe(400);
+      expect(shortPwd.body.error).toMatch(/at least 12 characters/);
+
+      const commonWeak = await request(app).post('/auth/reset-password').send({ token, password: 'password1234' });
+      expect(commonWeak.status).toBe(400);
+      expect(commonWeak.body.error).toMatch(/too common/);
 
       const record = await prisma.passwordResetToken.findFirst({ where: { userId } });
       expect(record?.usedAt).toBeNull();
@@ -203,4 +210,56 @@ describe('Password recovery', () => {
       await request(app).post('/auth/logout').set('Authorization', `Bearer ${newLogin.body.token}`);
     });
   });
+
+  describe('Registration Security (V-02 & V-04)', () => {
+    it('rejects passwords shorter than 12 characters', async () => {
+      const res = await request(app)
+        .post('/auth/register')
+        .send({ email: `short-${Date.now()}@example.com`, password: 'weakpw', name: 'Short Pwd' });
+      expect(res.status).toBe(400);
+      expect(res.body.error).toMatch(/at least 12 characters/);
+    });
+
+    it('rejects trivial or common passwords', async () => {
+      const res = await request(app)
+        .post('/auth/register')
+        .send({ email: `common-${Date.now()}@example.com`, password: 'password1234', name: 'Common Pwd' });
+      expect(res.status).toBe(400);
+      expect(res.body.error).toMatch(/too common/);
+    });
+
+    it('returns generic success response without enumerating existing emails', async () => {
+      const existingEmail = `existing-${Date.now()}@example.com`;
+      const pwd = 'a-very-secure-password-123';
+      const setupRes = await request(app)
+        .post('/auth/register')
+        .send({ email: existingEmail, password: pwd, name: 'Original User' });
+      expect(setupRes.status).toBe(201);
+
+      // Attempt duplicate registration with different password
+      const dupRes = await request(app)
+        .post('/auth/register')
+        .send({ email: existingEmail, password: 'another-valid-password-456', name: 'Imposter' });
+      expect(dupRes.status).toBe(201);
+      expect(dupRes.body).toEqual({
+        success: true,
+        message: 'Registration request received. If eligible, you can now log in with your credentials.',
+      });
+
+      // Confirm original password still works
+      const originalLogin = await request(app)
+        .post('/auth/login')
+        .send({ email: existingEmail, password: pwd });
+      expect(originalLogin.status).toBe(200);
+
+      // Clean up
+      await request(app).post('/auth/logout').set('Authorization', `Bearer ${originalLogin.body.token}`);
+      const user = await prisma.user.findUnique({ where: { email: existingEmail } });
+      if (user) {
+        await prisma.session.deleteMany({ where: { userId: user.id } });
+        await prisma.user.delete({ where: { id: user.id } });
+      }
+    });
+  });
 });
+

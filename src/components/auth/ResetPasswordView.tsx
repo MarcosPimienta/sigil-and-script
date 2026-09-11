@@ -30,12 +30,12 @@ export function ResetPasswordView({ token, onDone, onRequestNew }: ResetPassword
       setLocalError('Please fill in both fields');
       return;
     }
-    if (password.length < 6) {
-      setLocalError('Password must be at least 6 characters long');
-      return;
-    }
     if (password !== confirmPassword) {
       setLocalError('Passwords do not match');
+      return;
+    }
+    if (password.length < 12) {
+      setLocalError('Password must be at least 12 characters long');
       return;
     }
 
@@ -89,7 +89,7 @@ export function ResetPasswordView({ token, onDone, onRequestNew }: ResetPassword
                     id="reset-password"
                     type="password"
                     className="auth-input"
-                    placeholder="Min. 6 characters"
+                    placeholder="Min. 12 characters"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     disabled={isLoading}

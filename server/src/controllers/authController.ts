@@ -8,9 +8,37 @@ import { sendPasswordResetEmail } from '../services/mailer';
 let _prisma: PrismaClient | null = null;
 const prisma = (): PrismaClient => { if (!_prisma) _prisma = new PrismaClient(); return _prisma; };
 
+const COMMON_WEAK_PASSWORDS = new Set([
+  'password1234',
+  '123456789012',
+  'qwertyuiop12',
+  'administrator',
+  'changeme1234',
+  'welcome12345',
+  'weakpassword1',
+  'iloveyou1234',
+  'supersecret1',
+  'trustnoone12',
+  'passphrase12',
+  'letmein12345',
+  'weakpw123456',
+  '111111111111',
+  '000000000000',
+  '123123123123',
+]);
+
+export const passwordSchema = z
+  .string()
+  .min(12, 'Password must be at least 12 characters long')
+  .max(128, 'Password must not exceed 128 characters')
+  .refine(
+    (pwd) => !COMMON_WEAK_PASSWORDS.has(pwd.toLowerCase()),
+    { message: 'Password is too common or easily guessable' }
+  );
+
 const registerSchema = z.object({
   email: z.string().email('Invalid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters long'),
+  password: passwordSchema,
   name: z.string().optional(),
 });
 
@@ -25,7 +53,7 @@ const forgotPasswordSchema = z.object({
 
 const resetPasswordSchema = z.object({
   token: z.string().regex(/^[a-f0-9]{64}$/, 'Invalid reset token'),
-  password: z.string().min(6, 'Password must be at least 6 characters long'),
+  password: passwordSchema,
 });
 
 // Password-reset policy
@@ -69,11 +97,15 @@ export async function register(req: Request, res: Response): Promise<void> {
     });
 
     if (existingUser) {
-      res.status(400).json({ error: 'Email is already registered' });
+      // Anti-enumeration: return identical generic 201 response without disclosing account presence (CWE-204)
+      res.status(201).json({
+        success: true,
+        message: 'Registration request received. If eligible, you can now log in with your credentials.',
+      });
       return;
     }
 
-    const user = await prisma().user.create({
+    await prisma().user.create({
       data: {
         email: email.toLowerCase(),
         password: makePasswordRecord(password),
@@ -83,11 +115,7 @@ export async function register(req: Request, res: Response): Promise<void> {
 
     res.status(201).json({
       success: true,
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-      },
+      message: 'Registration request received. If eligible, you can now log in with your credentials.',
     });
   } catch (error) {
     console.error('Error during registration:', error);
@@ -116,7 +144,8 @@ export async function login(req: Request, res: Response): Promise<void> {
 
     const [salt, storedHash] = user.password.split(':');
     if (!salt || !storedHash) {
-      res.status(500).json({ error: 'Database integrity error' });
+      console.error(`User ${user.id} has malformed password record`);
+      res.status(401).json({ error: 'Invalid email or password' });
       return;
     }
 

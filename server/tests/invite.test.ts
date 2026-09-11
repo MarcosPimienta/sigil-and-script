@@ -9,12 +9,35 @@ describe('Sigil & Script Backend API Tests', () => {
   let testCanvasId: string;
   let pendingGuestId: string;
   let openedGuestId: string;
+  let testUserId: string;
+  let testUserToken: string;
   const nonExistentGuestId = '00000000-0000-0000-0000-000000000000';
 
   const createdGuestIds: string[] = [];
   const createdCanvasIds: string[] = [];
 
   beforeAll(async () => {
+    const user = await prisma.user.create({
+      data: {
+        email: `test-invite-${Date.now()}@example.com`,
+        password: 'test-hashed-password-123',
+        name: 'Test Invite Host',
+      },
+    });
+    testUserId = user.id;
+
+    testUserToken = 'tok-' + Date.now() + '-' + Math.random().toString(36).substring(2);
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 1);
+
+    await prisma.session.create({
+      data: {
+        token: testUserToken,
+        userId: testUserId,
+        expiresAt,
+      },
+    });
+
     const canvas = await prisma.invitationCanvas.create({
       data: {
         envelopeColor: '#e0cfa9',
@@ -22,7 +45,8 @@ describe('Sigil & Script Backend API Tests', () => {
         countdownTarget: '2026-12-25T18:00:00.000Z',
         colorPalette: JSON.stringify(['#e0cfa9', '#2c1e11']),
         itinerary: JSON.stringify([{ type: 'CEREMONY', time: '18:00', locationName: 'Main Chapel' }]),
-        hostId: 'test-host-id',
+        hostId: testUserId,
+        userId: testUserId,
       },
     });
     testCanvasId = canvas.id;
@@ -60,6 +84,10 @@ describe('Sigil & Script Backend API Tests', () => {
       await prisma.invitationCanvas.deleteMany({
         where: { id: { in: createdCanvasIds } },
       });
+    }
+    if (testUserId) {
+      await prisma.session.deleteMany({ where: { userId: testUserId } });
+      await prisma.user.deleteMany({ where: { id: testUserId } });
     }
     await prisma.$disconnect();
   });
@@ -185,38 +213,49 @@ describe('Sigil & Script Backend API Tests', () => {
     });
   });
 
-  describe('RBAC Middleware Guards', () => {
-    it('should allow access to host route when X-Role is HOST', async () => {
-      await request(app)
+  describe('Token-Based Auth Guards (H-02 & R-05)', () => {
+    it('should allow access to host route when a valid bearer token is provided', async () => {
+      const res = await request(app)
         .post('/canvas')
-        .set('X-Role', 'HOST')
+        .set('Authorization', `Bearer ${testUserToken}`)
+        .send({
+          eventType: 'WEDDING',
+          envelopeColor: '#f6ebe2',
+        })
         .expect(200);
+
+      expect(res.body).toHaveProperty('id');
+      expect(res.body.userId).toBe(testUserId);
+      createdCanvasIds.push(res.body.id);
     });
 
-    it('should allow access to host route when X-Role is ADMIN', async () => {
-      await request(app)
+    it('should deny access (401) when Authorization header is missing', async () => {
+      const res = await request(app)
+        .post('/canvas')
+        .send({ eventType: 'WEDDING' })
+        .expect(401);
+      expect(res.body).toHaveProperty('error', 'Access denied, please log in');
+    });
+
+    it('should deny access (401) even if client sends X-Role header without valid token', async () => {
+      const res = await request(app)
         .post('/canvas')
         .set('X-Role', 'ADMIN')
-        .expect(200);
+        .send({ eventType: 'WEDDING' })
+        .expect(401);
+      expect(res.body).toHaveProperty('error', 'Access denied, please log in');
     });
 
-    it('should deny access to host route (403) when X-Role is GUEST', async () => {
+    it('should deny access (401) for invalid or forged bearer tokens', async () => {
       const res = await request(app)
         .post('/canvas')
-        .set('X-Role', 'GUEST')
-        .expect(403);
-      expect(res.body).toHaveProperty('error', 'Access denied: requires HOST role');
-    });
-
-    it('should deny access to host route (403) when X-Role header is missing', async () => {
-      const res = await request(app)
-        .post('/canvas')
-        .expect(403);
-      expect(res.body).toHaveProperty('error', 'Access denied: missing role header');
+        .set('Authorization', 'Bearer forged-fake-token-1234')
+        .send({ eventType: 'WEDDING' })
+        .expect(401);
+      expect(res.body).toHaveProperty('error', 'Invalid or expired session, please log in');
     });
 
     it('persists floorPlan configuration inside designData and retrieves it', async () => {
-      const canvasId = 'test-canvas-fp-' + Date.now();
       const floorPlanData = {
         tables: [
           {
@@ -233,11 +272,10 @@ describe('Sigil & Script Backend API Tests', () => {
         ],
       };
 
-      await request(app)
+      const postRes = await request(app)
         .post('/canvas')
-        .set('X-Role', 'HOST')
+        .set('Authorization', `Bearer ${testUserToken}`)
         .send({
-          id: canvasId,
           designData: {
             title: 'Event with Floor Plan',
             floorPlan: floorPlanData,
@@ -245,9 +283,12 @@ describe('Sigil & Script Backend API Tests', () => {
         })
         .expect(200);
 
+      const createdId = postRes.body.id;
+      createdCanvasIds.push(createdId);
+
       const getRes = await request(app)
-        .get(`/canvas/${canvasId}`)
-        .set('X-Role', 'HOST')
+        .get(`/canvas/${createdId}`)
+        .set('Authorization', `Bearer ${testUserToken}`)
         .expect(200);
 
       expect(getRes.body).toHaveProperty('designData');

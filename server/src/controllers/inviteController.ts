@@ -8,6 +8,71 @@ import {
 import { PrismaClient } from '@prisma/client';
 import { z } from 'zod';
 import crypto from 'crypto';
+import sanitizeHtml from 'sanitize-html';
+
+const ALLOWED_STORAGE_BUCKETS = new Set(['invitation-images', 'invitation-music']);
+
+function stripHtml(input?: string | null): string | null | undefined {
+  if (input === null) return null;
+  if (input === undefined) return undefined;
+  return sanitizeHtml(input, {
+    allowedTags: [],
+    allowedAttributes: {},
+  }).trim();
+}
+
+function sanitizeSvg(rawSvg: string): string {
+  return sanitizeHtml(rawSvg, {
+    allowedTags: [
+      'svg', 'g', 'path', 'defs', 'clipPath', 'mask', 'pattern',
+      'linearGradient', 'radialGradient', 'stop', 'rect', 'circle',
+      'ellipse', 'line', 'polyline', 'polygon', 'text', 'tspan',
+      'use', 'symbol', 'style', 'title', 'desc'
+    ],
+    allowedAttributes: {
+      '*': [
+        'id', 'class', 'style', 'transform', 'viewBox', 'width', 'height',
+        'x', 'y', 'x1', 'y1', 'x2', 'y2', 'cx', 'cy', 'r', 'rx', 'ry',
+        'points', 'd', 'fill', 'fill-opacity', 'fill-rule',
+        'stroke', 'stroke-width', 'stroke-linecap', 'stroke-linejoin',
+        'stroke-miterlimit', 'stroke-dasharray', 'stroke-dashoffset', 'stroke-opacity',
+        'opacity', 'stop-color', 'stop-opacity', 'offset', 'gradientUnits',
+        'gradientTransform', 'preserveAspectRatio', 'xmlns', 'xmlns:xlink', 'xlink:href', 'href'
+      ],
+    },
+    allowedSchemes: ['http', 'https', 'data'],
+    disallowedTagsMode: 'discard',
+  });
+}
+
+function validateFileBuffer(buffer: Buffer, declaredType: string): boolean {
+  if (buffer.length < 4) return false;
+  const lower = declaredType.toLowerCase();
+  if (lower === 'image/png') {
+    return buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4e && buffer[3] === 0x47;
+  }
+  if (lower === 'image/jpeg' || lower === 'image/jpg') {
+    return buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff;
+  }
+  if (lower === 'image/webp') {
+    return buffer.subarray(0, 4).toString('ascii') === 'RIFF' &&
+           buffer.subarray(8, 12).toString('ascii') === 'WEBP';
+  }
+  if (lower === 'audio/mpeg' || lower === 'audio/mp3') {
+    const isId3 = buffer.subarray(0, 3).toString('ascii') === 'ID3';
+    const isSync = buffer[0] === 0xff && (buffer[1] & 0xe0) === 0xe0;
+    return isId3 || isSync;
+  }
+  if (lower === 'audio/wav' || lower === 'audio/x-wav') {
+    return buffer.subarray(0, 4).toString('ascii') === 'RIFF' &&
+           buffer.subarray(8, 12).toString('ascii') === 'WAVE';
+  }
+  if (lower === 'image/svg+xml') {
+    const start = buffer.subarray(0, 1024).toString('utf-8').trim().toLowerCase();
+    return start.includes('<svg') || start.includes('<?xml');
+  }
+  return false;
+}
 
 // Lazy singleton — avoids crashing the module on Vercel cold start
 let _prisma: PrismaClient | null = null;
@@ -252,13 +317,13 @@ export async function getInviteByToken(req: Request, res: Response): Promise<voi
 
 const rsvpBodySchema = z.object({
   status: z.enum(['RSVP_YES', 'RSVP_NO']),
-  mealPref: z.string().nullable().optional(),
-  dietary: z.string().nullable().optional(),
-  plusOne: z.string().nullable().optional(),
-  notes: z.string().nullable().optional(),
+  mealPref: z.string().max(500, 'Meal preference must not exceed 500 characters').nullable().optional(),
+  dietary: z.string().max(500, 'Dietary notes must not exceed 500 characters').nullable().optional(),
+  plusOne: z.string().max(500, 'Plus-one details must not exceed 500 characters').nullable().optional(),
+  notes: z.string().max(500, 'Notes must not exceed 500 characters').nullable().optional(),
   dependents: z.array(z.object({
     id: z.string(),
-    name: z.string(),
+    name: z.string().max(200),
     included: z.boolean(),
   })).optional(),
 });
@@ -302,10 +367,10 @@ export async function submitRsvp(req: Request, res: Response): Promise<void> {
 
     const mergedResponses = {
       ...existingResponses,
-      mealPref,
-      dietary,
-      plusOne,
-      notes,
+      mealPref: stripHtml(mealPref),
+      dietary: stripHtml(dietary),
+      plusOne: stripHtml(plusOne),
+      notes: stripHtml(notes),
       dependents: dependents ?? [],
       submittedAt: new Date().toISOString(),
     };
@@ -444,7 +509,7 @@ export async function saveCanvas(req: Request, res: Response): Promise<void> {
             countdownTarget: countdownTarget ?? existing.countdownTarget,
             colorPalette: colorPalette ?? existing.colorPalette,
             itinerary: itinerary ?? existing.itinerary,
-            hostId: hostId ?? existing.hostId,
+            hostId: userId,
             designData: designDataStr !== undefined ? designDataStr : existing.designData,
           },
         });
@@ -454,7 +519,7 @@ export async function saveCanvas(req: Request, res: Response): Promise<void> {
     if (!canvasObj) {
       canvasObj = await getPrisma().invitationCanvas.create({
         data: {
-          id: id || undefined,
+          id: crypto.randomUUID(),
           eventType: normalizeEventType(eventType),
           envelopeColor: envelopeColor || '#f6ebe2',
           waxSealAsset: waxSealAsset || 'classic-red',
@@ -462,7 +527,7 @@ export async function saveCanvas(req: Request, res: Response): Promise<void> {
           countdownTarget: countdownTarget || new Date().toISOString(),
           colorPalette: colorPalette || JSON.stringify([]),
           itinerary: itinerary || JSON.stringify([]),
-          hostId: hostId || 'host-default',
+          hostId: userId,
           designData: designDataStr || '{}',
           userId,
         },
@@ -599,6 +664,12 @@ export async function uploadMedia(req: Request, res: Response): Promise<void> {
     return;
   }
 
+  // V-03: Restrict to explicit storage bucket whitelist
+  if (!ALLOWED_STORAGE_BUCKETS.has(bucket)) {
+    res.status(400).json({ error: 'Invalid storage bucket target' });
+    return;
+  }
+
   const supabaseUrl = process.env.SUPABASE_URL;
   const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
@@ -611,7 +682,24 @@ export async function uploadMedia(req: Request, res: Response): Promise<void> {
   try {
     const base64Parts = fileData.split(';base64,');
     const base64String = base64Parts.length > 1 ? base64Parts[1] : fileData;
-    const buffer = Buffer.from(base64String, 'base64');
+    let buffer = Buffer.from(base64String, 'base64');
+
+    // V-05: Buffer signature verification
+    if (!validateFileBuffer(buffer, fileType)) {
+      res.status(400).json({ error: 'File header signature does not match declared type' });
+      return;
+    }
+
+    // V-05: SVG sanitization to strip executable/script content
+    if (fileType === 'image/svg+xml' || fileName.toLowerCase().endsWith('.svg')) {
+      const rawSvg = buffer.toString('utf-8');
+      const sanitizedSvg = sanitizeSvg(rawSvg);
+      if (!sanitizedSvg.includes('<svg')) {
+        res.status(400).json({ error: 'Invalid or disallowed SVG markup' });
+        return;
+      }
+      buffer = Buffer.from(sanitizedSvg, 'utf-8');
+    }
 
     const sanitizedName = fileName.replace(/[^a-zA-Z0-9.-]/g, '_');
     const uniqueFileName = `${crypto.randomUUID()}-${sanitizedName}`;
@@ -628,7 +716,6 @@ export async function uploadMedia(req: Request, res: Response): Promise<void> {
     });
 
     if (!uploadRes.ok && (fileType === 'image/svg+xml' || fileName.toLowerCase().endsWith('.svg'))) {
-      console.warn('Supabase rejected image/svg+xml, retrying with application/octet-stream fallback...');
       uploadRes = await fetch(targetUrl, {
         method: 'POST',
         headers: {
@@ -640,10 +727,11 @@ export async function uploadMedia(req: Request, res: Response): Promise<void> {
       });
     }
 
+    // V-06: Sanitize upload error responses to prevent Supabase internals disclosure
     if (!uploadRes.ok) {
       const errorText = await uploadRes.text();
       console.error('Supabase upload request failed:', errorText);
-      res.status(uploadRes.status).json({ error: `Supabase upload failed: ${errorText}` });
+      res.status(400).json({ error: 'Failed to upload media file' });
       return;
     }
 
