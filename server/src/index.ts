@@ -14,6 +14,9 @@ const ALLOWED_ORIGINS = [
 const app = express();
 const PORT = process.env.PORT || 5001;
 
+// Trust first proxy hop (e.g. Vercel) for rate limiting & IP resolution
+app.set('trust proxy', 1);
+
 // V-06: Suppress Express technology banner
 app.disable('x-powered-by');
 
@@ -59,8 +62,8 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   res.status(500).json({ error: 'An unexpected internal error occurred' });
 });
 
-// Start server only if not in testing environment
-if (process.env.NODE_ENV !== 'test') {
+// Start server only if not in testing environment and not in serverless runtime
+if (process.env.NODE_ENV !== 'test' && !process.env.VERCEL) {
   app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
   });
