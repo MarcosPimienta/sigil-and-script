@@ -9,6 +9,7 @@ import type {
   InvitationDesign,
   InviteeRecord,
   ApiStatus,
+  PanelTab,
 } from '../types/sigil.types';
 import { apiFetch } from '../utils/api';
 import { createDesignFromTemplate } from '../templates';
@@ -40,7 +41,7 @@ const DEFAULT_GUEST: GuestPayload = {
 };
 
 /** Human date for {{event_date}} derived from the countdown target. */
-function formatEventDateForGuest(countdownTarget: string | undefined, lang: string | undefined): string {
+export function formatEventDateForGuest(countdownTarget: string | undefined, lang: string | undefined): string {
   if (!countdownTarget) return '';
   const d = new Date(countdownTarget);
   if (Number.isNaN(d.getTime())) return '';
@@ -52,6 +53,8 @@ export interface SigilState {
   design: InvitationDesign;
   guest: GuestPayload;
   inspectorFocus: InspectorFocus;
+  /** Which of the left panel's three tabs is showing. */
+  panelTab: PanelTab;
   canvasSelection: CanvasSelection;
   isEditingText: boolean;
   guestRoster: GuestRoster;
@@ -67,6 +70,7 @@ export interface SigilState {
   // Actions
   setAppMode: (mode: AppMode) => void;
   focusInspector: (focus: InspectorFocus) => void;
+  setPanelTab: (tab: PanelTab) => void;
   selectTextBlock: (blockId: string | null) => void;
   setIsEditingText: (isEditing: boolean) => void;
   updateDesign: (updates: Partial<InvitationDesign>) => void;
@@ -159,6 +163,7 @@ export const useSigilStore = create<SigilState>((set, get) => ({
   design: DEFAULT_DESIGN,
   guest: DEFAULT_GUEST,
   inspectorFocus: { type: 'NONE' },
+  panelTab: 'SECTIONS',
   canvasSelection: { selectedTextBlockId: null },
   isEditingText: false,
   guestRoster: loadRoster(),
@@ -177,7 +182,14 @@ export const useSigilStore = create<SigilState>((set, get) => ({
       isEditingText: false,
     }),
 
-  focusInspector: (focus) => set({ inspectorFocus: focus }),
+  // Focusing a section is what "open this section's inspector" means, and the
+  // inspector only exists inside the Secciones tab — so a click in the preview
+  // while another tab is open must bring that tab forward too, or the host
+  // would open an inspector they cannot see.
+  focusInspector: (focus) =>
+    set(focus.type === 'SECTION' ? { inspectorFocus: focus, panelTab: 'SECTIONS' } : { inspectorFocus: focus }),
+
+  setPanelTab: (tab) => set({ panelTab: tab }),
 
   selectTextBlock: (blockId) =>
     set({ canvasSelection: { selectedTextBlockId: blockId } }),
@@ -224,6 +236,7 @@ export const useSigilStore = create<SigilState>((set, get) => ({
     set({
       design: { ...state.design, sections: next },
       inspectorFocus: { type: 'SECTION', sectionId: section.id },
+      panelTab: 'SECTIONS',
     });
     return section.id;
   },

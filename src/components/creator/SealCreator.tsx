@@ -7,7 +7,7 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo, type ChangeEvent } from 'react';
 import { apiFetch } from '../../utils/api';
-import { ACCEPTED_IMAGE_TYPES, MAX_IMAGE_BYTES } from './LeftPanel';
+import { ACCEPTED_IMAGE_TYPES, MAX_IMAGE_BYTES } from './uploadHelpers';
 import {
   shade,
   prepareGeometry,

@@ -87,7 +87,19 @@ export function SectionStack({ mode }: { mode: SectionMode }) {
   return (
     <div
       className="recipient-invite-details state-visible"
-      style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '2rem', alignItems: 'center' }}
+      style={{
+        width: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '2rem',
+        alignItems: 'center',
+        // Invitation-wide defaults. CSS custom properties inherit, so a section
+        // that sets neither variable picks these up and one that sets its own
+        // overrides exactly that variable — the cascade does the work. An
+        // invitation saved before defaultFonts existed sets nothing here, so
+        // every renderer keeps its historical font.
+        ...sectionFontVars(design.defaultFonts),
+      }}
     >
       {visible.map((section) => {
         const body = renderSection(section, mode, design.musicUrl);

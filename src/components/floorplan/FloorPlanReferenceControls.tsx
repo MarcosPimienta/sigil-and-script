@@ -1,6 +1,6 @@
 import React, { useState, useRef, useCallback } from 'react';
 import type { FloorPlanReferenceLayer } from '../../types/sigil.types';
-import { ACCEPTED_IMAGE_TYPES, MAX_IMAGE_BYTES, compressImage } from '../creator/LeftPanel';
+import { ACCEPTED_IMAGE_TYPES, MAX_IMAGE_BYTES, compressImage } from '../creator/uploadHelpers';
 import { apiFetch } from '../../utils/api';
 
 interface FloorPlanReferenceControlsProps {

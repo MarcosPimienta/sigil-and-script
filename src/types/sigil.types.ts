@@ -255,6 +255,12 @@ export interface InvitationDesign {
   stickerImage?: string;
   sealSize?: number;
   musicUrl?: string;
+  /**
+   * Invitation-wide default typography. Absent on every design saved before the
+   * left-panel rework, in which case each renderer keeps its historical font —
+   * SectionStack simply sets no CSS variables at its root.
+   */
+  defaultFonts?: SectionFonts;
   /** Floor plan and seating arrangement configuration */
   floorPlan?: FloorPlanConfig;
 }
@@ -341,6 +347,13 @@ export type InspectorFocus =
   | { type: 'PAPER'; design: InvitationDesign }
   | { type: 'TEXT_BLOCK'; blockId: string }
   | { type: 'SECTION'; sectionId: string };
+
+// ── Left Panel Navigation ────────────────────────────────
+
+/** The three top-level tabs of the Invitation Studio's left panel. */
+export type PanelTab = 'EVENT' | 'SECTIONS' | 'STYLE';
+
+export const PANEL_TABS: PanelTab[] = ['EVENT', 'SECTIONS', 'STYLE'];
 
 // ── Canvas Selection ──────────────────────────────────────────────────────────
 

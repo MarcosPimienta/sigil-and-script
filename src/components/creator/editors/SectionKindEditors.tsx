@@ -12,7 +12,8 @@ import {
   parseVideoUrl,
 } from '../../../utils/sectionDefaults';
 import { apiFetch } from '../../../utils/api';
-import { ACCEPTED_IMAGE_TYPES, MAX_IMAGE_BYTES, compressImage, ImageUploadSlot } from '../LeftPanel';
+import { ACCEPTED_IMAGE_TYPES, MAX_IMAGE_BYTES, compressImage } from '../uploadHelpers';
+import { ImageUploadSlot } from '../uploads';
 
 type Lang = 'ES' | 'EN';
 
