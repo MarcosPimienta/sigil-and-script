@@ -14,6 +14,7 @@ async function main() {
     `ALTER TABLE "public"."User" ENABLE ROW LEVEL SECURITY;`,
     `ALTER TABLE "public"."Session" ENABLE ROW LEVEL SECURITY;`,
     `ALTER TABLE "public"."PasswordResetToken" ENABLE ROW LEVEL SECURITY;`,
+    `ALTER TABLE "public"."CanvasCollaborator" ENABLE ROW LEVEL SECURITY;`,
 
     // 2. Protect Prisma migration metadata table if present
     `DO $$
@@ -29,6 +30,7 @@ async function main() {
     `REVOKE ALL ON TABLE "public"."User" FROM anon, authenticated;`,
     `REVOKE ALL ON TABLE "public"."Session" FROM anon, authenticated;`,
     `REVOKE ALL ON TABLE "public"."PasswordResetToken" FROM anon, authenticated;`,
+    `REVOKE ALL ON TABLE "public"."CanvasCollaborator" FROM anon, authenticated;`,
 
     // 4. Revoke default privileges on future tables created in public schema
     `ALTER DEFAULT PRIVILEGES IN SCHEMA public REVOKE ALL ON TABLES FROM anon, authenticated;`

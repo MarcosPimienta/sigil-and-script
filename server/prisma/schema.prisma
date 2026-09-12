@@ -23,6 +23,7 @@ model InvitationCanvas {
   invitees        Guest[]
   userId          String?
   user            User?    @relation(fields: [userId], references: [id])
+  collaborators   CanvasCollaborator[]
 }
 
 model User {
@@ -32,10 +33,29 @@ model User {
   name      String?
   createdAt DateTime           @default(now())
   updatedAt DateTime           @updatedAt
-  canvases    InvitationCanvas[]
-  sessions    Session[]
-  resetTokens PasswordResetToken[]
+  canvases        InvitationCanvas[]
+  collaborations  CanvasCollaborator[]
+  sessions        Session[]
+  resetTokens     PasswordResetToken[]
 }
+
+model CanvasCollaborator {
+  id          String           @id @default(uuid())
+  canvasId    String
+  canvas      InvitationCanvas @relation(fields: [canvasId], references: [id], onDelete: Cascade)
+  userId      String?
+  user        User?            @relation(fields: [userId], references: [id], onDelete: SetNull)
+  email       String
+  role        String           @default("CO_HOST") // CO_HOST | EDITOR | VIEWER
+  status      String           @default("PENDING") // PENDING | ACCEPTED
+  inviteToken String           @unique
+  createdAt   DateTime         @default(now())
+  acceptedAt  DateTime?
+
+  @@index([canvasId, email])
+  @@index([userId])
+}
+
 
 model PasswordResetToken {
   id        String    @id @default(uuid())

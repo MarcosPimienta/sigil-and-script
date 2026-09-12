@@ -6,7 +6,9 @@ import { getPhrasing } from '../../utils/eventPhrasing';
 import { EventIcon } from '../icons/eventIcons';
 import { EVENT_TYPE_ICON } from '../icons/iconMaps';
 import { EventTypePicker } from './EventTypePicker';
+import { CollaboratorModal } from '../collaborators/CollaboratorModal';
 import '../../styles/eventsHub.css';
+import '../../styles/collaborator.css';
 
 export function EventsHubView() {
   const fetchSavedDesigns = useSigilStore((s) => s.fetchSavedDesigns);
@@ -22,6 +24,7 @@ export function EventsHubView() {
   const [error, setError] = useState<string | null>(null);
   const [isPickerOpen, setIsPickerOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
+  const [collabModalCanvasId, setCollabModalCanvasId] = useState<string | null>(null);
 
   const loadDesignsList = async () => {
     setLoading(true);
@@ -186,6 +189,11 @@ export function EventsHubView() {
                     <EventIcon id={EVENT_TYPE_ICON[(design.eventType || 'WEDDING') as EventType]} size={13} />
                     {getPhrasing((design.eventType || 'WEDDING') as EventType, 'ES').typeLabel}
                   </span>
+                  {design.isCoHost && (
+                    <span className="cohost-card-tag" style={{ marginLeft: '8px' }}>
+                      👥 Co-Host
+                    </span>
+                  )}
                   <h2 className="event-card-title">{design.title}</h2>
                   <div className="event-card-meta">
                     <div className="event-card-meta-item">
@@ -224,6 +232,15 @@ export function EventsHubView() {
                   </button>
                   <button
                     type="button"
+                    className="event-card-btn event-card-btn--ghost"
+                    onClick={() => setCollabModalCanvasId(design.id)}
+                    title="Manage Co-Hosts & Team"
+                    aria-label="Manage Co-Hosts & Team"
+                  >
+                    Team
+                  </button>
+                  <button
+                    type="button"
                     className="event-card-btn event-card-btn--danger"
                     onClick={() => handleDelete(design.id)}
                     aria-label="Delete event"
@@ -241,6 +258,13 @@ export function EventsHubView() {
           })
         )}
       </div>
+
+      {collabModalCanvasId && (
+        <CollaboratorModal
+          canvasId={collabModalCanvasId}
+          onClose={() => setCollabModalCanvasId(null)}
+        />
+      )}
     </div>
   );
 }

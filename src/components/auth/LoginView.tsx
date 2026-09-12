@@ -4,11 +4,12 @@ import { useSigilStore } from '../../state/sigilStore';
 interface LoginViewProps {
   onToggleToRegister: () => void;
   onForgotPassword?: () => void;
+  onBackToLanding?: () => void;
   /** One-off notice shown above the form (e.g. after a successful reset). */
   notice?: string | null;
 }
 
-export function LoginView({ onToggleToRegister, onForgotPassword, notice }: LoginViewProps) {
+export function LoginView({ onToggleToRegister, onForgotPassword, onBackToLanding, notice }: LoginViewProps) {
   const login = useSigilStore((state) => state.login);
   const authStatus = useSigilStore((state) => state.authStatus);
   const authError = useSigilStore((state) => state.authError);
@@ -109,6 +110,19 @@ export function LoginView({ onToggleToRegister, onForgotPassword, notice }: Logi
             Create Account
           </button>
         </p>
+
+        {onBackToLanding && (
+          <p style={{ marginTop: '16px' }}>
+            <button
+              type="button"
+              className="auth-toggle-link"
+              onClick={onBackToLanding}
+              style={{ fontSize: '0.85rem', opacity: 0.8 }}
+            >
+              ← Back to Overview
+            </button>
+          </p>
+        )}
       </div>
     </div>
   );

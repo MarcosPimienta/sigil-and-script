@@ -9,9 +9,14 @@ import { ForgotPasswordView } from './components/auth/ForgotPasswordView';
 import { ResetPasswordView } from './components/auth/ResetPasswordView';
 import { EventsHubView } from './components/events/EventsHubView';
 import { FloorPlanView } from './components/floorplan/FloorPlanView';
+import { LandingHero } from './components/landing/LandingHero';
+import { OnboardingWizard } from './components/onboarding/OnboardingWizard';
+import { CollaboratorInviteView } from './components/collaborators/CollaboratorInviteView';
 import { useSigilStore } from './state/sigilStore';
 import './index.css';
 import './styles/auth.css';
+import './styles/landing.css';
+import './styles/collaborator.css';
 
 // ── Inner shell — has access to SigilContext ──────────────────────────────────
 
@@ -19,6 +24,7 @@ function AppShell() {
   const { state, markInvitationOpened, setGuest, setAppMode, fetchInvitationDetails } = useSigil();
   const user = useSigilStore((s) => s.user);
   const checkAuth = useSigilStore((s) => s.checkAuth);
+
   // Password-reset entry point: read ?reset=<token> once, then strip it from the URL
   const [resetToken] = useState<string | null>(() => {
     const t = new URLSearchParams(window.location.search).get('reset');
@@ -28,9 +34,33 @@ function AppShell() {
     window.history.replaceState({}, '', url.pathname + url.search + url.hash);
     return /^[a-f0-9]{64}$/i.test(t) ? t : null;
   });
-  const [authView, setAuthView] = useState<'login' | 'register' | 'forgot' | 'reset'>(
-    resetToken ? 'reset' : 'login',
-  );
+
+  // Collaborator-invite entry point: read ?collab=<token> once, then strip it from the URL
+  const [collabToken] = useState<string | null>(() => {
+    const c = new URLSearchParams(window.location.search).get('collab');
+    if (!c) return null;
+    const url = new URL(window.location.href);
+    url.searchParams.delete('collab');
+    window.history.replaceState({}, '', url.pathname + url.search + url.hash);
+    return /^[a-f0-9]{64}$/i.test(c) ? c : null;
+  });
+
+  // Direct auth entry point (?auth=register or ?auth=login)
+  const [initialAuth] = useState<string | null>(() => {
+    const a = new URLSearchParams(window.location.search).get('auth');
+    if (!a) return null;
+    const url = new URL(window.location.href);
+    url.searchParams.delete('auth');
+    window.history.replaceState({}, '', url.pathname + url.search + url.hash);
+    return a;
+  });
+
+  const [isOnboardingOpen, setIsOnboardingOpen] = useState(() => initialAuth === 'register');
+  const [authView, setAuthView] = useState<'landing' | 'login' | 'register' | 'forgot' | 'reset'>(() => {
+    if (resetToken) return 'reset';
+    if (initialAuth === 'login') return 'login';
+    return 'landing';
+  });
   const [loginNotice, setLoginNotice] = useState<string | null>(null);
 
   // Check authentication on mount
@@ -123,6 +153,18 @@ function AppShell() {
 
   const { appMode } = state;
 
+  // Collaborator invite link handling (?collab=<token>)
+  if (collabToken && appMode !== 'RECIPIENT') {
+    return (
+      <CollaboratorInviteView
+        token={collabToken}
+        onAccepted={() => {
+          // Handled inside CollaboratorInviteView
+        }}
+      />
+    );
+  }
+
   // A reset link takes precedence even for a signed-in browser: the reset
   // revokes every session, so the host must re-authenticate afterwards.
   if (authView === 'reset' && resetToken && appMode !== 'RECIPIENT') {
@@ -138,20 +180,42 @@ function AppShell() {
     );
   }
 
-  // Gate creator and dashboard tools behind user login
+  // Unauthenticated experience: Landing hero or Auth views
   if (appMode !== 'RECIPIENT' && !user) {
     if (authView === 'forgot') {
       return <ForgotPasswordView onBackToLogin={() => setAuthView('login')} />;
     }
     if (authView === 'register') {
-      return <RegisterView onToggleToLogin={() => setAuthView('login')} />;
+      return (
+        <RegisterView
+          onToggleToLogin={() => setAuthView('login')}
+          onBackToLanding={() => setAuthView('landing')}
+        />
+      );
+    }
+    if (authView === 'login') {
+      return (
+        <LoginView
+          onToggleToRegister={() => setAuthView('register')}
+          onForgotPassword={() => setAuthView('forgot')}
+          onBackToLanding={() => setAuthView('landing')}
+          notice={loginNotice}
+        />
+      );
     }
     return (
-      <LoginView
-        onToggleToRegister={() => setAuthView('register')}
-        onForgotPassword={() => setAuthView('forgot')}
-        notice={loginNotice}
-      />
+      <>
+        <LandingHero
+          onStartDesigning={() => setIsOnboardingOpen(true)}
+          onSignIn={() => setAuthView('login')}
+        />
+        {isOnboardingOpen && (
+          <OnboardingWizard
+            onClose={() => setIsOnboardingOpen(false)}
+            onSuccess={() => setIsOnboardingOpen(false)}
+          />
+        )}
+      </>
     );
   }
 

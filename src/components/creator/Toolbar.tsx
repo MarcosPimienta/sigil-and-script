@@ -5,6 +5,7 @@
 import { useState, useEffect } from 'react';
 import { useSigil } from '../../context/SigilContext';
 import { useSigilStore } from '../../state/sigilStore';
+import { CollaboratorModal } from '../collaborators/CollaboratorModal';
 
 const NAV_LINKS = ['Create', 'Templates', 'Features', 'Inspiration'] as const;
 
@@ -26,6 +27,7 @@ export function Toolbar() {
 
   // Local state
   const [isLoadModalOpen, setIsLoadModalOpen] = useState(false);
+  const [isCollabModalOpen, setIsCollabModalOpen] = useState(false);
   const [savedDesigns, setSavedDesigns] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -222,6 +224,23 @@ export function Toolbar() {
               </svg>
               Load Layout
             </button>
+
+            <button
+              id="btn-cohosts"
+              className="toolbar-btn-ghost"
+              type="button"
+              onClick={() => setIsCollabModalOpen(true)}
+              style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+              aria-label="Manage co-hosts and collaborators"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                <circle cx="9" cy="7" r="4" />
+                <line x1="19" y1="8" x2="19" y2="14" />
+                <line x1="22" y1="11" x2="16" y2="11" />
+              </svg>
+              Co-Hosts
+            </button>
           </>
         )}
 
@@ -361,6 +380,14 @@ export function Toolbar() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* ── Collaborators modal dialog ── */}
+      {isCollabModalOpen && design.id && (
+        <CollaboratorModal
+          canvasId={design.id}
+          onClose={() => setIsCollabModalOpen(false)}
+        />
       )}
 
       {/* ── Toast Notification ── */}

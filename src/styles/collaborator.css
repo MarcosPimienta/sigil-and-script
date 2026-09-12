@@ -1,0 +1,334 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+ * Sigil & Script — Collaborator & Co-Hosting Styles
+ * ───────────────────────────────────────────────────────────────────────────── */
+
+.collab-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 10, 9, 0.8);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  z-index: 120;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.collab-modal {
+  width: 100%;
+  max-width: 580px;
+  background: #1c1b1a;
+  border: 1px solid rgba(223, 184, 142, 0.2);
+  border-radius: 20px;
+  padding: 2.25rem;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
+  position: relative;
+  font-family: 'Outfit', sans-serif;
+  color: #f6ebe2;
+  box-sizing: border-box;
+}
+
+.collab-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.collab-modal-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.9rem;
+  font-weight: 500;
+  color: #dfb88e;
+  margin: 0 0 0.25rem;
+}
+
+.collab-modal-subtitle {
+  color: #a08e7c;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.collab-close-btn {
+  background: none;
+  border: none;
+  color: #a08e7c;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.2s;
+}
+
+.collab-close-btn:hover {
+  color: #ffffff;
+}
+
+/* Invite Form */
+.collab-invite-form {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 14px;
+  padding: 1.25rem;
+  margin-bottom: 1.75rem;
+}
+
+.collab-form-row {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.collab-input {
+  flex: 2;
+  padding: 11px 14px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  color: #ffffff;
+  font-size: 0.9rem;
+  font-family: inherit;
+}
+
+.collab-input:focus {
+  outline: none;
+  border-color: #dfb88e;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.collab-select {
+  flex: 1;
+  padding: 11px 12px;
+  background: #252422;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  color: #f6ebe2;
+  font-size: 0.85rem;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.collab-btn-send {
+  padding: 11px 18px;
+  background: linear-gradient(135deg, #dfb88e 0%, #c49e75 100%);
+  color: #1a1918;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.collab-btn-send:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.collab-btn-send:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Collaborators List */
+.collab-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-height: 240px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.collab-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  padding: 10px 14px;
+}
+
+.collab-item-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.collab-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(223, 184, 142, 0.15);
+  color: #dfb88e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.collab-item-name {
+  font-weight: 500;
+  font-size: 0.9rem;
+  color: #f6ebe2;
+}
+
+.collab-item-email {
+  font-size: 0.8rem;
+  color: #a08e7c;
+}
+
+.collab-item-badges {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.collab-badge {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.collab-badge--role {
+  background: rgba(223, 184, 142, 0.15);
+  color: #dfb88e;
+}
+
+.collab-badge--status-accepted {
+  background: rgba(34, 197, 94, 0.15);
+  color: #4ade80;
+}
+
+.collab-badge--status-pending {
+  background: rgba(234, 179, 8, 0.15);
+  color: #facc15;
+}
+
+.collab-btn-remove {
+  background: none;
+  border: none;
+  color: #ef4444;
+  opacity: 0.7;
+  cursor: pointer;
+  padding: 4px 8px;
+  font-size: 0.85rem;
+  transition: opacity 0.2s;
+}
+
+.collab-btn-remove:hover {
+  opacity: 1;
+}
+
+/* Event Card Co-Host Badge */
+.cohost-card-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: rgba(223, 184, 142, 0.12);
+  border: 1px solid rgba(223, 184, 142, 0.3);
+  color: #dfb88e;
+  padding: 3px 9px;
+  border-radius: 9999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ * Collaborator Invite Acceptance Card
+ * ───────────────────────────────────────────────────────────────────────────── */
+
+.collab-invite-page {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at center, #232221 0%, #151413 100%);
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.collab-invite-card {
+  width: 100%;
+  max-width: 480px;
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(223, 184, 142, 0.25);
+  border-radius: 24px;
+  padding: 40px;
+  text-align: center;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5);
+  color: #f6ebe2;
+  font-family: 'Outfit', sans-serif;
+  box-sizing: border-box;
+}
+
+.collab-invite-header {
+  margin-bottom: 2rem;
+}
+
+.collab-invite-crest {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #dfb88e 0%, #a67c52 100%);
+  color: #1a1a19;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.8rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.25rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+.collab-invite-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 2.2rem;
+  font-style: italic;
+  color: #dfb88e;
+  margin: 0 0 0.5rem;
+}
+
+.collab-invite-subtitle {
+  color: #a08e7c;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.collab-event-highlight {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 1.25rem;
+  margin-bottom: 2rem;
+}
+
+.collab-event-name {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.7rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin-bottom: 0.25rem;
+}
+
+.collab-event-meta {
+  font-size: 0.85rem;
+  color: #dfb88e;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}

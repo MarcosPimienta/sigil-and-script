@@ -370,3 +370,40 @@ export interface ApiState {
   error: string | null;
 }
 
+// ── Collaborators & Co-Hosting ────────────────────────────────────────────────
+
+export type CollaboratorRole = 'CO_HOST' | 'EDITOR' | 'VIEWER';
+
+export interface CanvasCollaborator {
+  id: string;
+  canvasId: string;
+  email: string;
+  role: CollaboratorRole;
+  status: 'PENDING' | 'ACCEPTED';
+  userId?: string | null;
+  userName?: string | null;
+  userEmail?: string | null;
+  createdAt: string;
+  acceptedAt?: string | null;
+}
+
+export interface CollaboratorInviteDetails {
+  valid: boolean;
+  canvasId: string;
+  eventTitle: string;
+  eventType: EventType;
+  inviterName: string;
+  email: string;
+  role: CollaboratorRole;
+}
+
+export interface SavedDesignMeta {
+  id: string;
+  title: string;
+  countdownTarget: string;
+  eventType: EventType;
+  isCoHost?: boolean;
+  role?: 'OWNER' | CollaboratorRole;
+}
+
+

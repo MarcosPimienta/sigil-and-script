@@ -414,7 +414,25 @@ export async function getCanvases(req: Request, res: Response): Promise<void> {
   try {
     const userId = req.user!.id;
     const canvases = await getPrisma().invitationCanvas.findMany({
-      where: { userId },
+      where: {
+        OR: [
+          { userId },
+          {
+            collaborators: {
+              some: {
+                userId,
+                status: 'ACCEPTED',
+              },
+            },
+          },
+        ],
+      },
+      include: {
+        collaborators: {
+          where: { userId },
+          select: { role: true, status: true },
+        },
+      },
     });
     const strippedCanvases = canvases.map(canvas => {
       let designObj: any = {};
@@ -426,10 +444,15 @@ export async function getCanvases(req: Request, res: Response): Promise<void> {
         console.error('Failed to parse designData in getCanvases', e);
       }
 
+      const isOwner = canvas.userId === userId;
+      const userCollab = canvas.collaborators?.[0];
+
       return {
         id: canvas.id,
         eventType: normalizeEventType(designObj.eventType || canvas.eventType),
         countdownTarget: canvas.countdownTarget || designObj.countdownTarget,
+        isCoHost: !isOwner,
+        role: isOwner ? 'OWNER' : (userCollab?.role || 'CO_HOST'),
         designData: JSON.stringify({
           title: designObj.title || 'Untitled Design'
         })
@@ -450,9 +473,29 @@ export async function getCanvasById(req: Request, res: Response): Promise<void> 
   }
 
   try {
+    const userId = req.user!.id;
     const canvas = await getPrisma().invitationCanvas.findFirst({
-      where: { id, userId: req.user!.id },
-      include: { invitees: true },
+      where: {
+        id,
+        OR: [
+          { userId },
+          {
+            collaborators: {
+              some: {
+                userId,
+                status: 'ACCEPTED',
+              },
+            },
+          },
+        ],
+      },
+      include: {
+        invitees: true,
+        collaborators: {
+          where: { userId },
+          select: { role: true, status: true },
+        },
+      },
     });
     if (!canvas) {
       res.status(404).json({ error: 'Configuration not found' });
@@ -491,11 +534,21 @@ export async function saveCanvas(req: Request, res: Response): Promise<void> {
     if (id) {
       const existing = await getPrisma().invitationCanvas.findUnique({
         where: { id },
+        include: {
+          collaborators: {
+            where: { userId, status: 'ACCEPTED' },
+          },
+        },
       });
 
       if (existing) {
-        if (existing.userId !== userId) {
-          res.status(403).json({ error: 'Access denied: You do not own this canvas' });
+        const isOwner = existing.userId === userId;
+        const isAuthorizedCollab = existing.collaborators.some(
+          (c) => c.role === 'CO_HOST' || c.role === 'EDITOR'
+        );
+
+        if (!isOwner && !isAuthorizedCollab) {
+          res.status(403).json({ error: 'Access denied: You do not have permission to edit this canvas' });
           return;
         }
 
@@ -509,7 +562,6 @@ export async function saveCanvas(req: Request, res: Response): Promise<void> {
             countdownTarget: countdownTarget ?? existing.countdownTarget,
             colorPalette: colorPalette ?? existing.colorPalette,
             itinerary: itinerary ?? existing.itinerary,
-            hostId: userId,
             designData: designDataStr !== undefined ? designDataStr : existing.designData,
           },
         });

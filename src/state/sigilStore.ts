@@ -10,6 +10,10 @@ import type {
   InviteeRecord,
   ApiStatus,
   PanelTab,
+  CanvasCollaborator,
+  CollaboratorInviteDetails,
+  CollaboratorRole,
+  SavedDesignMeta,
 } from '../types/sigil.types';
 import { apiFetch } from '../utils/api';
 import { createDesignFromTemplate } from '../templates';
@@ -123,8 +127,15 @@ export interface SigilState {
   saveCurrentDesign: () => Promise<void>;
   refreshRoster: () => Promise<void>;
   loadDesign: (designId: string) => Promise<void>;
-  fetchSavedDesigns: () => Promise<{ id: string; title: string; countdownTarget: string; eventType: EventType }[]>;
+  fetchSavedDesigns: () => Promise<SavedDesignMeta[]>;
   deleteSavedDesign: (designId: string) => Promise<void>;
+
+  // Collaborator actions
+  fetchCollaborators: (canvasId: string) => Promise<CanvasCollaborator[]>;
+  inviteCollaborator: (canvasId: string, email: string, role?: CollaboratorRole) => Promise<{ success: boolean; inviteLink?: string }>;
+  removeCollaborator: (canvasId: string, collabId: string) => Promise<boolean>;
+  getCollaboratorInviteDetails: (token: string) => Promise<CollaboratorInviteDetails | null>;
+  acceptCollaboratorInvite: (token: string) => Promise<string | null>;
 
   // CSV Batch Ingest Action
   ingestGuestsBatch: (records: { name: string; email?: string }[]) => void;
@@ -1152,6 +1163,8 @@ export const useSigilStore = create<SigilState>((set, get) => ({
           title,
           countdownTarget: canvas.countdownTarget,
           eventType,
+          isCoHost: !!canvas.isCoHost,
+          role: canvas.role || (canvas.isCoHost ? 'CO_HOST' : 'OWNER'),
         };
       });
     } catch (error: any) {
@@ -1177,6 +1190,63 @@ export const useSigilStore = create<SigilState>((set, get) => ({
     } catch (error: any) {
       console.error('Failed to delete configuration:', error);
       throw error;
+    }
+  },
+
+  fetchCollaborators: async (canvasId: string) => {
+    try {
+      const data = await apiFetch(`/canvas/${canvasId}/collaborators`);
+      return (data.collaborators || []) as CanvasCollaborator[];
+    } catch (err) {
+      console.error('Failed to fetch collaborators:', err);
+      return [];
+    }
+  },
+
+  inviteCollaborator: async (canvasId: string, email: string, role = 'CO_HOST') => {
+    try {
+      const data = await apiFetch(`/canvas/${canvasId}/collaborators`, {
+        method: 'POST',
+        body: JSON.stringify({ email, role }),
+      });
+      return { success: true, inviteLink: data.inviteLink };
+    } catch (err) {
+      console.error('Failed to invite collaborator:', err);
+      throw err;
+    }
+  },
+
+  removeCollaborator: async (canvasId: string, collabId: string) => {
+    try {
+      await apiFetch(`/canvas/${canvasId}/collaborators/${collabId}`, {
+        method: 'DELETE',
+      });
+      return true;
+    } catch (err) {
+      console.error('Failed to remove collaborator:', err);
+      return false;
+    }
+  },
+
+  getCollaboratorInviteDetails: async (token: string) => {
+    try {
+      const data = await apiFetch(`/collaborators/invite/${token}`);
+      return data as CollaboratorInviteDetails;
+    } catch (err) {
+      console.error('Failed to get collaborator invite details:', err);
+      return null;
+    }
+  },
+
+  acceptCollaboratorInvite: async (token: string) => {
+    try {
+      const data = await apiFetch(`/collaborators/invite/${token}/accept`, {
+        method: 'POST',
+      });
+      return data.canvasId as string;
+    } catch (err) {
+      console.error('Failed to accept collaborator invite:', err);
+      throw err;
     }
   },
 

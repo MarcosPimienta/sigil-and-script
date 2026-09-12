@@ -3,9 +3,10 @@ import { useSigilStore } from '../../state/sigilStore';
 
 interface RegisterViewProps {
   onToggleToLogin: () => void;
+  onBackToLanding?: () => void;
 }
 
-export function RegisterView({ onToggleToLogin }: RegisterViewProps) {
+export function RegisterView({ onToggleToLogin, onBackToLanding }: RegisterViewProps) {
   const register = useSigilStore((state) => state.register);
   const authStatus = useSigilStore((state) => state.authStatus);
   const authError = useSigilStore((state) => state.authError);
@@ -128,6 +129,19 @@ export function RegisterView({ onToggleToLogin }: RegisterViewProps) {
             Sign In
           </button>
         </p>
+
+        {onBackToLanding && (
+          <p style={{ marginTop: '16px' }}>
+            <button
+              type="button"
+              className="auth-toggle-link"
+              onClick={onBackToLanding}
+              style={{ fontSize: '0.85rem', opacity: 0.8 }}
+            >
+              ← Back to Overview
+            </button>
+          </p>
+        )}
       </div>
     </div>
   );
