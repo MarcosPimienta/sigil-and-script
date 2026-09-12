@@ -77,6 +77,17 @@
         "token": "string (64-byte hex)",
         "userId": "uuid-v4",
         "expiresAt": "string (ISO-8601)"
+      },
+      "CanvasCollaborator": {
+        "id": "uuid-v4",
+        "canvasId": "uuid-v4",
+        "userId": "uuid-v4 | Null",
+        "email": "string",
+        "role": "CO_HOST | EDITOR | VIEWER",
+        "status": "PENDING | ACCEPTED",
+        "inviteToken": "string (64-byte hex | Null)",
+        "createdAt": "string (ISO-8601)",
+        "updatedAt": "string (ISO-8601)"
       }
     },
     "state_transitions": {
@@ -177,6 +188,16 @@
           "Implement forgot-password and reset-password backend API endpoints with Resend email delivery",
           "Add token rate-limiting, single-use invalidation, and session revocation on password update",
           "Build ForgotPasswordView and ResetPasswordView frontend interfaces"
+        ]
+      },
+      {
+        "id": "M10_USER_ONBOARDING_AND_COHOST_COLLABORATION",
+        "name": "Public Landing, Guided Onboarding & Co-Host Collaboration",
+        "tasks": [
+          "Implement high-converting LandingHero luxury presentation for unauthenticated visitors",
+          "Build 3-step OnboardingWizard with account creation, event selection, and studio jump",
+          "Add CanvasCollaborator schema migration, RLS policies, and scoped authorization backend APIs",
+          "Build CollaboratorModal and CollaboratorInviteView for seamless co-host invitation acceptance"
         ]
       }
     ]
