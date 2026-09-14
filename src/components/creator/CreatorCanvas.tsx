@@ -34,6 +34,8 @@ export function CreatorCanvas() {
     | 'COMPLETED'
   >('CLOSED');
 
+  const [isMobilePanelOpen, setIsMobilePanelOpen] = useState(false);
+
   const showRosterDetails = envelopePhase === 'FADING_OUT' || envelopePhase === 'COMPLETED';
 
   const depsCount = Math.max(state.guest.additionalGuests?.length || 0, state.guest.dependents?.length || 0);
@@ -46,12 +48,20 @@ export function CreatorCanvas() {
       data-texture={state.design.paperTexture}
     >
       {/* ── Top Navigation ─── */}
-      <Toolbar />
+      <Toolbar
+        onToggleMobilePanel={() => setIsMobilePanelOpen((v) => !v)}
+        isMobilePanelOpen={isMobilePanelOpen}
+      />
 
       {/* ── Workspace ─── */}
       <div className="creator-workspace">
         {/* Left control panel (hidden in recipient mode) */}
-        {!isRecipient && <LeftPanel />}
+        {!isRecipient && (
+          <LeftPanel
+            isOpen={isMobilePanelOpen}
+            onClose={() => setIsMobilePanelOpen(false)}
+          />
+        )}
 
         {/* Right canvas / preview area */}
         <main className="creator-preview-area" aria-label="Invitation preview canvas" style={{
@@ -68,7 +78,7 @@ export function CreatorCanvas() {
             width: '100%',
             height: '100%',
             overflowY: (showRosterDetails || !isRecipient) ? 'auto' : 'hidden',
-            padding: '2rem 1rem',
+            padding: '2rem 1rem calc(2.5rem + var(--safe-bottom, 0px)) 1rem',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
@@ -216,6 +226,19 @@ export function CreatorCanvas() {
              <AudioToggle />
           </div>
         </main>
+
+        {/* Mobile floating panel toggle button */}
+        {!isRecipient && (
+          <button
+            type="button"
+            id="btn-floating-panel-toggle"
+            className="creator-floating-panel-toggle"
+            onClick={() => setIsMobilePanelOpen((v) => !v)}
+            aria-label={isMobilePanelOpen ? 'Close design controls' : 'Open design controls'}
+          >
+            {isMobilePanelOpen ? '✕ Close Controls' : '✏️ Design Controls'}
+          </button>
+        )}
       </div>
     </div>
   );

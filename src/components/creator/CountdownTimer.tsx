@@ -53,7 +53,7 @@ export function CountdownTimer() {
         position: 'relative',
         width: '100%',
         marginTop: '1.5rem',
-        padding: '2.5rem 1.75rem',
+        padding: '2.5rem clamp(0.75rem, 3vw, 1.75rem)',
         boxSizing: 'border-box',
         fontFamily: "var(--sec-body-font, 'Cormorant Garamond', serif)",
       }}
@@ -102,7 +102,7 @@ export function CountdownTimer() {
         </h4>
 
         {/* Numbers */}
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '2rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 'clamp(1rem, 4vw, 2rem)' }}>
           {[
             { label: t.days, val: timeLeft.days },
             { label: t.hours, val: timeLeft.hours },
@@ -111,10 +111,10 @@ export function CountdownTimer() {
             <div key={idx} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
               <span
                 style={{
-                  fontSize: '2.6rem',
+                  fontSize: 'clamp(2rem, 6vw, 2.6rem)',
                   fontWeight: 300,
                   color: '#3a2e26',
-                  minWidth: '44px',
+                  minWidth: '40px',
                   letterSpacing: '-0.02em',
                   lineHeight: 1,
                   fontFamily: "var(--sec-body-font, 'Cormorant Garamond', serif)",

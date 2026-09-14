@@ -9,7 +9,12 @@ import { CollaboratorModal } from '../collaborators/CollaboratorModal';
 
 const NAV_LINKS = ['Create', 'Templates', 'Features', 'Inspiration'] as const;
 
-export function Toolbar() {
+export interface ToolbarProps {
+  onToggleMobilePanel?: () => void;
+  isMobilePanelOpen?: boolean;
+}
+
+export function Toolbar({ onToggleMobilePanel, isMobilePanelOpen = false }: ToolbarProps = {}) {
   const { state, setAppMode, updateDesign } = useSigil();
   const { appMode, design } = state;
   const currentLang = design.language || 'ES';
@@ -28,6 +33,7 @@ export function Toolbar() {
   // Local state
   const [isLoadModalOpen, setIsLoadModalOpen] = useState(false);
   const [isCollabModalOpen, setIsCollabModalOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [savedDesigns, setSavedDesigns] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -134,8 +140,8 @@ export function Toolbar() {
         ))}
       </nav>
 
-      {/* ── Actions ───────────────────────────────────────────────────────── */}
-      <div className="toolbar-actions">
+      {/* ── Actions (Desktop) ───────────────────────────────────────────── */}
+      <div className="toolbar-actions toolbar-actions-desktop">
         {/* EN / SPA language toggle switch */}
         {!isRecipient && !isDashboard && !isFloorPlan && appMode !== 'EVENTS_HUB' && (
           <div
@@ -322,6 +328,198 @@ export function Toolbar() {
           </button>
         )}
       </div>
+
+      {/* ── Actions (Mobile) ─────────────────────────────────────────────── */}
+      <div className="toolbar-actions toolbar-actions-mobile">
+        {/* Toggle Panel Button (Studio mode) */}
+        {!isRecipient && !isDashboard && !isFloorPlan && appMode !== 'EVENTS_HUB' && onToggleMobilePanel && (
+          <button
+            type="button"
+            id="btn-mobile-panel-toggle"
+            className={`toolbar-btn-mobile-toggle${isMobilePanelOpen ? ' is-active' : ''}`}
+            onClick={onToggleMobilePanel}
+            aria-label={isMobilePanelOpen ? 'View Preview' : 'Edit Design'}
+          >
+            {isMobilePanelOpen ? '👁️ Preview' : '✏️ Design'}
+          </button>
+        )}
+
+        {/* Recipient preview exit button if in recipient mode */}
+        {isRecipient && (
+          <button
+            id="btn-mobile-exit-preview"
+            className="toolbar-btn-mobile-toggle is-active"
+            type="button"
+            onClick={() => setAppMode('CREATOR')}
+            aria-label="Return to Studio"
+          >
+            ← Studio
+          </button>
+        )}
+
+        {/* Mobile Menu Trigger button */}
+        {!isRecipient && appMode !== 'EVENTS_HUB' && (
+          <button
+            type="button"
+            id="btn-mobile-menu"
+            className="toolbar-btn-mobile-menu"
+            onClick={() => setIsMobileMenuOpen((v) => !v)}
+            aria-label="Open studio menu"
+            aria-expanded={isMobileMenuOpen}
+          >
+            ⋯
+          </button>
+        )}
+      </div>
+
+      {/* ── Mobile Dropdown Menu & Scrim ─────────────────────────────────── */}
+      {isMobileMenuOpen && (
+        <>
+          <div
+            className="toolbar-menu-backdrop"
+            onClick={() => setIsMobileMenuOpen(false)}
+            aria-hidden="true"
+          />
+          <div className="toolbar-mobile-dropdown" role="menu" aria-label="Studio menu">
+            {/* Mode Switcher */}
+            <div className="toolbar-dropdown-section">
+              <span className="toolbar-dropdown-label">Workspace Mode</span>
+              <button
+                type="button"
+                className={`toolbar-dropdown-btn${appMode === 'CREATOR' ? ' toolbar-dropdown-btn--active' : ''}`}
+                onClick={() => {
+                  setAppMode('CREATOR');
+                  setIsMobileMenuOpen(false);
+                }}
+              >
+                🎨 Studio
+              </button>
+              <button
+                type="button"
+                className={`toolbar-dropdown-btn${isDashboard ? ' toolbar-dropdown-btn--active' : ''}`}
+                onClick={() => {
+                  setAppMode('DASHBOARD');
+                  setIsMobileMenuOpen(false);
+                }}
+              >
+                📋 Dashboard
+              </button>
+              <button
+                type="button"
+                className={`toolbar-dropdown-btn${isFloorPlan ? ' toolbar-dropdown-btn--active' : ''}`}
+                onClick={() => {
+                  setAppMode('FLOOR_PLAN');
+                  setIsMobileMenuOpen(false);
+                }}
+              >
+                🪑 Floor Plan
+              </button>
+            </div>
+
+            {/* Language Selection */}
+            {!isDashboard && !isFloorPlan && (
+              <div className="toolbar-dropdown-section">
+                <span className="toolbar-dropdown-label">Language</span>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button
+                    type="button"
+                    className={`toolbar-dropdown-btn${currentLang === 'EN' ? ' toolbar-dropdown-btn--active' : ''}`}
+                    onClick={() => {
+                      updateDesign({ language: 'EN' });
+                    }}
+                    style={{ flex: 1, justifyContent: 'center' }}
+                  >
+                    English
+                  </button>
+                  <button
+                    type="button"
+                    className={`toolbar-dropdown-btn${currentLang === 'ES' ? ' toolbar-dropdown-btn--active' : ''}`}
+                    onClick={() => {
+                      updateDesign({ language: 'ES' });
+                    }}
+                    style={{ flex: 1, justifyContent: 'center' }}
+                  >
+                    Español
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Layout Actions */}
+            {!isDashboard && !isFloorPlan && (
+              <div className="toolbar-dropdown-section">
+                <span className="toolbar-dropdown-label">Actions</span>
+                <button
+                  type="button"
+                  className="toolbar-dropdown-btn"
+                  onClick={() => {
+                    handleSave();
+                    setIsMobileMenuOpen(false);
+                  }}
+                >
+                  💾 Save Layout
+                </button>
+                <button
+                  type="button"
+                  className="toolbar-dropdown-btn"
+                  onClick={() => {
+                    handleOpenLoadModal();
+                    setIsMobileMenuOpen(false);
+                  }}
+                >
+                  📂 Load Layout
+                </button>
+                <button
+                  type="button"
+                  className="toolbar-dropdown-btn"
+                  onClick={() => {
+                    setIsCollabModalOpen(true);
+                    setIsMobileMenuOpen(false);
+                  }}
+                >
+                  👥 Co-Hosts
+                </button>
+                <button
+                  type="button"
+                  className="toolbar-dropdown-btn"
+                  onClick={() => {
+                    setAppMode('RECIPIENT');
+                    setIsMobileMenuOpen(false);
+                  }}
+                >
+                  👁️ Recipient Preview
+                </button>
+              </div>
+            )}
+
+            {/* Account / Auth */}
+            <div className="toolbar-dropdown-section">
+              <span className="toolbar-dropdown-label">Account</span>
+              {user ? (
+                <>
+                  <div style={{ padding: '4px 10px', fontSize: '0.8rem', color: 'var(--cr-text-muted)' }}>
+                    {user.name || user.email}
+                  </div>
+                  <button
+                    type="button"
+                    className="toolbar-dropdown-btn"
+                    onClick={() => {
+                      logout();
+                      setIsMobileMenuOpen(false);
+                    }}
+                  >
+                    🚪 Log Out
+                  </button>
+                </>
+              ) : (
+                <div style={{ padding: '4px 10px', fontSize: '0.8rem', color: 'var(--cr-text-muted)' }}>
+                  Guest Mode
+                </div>
+              )}
+            </div>
+          </div>
+        </>
+      )}
 
       {/* ── Saved configurations modal dialog ── */}
       {isLoadModalOpen && (

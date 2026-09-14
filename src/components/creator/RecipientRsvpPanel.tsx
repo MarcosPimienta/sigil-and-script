@@ -88,7 +88,7 @@ export function RecipientRsvpPanel({ idPrefix }: { idPrefix?: string } = {}) {
 
   if (submitted) {
     return (
-      <aside className="left-panel" style={{ padding: '2rem', color: 'var(--rsvp-input-color, #ffffff)', display: 'flex', flexDirection: 'column', gap: '1rem', justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>
+      <div className="recipient-rsvp-card" style={{ padding: '2rem', color: 'var(--rsvp-input-color, #ffffff)', display: 'flex', flexDirection: 'column', gap: '1rem', justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>
         <h2 style={{ fontSize: '1.8rem', fontFamily: "var(--sec-body-font, 'Cormorant Garamond', serif)", fontStyle: 'italic' }}>
           {t.thankYou}
         </h2>
@@ -118,13 +118,13 @@ export function RecipientRsvpPanel({ idPrefix }: { idPrefix?: string } = {}) {
             </div>
           )}
         </div>
-      </aside>
+      </div>
     );
   }
 
   return (
-    <aside className="left-panel" style={{ overflowY: 'auto' }}>
-      <div className="lp-inner" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+    <div className="recipient-rsvp-card">
+      <div className="lp-inner" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', width: '100%', padding: '1.5rem 1rem' }}>
         <div className="lp-header" style={{ textAlign: 'center' }}>
           <h1 className="lp-title" style={{ fontFamily: "var(--sec-body-font, 'Cormorant Garamond', serif)", fontStyle: 'italic', fontSize: '1.8rem', color: 'var(--rsvp-input-color, #ffffff)' }}>
             {t.rsvpTitle}
@@ -164,24 +164,15 @@ export function RecipientRsvpPanel({ idPrefix }: { idPrefix?: string } = {}) {
             </div>
 
             <span className="lp-field-label" style={{ position: 'relative', zIndex: 2, marginBottom: '1.5rem' }}>{t.willAttend}</span>
-            <div style={{ display: 'flex', gap: '2rem', marginTop: '0.5rem', position: 'relative', zIndex: 2 }}>
+            <div style={{ display: 'flex', gap: '1.5rem', marginTop: '0.5rem', position: 'relative', zIndex: 2, flexWrap: 'wrap', justifyContent: 'center' }}>
               <button
                 type="button"
                 id={fid("rsvp-yes-btn")}
+                className="rsvp-choice-btn"
                 onClick={() => setRsvpStatus('YES')}
                 style={{
-                  position: 'relative',
-                  background: 'none',
-                  border: 'none',
-                  color: 'var(--rsvp-input-color, #ffffff)',
-                  cursor: 'pointer',
-                  fontWeight: 400,
-                  fontSize: '1.2rem',
-                  fontFamily: "var(--sec-body-font, 'Cormorant Garamond', serif)",
-                  fontStyle: 'italic',
-                  padding: '4px 8px',
-                  transition: 'opacity 0.2s',
                   opacity: rsvpStatus === 'NO' ? 0.5 : 1,
+                  background: rsvpStatus === 'YES' ? 'rgba(40, 199, 111, 0.12)' : 'transparent',
                 }}
               >
                 <span style={{ position: 'relative', zIndex: 1 }}>{t.yesGladly}</span>
@@ -191,20 +182,11 @@ export function RecipientRsvpPanel({ idPrefix }: { idPrefix?: string } = {}) {
               <button
                 type="button"
                 id={fid("rsvp-no-btn")}
+                className="rsvp-choice-btn"
                 onClick={() => setRsvpStatus('NO')}
                 style={{
-                  position: 'relative',
-                  background: 'none',
-                  border: 'none',
-                  color: 'var(--rsvp-input-color, #ffffff)',
-                  cursor: 'pointer',
-                  fontWeight: 400,
-                  fontSize: '1.2rem',
-                  fontFamily: "var(--sec-body-font, 'Cormorant Garamond', serif)",
-                  fontStyle: 'italic',
-                  padding: '4px 8px',
-                  transition: 'opacity 0.2s',
                   opacity: rsvpStatus === 'YES' ? 0.5 : 1,
+                  background: rsvpStatus === 'NO' ? 'rgba(234, 84, 85, 0.12)' : 'transparent',
                 }}
               >
                 <span style={{ position: 'relative', zIndex: 1 }}>{t.noRegrettably}</span>
@@ -288,32 +270,19 @@ export function RecipientRsvpPanel({ idPrefix }: { idPrefix?: string } = {}) {
               {guest.dependents && guest.dependents.length > 0 && (
                 <div className="lp-field">
                   <span className="lp-field-label">{t.familyGuests}</span>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', marginTop: '0.6rem' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', marginTop: '0.6rem' }}>
                     {guest.dependents.map((dep) => (
                       <label
                         key={dep.id}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '0.6rem',
-                          fontSize: '0.85rem',
-                          color: 'var(--rsvp-input-color, #ffffff)',
-                          cursor: 'pointer',
-                          userSelect: 'none'
-                        }}
+                        className="rsvp-dependent-row"
                       >
                         <input
                           type="checkbox"
+                          className="rsvp-dependent-checkbox"
                           checked={!!selectedDependents[dep.id]}
                           onChange={() => handleDependentToggle(dep.id)}
-                          style={{
-                            width: '16px',
-                            height: '16px',
-                            cursor: 'pointer',
-                            accentColor: 'var(--status-rsvp-yes)'
-                          }}
                         />
-                        {dep.name}
+                        <span>{dep.name}</span>
                       </label>
                     ))}
                   </div>
@@ -343,22 +312,17 @@ export function RecipientRsvpPanel({ idPrefix }: { idPrefix?: string } = {}) {
             type="submit"
             id={fid("rsvp-submit-btn")}
             disabled={!rsvpStatus}
+            className="rsvp-submit-btn"
             style={{
-              padding: '12px',
               background: rsvpStatus ? 'var(--rsvp-submit-active-bg, var(--status-pending))' : 'var(--rsvp-submit-inactive-bg, rgba(255,255,255,0.05))',
-              border: 'none',
-              borderRadius: '4px',
               color: rsvpStatus ? 'var(--rsvp-submit-active-color, #ffffff)' : 'var(--rsvp-submit-inactive-color, rgba(255,255,255,0.3))',
               cursor: rsvpStatus ? 'pointer' : 'not-allowed',
-              fontWeight: 600,
-              marginTop: '1rem',
-              transition: 'background 0.2s',
             }}
           >
             {t.submitRsvp}
           </button>
         </form>
       </div>
-    </aside>
+    </div>
   );
 }

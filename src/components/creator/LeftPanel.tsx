@@ -12,10 +12,24 @@
 
 import { PanelShell } from './panel/PanelShell';
 
-export function LeftPanel() {
+export interface LeftPanelProps {
+  isOpen?: boolean;
+  onClose?: () => void;
+}
+
+export function LeftPanel({ isOpen = false, onClose }: LeftPanelProps = {}) {
   return (
-    <aside className="left-panel">
-      <PanelShell />
-    </aside>
+    <>
+      {isOpen && (
+        <div
+          className="mobile-panel-backdrop"
+          onClick={onClose}
+          aria-hidden="true"
+        />
+      )}
+      <aside className={`left-panel${isOpen ? ' mobile-open' : ''}`}>
+        <PanelShell onCloseMobile={onClose} />
+      </aside>
+    </>
   );
 }

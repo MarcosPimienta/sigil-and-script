@@ -350,7 +350,8 @@ export function DashboardView() {
               <p>No guests added yet. Click "+ Add Guest" above to get started!</p>
             </div>
           ) : (
-            <table className="dashboard-table">
+            <div className="dashboard-table-container">
+              <table className="dashboard-table">
           <thead>
             <tr>
               <SortHeader
@@ -658,9 +659,10 @@ export function DashboardView() {
             })}
           </tbody>
         </table>
-      )}
-        </>
-      )}
+      </div>
+    )}
+  </>
+)}
     </div>
   );
 }

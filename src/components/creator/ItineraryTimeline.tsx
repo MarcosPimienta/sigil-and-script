@@ -31,7 +31,7 @@ export function ItineraryTimeline() {
   return (
     <div className="section-itinerary" style={{
       position: 'relative',
-      padding: '2.8rem 2.2rem',
+      padding: '2.8rem clamp(1rem, 4vw, 2.2rem)',
       background: 'var(--envelope-color, #c8b998)',
       borderRadius: '8px',
       color: '#ffffff',

@@ -123,9 +123,12 @@ export function GiftsRegistryPanel() {
             target="_blank"
             rel="noopener noreferrer"
             style={{
-              display: 'inline-block',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              minHeight: '44px',
               border: '2px solid rgba(120, 100, 80, 0.7)',
-              borderRadius: '2px',
+              borderRadius: '4px',
               padding: '8px 24px',
               fontSize: '0.9rem',
               color: '#4c4844',
@@ -135,6 +138,7 @@ export function GiftsRegistryPanel() {
               textTransform: 'uppercase',
               transition: 'all 0.2s',
               background: 'rgba(255, 255, 255, 0.4)',
+              WebkitTapHighlightColor: 'transparent',
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.background = '#4c4844';

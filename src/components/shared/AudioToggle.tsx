@@ -17,8 +17,8 @@ export function AudioToggle() {
       aria-label={muted ? 'Unmute ambient sound' : 'Mute ambient sound'}
       style={{
         position: 'fixed',
-        bottom: '24px',
-        right: '24px',
+        bottom: 'calc(24px + var(--safe-bottom, 0px))',
+        right: 'calc(24px + var(--safe-right, 0px))',
         width: '46px',
         height: '46px',
         borderRadius: '50%',

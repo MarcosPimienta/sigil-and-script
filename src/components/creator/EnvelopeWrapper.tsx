@@ -63,7 +63,16 @@ export function EnvelopeWrapper({ children, onPhaseChange, alwaysOpen }: Envelop
     
     // Auto-enable sound on user gesture (wax seal click) to bypass autoplay blocks
     audioEngine.setMute(false);
-    
+
+    // Haptic feedback on mobile devices supporting the Vibration API
+    if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+      try {
+        navigator.vibrate([25, 40, 30]);
+      } catch {
+        // Ignore environments where vibration is not supported or permitted
+      }
+    }
+
     setPhase('CRACKING');
     onPhaseChange?.('CRACKING');
     audioEngine.playCrack();

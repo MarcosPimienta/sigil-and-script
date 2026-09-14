@@ -59,4 +59,11 @@ describe('DashboardView Column Sorting', () => {
     const rowsDesc = screen.getAllByTitle('Click to edit name');
     expect(rowsDesc[0].textContent).toContain('Carlos'); // 2 dependents
   });
+
+  it('wraps the table in .dashboard-table-container for mobile horizontal scrolling', () => {
+    const { container } = render(<DashboardView />);
+    const tableContainer = container.querySelector('.dashboard-table-container');
+    expect(tableContainer).toBeInTheDocument();
+    expect(tableContainer?.querySelector('table.dashboard-table')).toBeInTheDocument();
+  });
 });

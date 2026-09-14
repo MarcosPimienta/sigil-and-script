@@ -35,7 +35,11 @@ function formatEventChip(countdownTarget: string | undefined, lang: 'ES' | 'EN')
   });
 }
 
-export function PanelShell() {
+export interface PanelShellProps {
+  onCloseMobile?: () => void;
+}
+
+export function PanelShell({ onCloseMobile }: PanelShellProps = {}) {
   const design = useSigilStore((s) => s.design);
   const panelTab = useSigilStore((s) => s.panelTab);
   const setPanelTab = useSigilStore((s) => s.setPanelTab);
@@ -48,16 +52,28 @@ export function PanelShell() {
   return (
     <div className="lp-shell">
       <header className="lp-shell-header">
-        <input
-          id="input-design-title"
-          type="text"
-          className="lp-shell-name"
-          value={design.title || ''}
-          onChange={(e) => updateDesign({ title: e.target.value })}
-          placeholder={phrasing.hostsPlaceholder}
-          aria-label={t('eventTitleLabel')}
-          maxLength={120}
-        />
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', width: '100%' }}>
+          <input
+            id="input-design-title"
+            type="text"
+            className="lp-shell-name"
+            value={design.title || ''}
+            onChange={(e) => updateDesign({ title: e.target.value })}
+            placeholder={phrasing.hostsPlaceholder}
+            aria-label={t('eventTitleLabel')}
+            maxLength={120}
+          />
+          {onCloseMobile && (
+            <button
+              type="button"
+              className="lp-mobile-close-btn"
+              onClick={onCloseMobile}
+              aria-label="Close design panel"
+            >
+              ✕
+            </button>
+          )}
+        </div>
         <div className="lp-shell-chips">
           <span className="lp-chip lp-chip--type">
             <EventIcon id={EVENT_TYPE_ICON[design.eventType ?? 'WEDDING']} size={12} />

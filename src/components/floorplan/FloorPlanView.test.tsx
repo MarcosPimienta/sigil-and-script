@@ -367,4 +367,11 @@ describe('FloorPlanView Component', () => {
     const resetTable = useSigilStore.getState().design.floorPlan?.tables.find((t) => t.id === tableId);
     expect(resetTable?.seats[0].angle).toBeUndefined();
   });
+
+  it('renders mobile-friendly header with scrollable stats bar and header actions', () => {
+    const { container } = render(<FloorPlanView />);
+    expect(container.querySelector('.floorplan-header')).toBeInTheDocument();
+    expect(container.querySelector('.floorplan-stats-bar')).toBeInTheDocument();
+    expect(container.querySelector('.floorplan-header-actions')).toBeInTheDocument();
+  });
 });

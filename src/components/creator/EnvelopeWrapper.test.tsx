@@ -79,4 +79,24 @@ describe('EnvelopeWrapper', () => {
       maxHeight: '140px',
     });
   });
+
+  it('triggers haptic vibration feedback when wax seal is cracked if supported', () => {
+    const mockVibrate = vi.fn();
+    vi.stubGlobal('navigator', {
+      ...navigator,
+      vibrate: mockVibrate,
+    });
+
+    render(
+      <EnvelopeWrapper>
+        <div>Test Letter</div>
+      </EnvelopeWrapper>,
+    );
+
+    const seal = screen.getByLabelText(/break wax seal/i);
+    fireEvent.click(seal);
+
+    expect(mockVibrate).toHaveBeenCalledWith([25, 40, 30]);
+    vi.unstubAllGlobals();
+  });
 });

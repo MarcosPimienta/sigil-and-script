@@ -35,7 +35,6 @@ export function DressCodePanel() {
   const groups = dressCode?.groups ?? [];
   if (!dressCode || (!dressCode.intro && groups.length === 0)) return null;
 
-  const columns = Math.min(Math.max(groups.length, 1), 3);
 
   return (
     <div className="section-dresscode" style={{
@@ -71,8 +70,8 @@ export function DressCodePanel() {
       {groups.length > 0 && (
         <div style={{
           display: 'grid',
-          gridTemplateColumns: `repeat(${columns}, 1fr)`,
-          gap: '2rem',
+          gridTemplateColumns: `repeat(auto-fit, minmax(min(100%, 140px), 1fr))`,
+          gap: 'clamp(1rem, 3vw, 2rem)',
         }}>
           {groups.map((group) => (
             <div key={group.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100%' }}>
