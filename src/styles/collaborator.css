@@ -19,6 +19,8 @@
 .collab-modal {
   width: 100%;
   max-width: 580px;
+  max-height: 90vh;
+  overflow-y: auto;
   background: #1c1b1a;
   border: 1px solid rgba(223, 184, 142, 0.2);
   border-radius: 20px;
@@ -74,16 +76,22 @@
   border-radius: 14px;
   padding: 1.25rem;
   margin-bottom: 1.75rem;
+  box-sizing: border-box;
 }
 
 .collab-form-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto;
   gap: 0.75rem;
   align-items: center;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .collab-input {
-  flex: 2;
+  grid-column: 1 / -1;
+  width: 100%;
+  box-sizing: border-box;
   padding: 11px 14px;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.12);
@@ -91,6 +99,7 @@
   color: #ffffff;
   font-size: 0.9rem;
   font-family: inherit;
+  min-width: 0;
 }
 
 .collab-input:focus {
@@ -100,7 +109,9 @@
 }
 
 .collab-select {
-  flex: 1;
+  grid-column: 1;
+  width: 100%;
+  box-sizing: border-box;
   padding: 11px 12px;
   background: #252422;
   border: 1px solid rgba(255, 255, 255, 0.12);
@@ -109,10 +120,17 @@
   font-size: 0.85rem;
   font-family: inherit;
   cursor: pointer;
+  min-width: 0;
+}
+
+.collab-select:focus {
+  outline: none;
+  border-color: #dfb88e;
 }
 
 .collab-btn-send {
-  padding: 11px 18px;
+  grid-column: 2;
+  padding: 11px 20px;
   background: linear-gradient(135deg, #dfb88e 0%, #c49e75 100%);
   color: #1a1918;
   border: none;
@@ -122,6 +140,10 @@
   cursor: pointer;
   transition: all 0.2s ease;
   white-space: nowrap;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .collab-btn-send:hover:not(:disabled) {
@@ -141,6 +163,7 @@
   max-height: 240px;
   overflow-y: auto;
   padding-right: 4px;
+  box-sizing: border-box;
 }
 
 .collab-item {
@@ -151,12 +174,16 @@
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 10px;
   padding: 10px 14px;
+  gap: 0.75rem;
+  box-sizing: border-box;
 }
 
 .collab-item-info {
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  min-width: 0;
+  flex: 1;
 }
 
 .collab-avatar {
@@ -170,23 +197,31 @@
   justify-content: center;
   font-weight: 600;
   font-size: 0.85rem;
+  flex-shrink: 0;
 }
 
 .collab-item-name {
   font-weight: 500;
   font-size: 0.9rem;
   color: #f6ebe2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .collab-item-email {
   font-size: 0.8rem;
   color: #a08e7c;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .collab-item-badges {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  flex-shrink: 0;
 }
 
 .collab-badge {
@@ -196,6 +231,7 @@
   padding: 3px 8px;
   border-radius: 4px;
   font-weight: 600;
+  white-space: nowrap;
 }
 
 .collab-badge--role {
@@ -222,6 +258,7 @@
   padding: 4px 8px;
   font-size: 0.85rem;
   transition: opacity 0.2s;
+  flex-shrink: 0;
 }
 
 .collab-btn-remove:hover {
@@ -242,6 +279,80 @@
   font-weight: 600;
   letter-spacing: 0.05em;
   text-transform: uppercase;
+}
+
+/* ── Mobile Responsiveness (< 580px) ── */
+@media (max-width: 580px) {
+  .collab-modal-overlay {
+    padding: 12px;
+  }
+
+  .collab-modal {
+    padding: 1.5rem 1.25rem;
+    border-radius: 16px;
+    max-height: 94vh;
+  }
+
+  .collab-modal-title {
+    font-size: 1.55rem;
+  }
+
+  .collab-modal-subtitle {
+    font-size: 0.82rem;
+  }
+
+  .collab-invite-form {
+    padding: 1rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .collab-form-row {
+    grid-template-columns: 1fr;
+    gap: 0.65rem;
+  }
+
+  .collab-input {
+    grid-column: 1;
+    font-size: 0.85rem;
+    padding: 10px 12px;
+  }
+
+  .collab-select {
+    grid-column: 1;
+    font-size: 0.82rem;
+    padding: 10px 12px;
+  }
+
+  .collab-btn-send {
+    grid-column: 1;
+    width: 100%;
+    padding: 11px;
+    font-size: 0.85rem;
+  }
+
+  .collab-item {
+    padding: 8px 10px;
+    gap: 0.5rem;
+  }
+
+  .collab-avatar {
+    width: 30px;
+    height: 30px;
+    font-size: 0.78rem;
+  }
+
+  .collab-item-name {
+    font-size: 0.82rem;
+  }
+
+  .collab-item-email {
+    font-size: 0.75rem;
+  }
+
+  .collab-badge {
+    font-size: 0.65rem;
+    padding: 2px 6px;
+  }
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
