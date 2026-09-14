@@ -43,7 +43,7 @@
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 16px;
-  padding: 28px;
+  padding: 24px;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
@@ -82,14 +82,13 @@
 }
 
 .event-card-title {
-  font-size: 1.35rem;
+  font-size: clamp(1.15rem, 2.5vw, 1.35rem);
   font-weight: 500;
   color: #ffffff;
   margin: 0 0 12px 0;
-  line-height: 1.4;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  line-height: 1.35;
+  word-break: break-word;
+  overflow-wrap: break-word;
   transition: color 0.2s ease;
 }
 
@@ -116,16 +115,16 @@
 }
 
 .event-card-actions {
-  display: flex;
-  gap: 10px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr) 42px;
+  gap: 8px;
   width: 100%;
 }
 
 .event-card-btn {
-  flex: 1;
-  padding: 10px 14px;
+  padding: 9px 8px;
   border-radius: 8px;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -134,12 +133,18 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
+  text-align: center;
+  white-space: nowrap;
+  box-sizing: border-box;
 }
 
 .event-card-btn--primary {
+  grid-column: 1 / -1;
   background: rgba(223, 184, 142, 0.1);
   border: 1px solid rgba(223, 184, 142, 0.2);
   color: #dfb88e;
+  padding: 11px 16px;
+  font-size: 0.88rem;
 }
 
 .event-card-btn--primary:hover {
@@ -164,9 +169,12 @@
   background: transparent;
   border: 1px solid rgba(239, 68, 68, 0.15);
   color: #f87171;
-  flex: 0 0 42px;
   width: 42px;
+  height: 38px;
   padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .event-card-btn--danger:hover {
@@ -415,3 +423,94 @@
   border: 1px solid rgba(223, 184, 142, 0.3);
   color: #dfb88e;
 }
+
+/* ── Mobile responsiveness (< 768px) ── */
+@media (max-width: 767px) {
+  .events-hub-container {
+    padding: 20px 16px 40px;
+  }
+
+  .events-hub-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+  }
+
+  .events-hub-title {
+    font-size: 1.85rem;
+  }
+
+  .events-hub-subtitle {
+    font-size: 0.85rem;
+  }
+
+  .events-hub-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .event-card {
+    padding: 20px 16px;
+    min-height: auto;
+  }
+
+  .event-card-title {
+    font-size: 1.18rem;
+    line-height: 1.32;
+    margin: 0 0 10px 0;
+  }
+
+  .event-card-content {
+    margin-bottom: 18px;
+  }
+
+  .event-card-meta {
+    font-size: 0.8rem;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .event-card-actions {
+    grid-template-columns: repeat(3, 1fr) 38px;
+    gap: 6px;
+  }
+
+  .event-card-btn {
+    padding: 8px 4px;
+    font-size: 0.78rem;
+  }
+
+  .event-card-btn--primary {
+    padding: 10px 14px;
+    font-size: 0.86rem;
+  }
+
+  .event-card-btn--danger {
+    width: 38px;
+    min-width: 38px;
+    height: 36px;
+    padding: 0;
+  }
+
+  .create-event-card {
+    min-height: 160px;
+    padding: 24px 16px;
+  }
+
+  .etp-panel {
+    padding: 20px 16px;
+    width: 95%;
+  }
+
+  .etp-title {
+    font-size: 1.5rem;
+  }
+
+  .etp-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+}
+
