@@ -11,7 +11,29 @@ const prisma = (): PrismaClient => {
   return _prisma;
 };
 
-function appUrl(): string {
+function resolveAppUrl(req?: Request): string {
+  if (req) {
+    const origin = req.headers.origin || req.headers.referer;
+    if (origin && typeof origin === 'string') {
+      try {
+        const parsed = new URL(origin);
+        if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+          return `${parsed.protocol}//${parsed.host}`;
+        }
+      } catch {
+        // ignore
+      }
+    }
+  }
+
+  if (process.env.APP_URL && process.env.APP_URL !== 'http://localhost:5173') {
+    return process.env.APP_URL.replace(/\/$/, '');
+  }
+
+  if (process.env.VERCEL || process.env.NODE_ENV === 'production') {
+    return 'https://sigil-and-script-frontend.vercel.app';
+  }
+
   const raw = process.env.APP_URL || 'http://localhost:5173';
   return raw.endsWith('/') ? raw.slice(0, -1) : raw;
 }
@@ -121,10 +143,10 @@ export async function inviteCollaborator(req: Request, res: Response): Promise<v
       // fallback to default
     }
 
-    const inviteLink = `${appUrl()}/?collab=${inviteToken}`;
+    const inviteLink = `${resolveAppUrl(req)}/?collab=${inviteToken}`;
     const inviterName = req.user!.name || req.user!.email;
 
-    await sendCollaboratorInviteEmail({
+    const mailResult = await sendCollaboratorInviteEmail({
       to: normalizedEmail,
       link: inviteLink,
       inviterName,
@@ -136,6 +158,8 @@ export async function inviteCollaborator(req: Request, res: Response): Promise<v
       success: true,
       collaborator: collaboratorRecord,
       inviteLink,
+      emailDelivered: mailResult.delivered,
+      emailError: mailResult.error,
     });
   } catch (error) {
     console.error('Error inviting collaborator:', error);

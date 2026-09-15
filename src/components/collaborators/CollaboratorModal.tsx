@@ -50,7 +50,11 @@ export function CollaboratorModal({ canvasId, onClose }: CollaboratorModalProps)
 
     try {
       const res = await inviteCollaborator(canvasId, email.trim(), role);
-      setSuccessNotice(`Invitation sent to ${email.trim()}`);
+      if (res.emailDelivered === false && res.emailError) {
+        setSuccessNotice(`Invite link created! Note: Email was not delivered by mail provider (${res.emailError}). Please copy and share the link below.`);
+      } else {
+        setSuccessNotice(`Invitation sent to ${email.trim()}`);
+      }
       if (res.inviteLink) {
         setLastInviteLink(res.inviteLink);
       }

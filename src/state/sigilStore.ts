@@ -132,7 +132,7 @@ export interface SigilState {
 
   // Collaborator actions
   fetchCollaborators: (canvasId: string) => Promise<CanvasCollaborator[]>;
-  inviteCollaborator: (canvasId: string, email: string, role?: CollaboratorRole) => Promise<{ success: boolean; inviteLink?: string }>;
+  inviteCollaborator: (canvasId: string, email: string, role?: CollaboratorRole) => Promise<{ success: boolean; inviteLink?: string; emailDelivered?: boolean; emailError?: string }>;
   removeCollaborator: (canvasId: string, collabId: string) => Promise<boolean>;
   getCollaboratorInviteDetails: (token: string) => Promise<CollaboratorInviteDetails | null>;
   acceptCollaboratorInvite: (token: string) => Promise<string | null>;
@@ -1209,7 +1209,12 @@ export const useSigilStore = create<SigilState>((set, get) => ({
         method: 'POST',
         body: JSON.stringify({ email, role }),
       });
-      return { success: true, inviteLink: data.inviteLink };
+      return {
+        success: true,
+        inviteLink: data.inviteLink,
+        emailDelivered: data.emailDelivered,
+        emailError: data.emailError,
+      };
     } catch (err) {
       console.error('Failed to invite collaborator:', err);
       throw err;

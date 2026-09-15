@@ -77,7 +77,29 @@ function hashResetToken(token: string): string {
   return crypto.createHash('sha256').update(token).digest('hex');
 }
 
-function appUrl(): string {
+function resolveAppUrl(req?: Request): string {
+  if (req) {
+    const origin = req.headers.origin || req.headers.referer;
+    if (origin && typeof origin === 'string') {
+      try {
+        const parsed = new URL(origin);
+        if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+          return `${parsed.protocol}//${parsed.host}`;
+        }
+      } catch {
+        // ignore
+      }
+    }
+  }
+
+  if (process.env.APP_URL && process.env.APP_URL !== 'http://localhost:5173') {
+    return process.env.APP_URL.replace(/\/$/, '');
+  }
+
+  if (process.env.VERCEL || process.env.NODE_ENV === 'production') {
+    return 'https://sigil-and-script-frontend.vercel.app';
+  }
+
   const raw = process.env.APP_URL || 'http://localhost:5173';
   return raw.endsWith('/') ? raw.slice(0, -1) : raw;
 }
@@ -249,7 +271,7 @@ export async function forgotPassword(req: Request, res: Response): Promise<void>
       }),
     ]);
 
-    const link = `${appUrl()}/?reset=${token}`;
+    const link = `${resolveAppUrl(req)}/?reset=${token}`;
     await sendPasswordResetEmail({ to: user.email, link, expiresInMinutes: RESET_TOKEN_TTL_MINUTES });
 
     res.json({ success: true });

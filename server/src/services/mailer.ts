@@ -132,13 +132,19 @@ export function renderCollaboratorInviteEmail({ link, inviterName, eventTitle, r
   return { subject, text, html };
 }
 
-export async function sendCollaboratorInviteEmail(email: CollaboratorInviteEmail): Promise<void> {
+export interface MailerResult {
+  delivered: boolean;
+  error?: string;
+}
+
+export async function sendCollaboratorInviteEmail(email: CollaboratorInviteEmail): Promise<MailerResult> {
   const { subject, text, html } = renderCollaboratorInviteEmail(email);
   const resend = getResend();
 
   if (!resend) {
-    console.log(`[mailer] RESEND_API_KEY not set — collaborator invite for ${email.to}: ${email.link}`);
-    return;
+    const msg = 'RESEND_API_KEY not configured on server';
+    console.log(`[mailer] ${msg} — collaborator invite for ${email.to}: ${email.link}`);
+    return { delivered: false, error: msg };
   }
 
   try {
@@ -154,12 +160,15 @@ export async function sendCollaboratorInviteEmail(email: CollaboratorInviteEmail
       if (process.env.NODE_ENV !== 'production') {
         console.log(`[mailer] Collaborator invite link for ${email.to}: ${email.link}`);
       }
+      return { delivered: false, error: error.message };
     }
-  } catch (err) {
+    return { delivered: true };
+  } catch (err: any) {
     console.error('[mailer] Failed to send collaborator invite email:', err);
     if (process.env.NODE_ENV !== 'production') {
       console.log(`[mailer] Collaborator invite link for ${email.to}: ${email.link}`);
     }
+    return { delivered: false, error: err?.message || 'Failed to send email' };
   }
 }
 
