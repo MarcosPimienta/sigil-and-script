@@ -5,12 +5,15 @@ import { EnvelopeWrapper } from './EnvelopeWrapper';
 import { SectionStack } from './sections/SectionStack';
 import { getPhrasing } from '../../utils/eventPhrasing';
 import { AudioToggle } from '../shared/AudioToggle';
+import { PreviewBackButton } from './PreviewBackButton';
 import { useSigil } from '../../context/SigilContext';
+import { useSigilStore } from '../../state/sigilStore';
 import { formatGuestTitleName } from '../../utils/formatGuestTitle';
 import { audioEngine } from '../../utils/audioEngine';
 
 export function CreatorCanvas() {
-  const { state } = useSigil();
+  const { state, setAppMode } = useSigil();
+  const user = useSigilStore((s) => s.user);
   const isRecipient = state.appMode === 'RECIPIENT';
 
   // Sync background song url on load / update to prevent async browser play blocks
@@ -41,12 +44,28 @@ export function CreatorCanvas() {
   const depsCount = Math.max(state.guest.additionalGuests?.length || 0, state.guest.dependents?.length || 0);
   const reservedSeats = 1 + depsCount;
 
+  const isPreviewHost = Boolean(user) || state.guest?.routingToken === 'preview' || (typeof window !== 'undefined' && !window.location.pathname.startsWith('/invite/'));
+  const shouldShowBackButton = (isRecipient && isPreviewHost) || (!isRecipient && envelopePhase !== 'CLOSED');
+
+  const handleExitPreview = () => {
+    setEnvelopePhase('CLOSED');
+    audioEngine.setMute(true);
+    setAppMode('CREATOR');
+  };
+
   return (
     <div
       className="creator-canvas"
       data-mode={state.appMode}
       data-texture={state.design.paperTexture}
     >
+      {shouldShowBackButton && (
+        <PreviewBackButton
+          onExit={handleExitPreview}
+          language={state.guest?.language || state.design.language || 'ES'}
+        />
+      )}
+
       {/* ── Top Navigation ─── */}
       <Toolbar
         onToggleMobilePanel={() => setIsMobilePanelOpen((v) => !v)}
