@@ -8,13 +8,20 @@ interface DashboardStatsProps {
 // eslint-disable-next-line react-refresh/only-export-components
 export function computeStats(invitees: InviteeRecord[]) {
   const getGuestCount = (i: InviteeRecord) => {
-    return 1 + (i.dependents?.length || 0);
+    const depsCount = i.dependents?.length || 0;
+    if (i.guestType === 'FAMILY') {
+      return depsCount > 0 ? depsCount : 1;
+    }
+    return 1 + depsCount;
   };
 
   const getAttendingGuestCount = (i: InviteeRecord) => {
     const includedDeps = i.dependents
       ? i.dependents.filter((d) => d.included === true || d.included === ('true' as any)).length
       : 0;
+    if (i.guestType === 'FAMILY') {
+      return includedDeps > 0 ? includedDeps : (i.dependents && i.dependents.length > 0 ? 0 : 1);
+    }
     return 1 + includedDeps;
   };
 

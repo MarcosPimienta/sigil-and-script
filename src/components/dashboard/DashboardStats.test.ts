@@ -75,30 +75,48 @@ describe('computeStats', () => {
     ];
 
     const stats = computeStats(invitees);
-    // Total invited capacity: (1 + 2) + (1 + 3) = 7
-    expect(stats.total).toBe(7);
+    // Total invited capacity: Individual (1 + 2 = 3) + Family (3 members = 3) = 6
+    expect(stats.total).toBe(6);
     expect(stats.dependents).toBe(5);
-    // Attending headcount: Individual (1 primary + 1 checked = 2) + Family (1 primary + 2 checked = 3) -> 5 total attending
-    expect(stats.attending).toBe(5);
+    // Attending headcount: Individual (1 primary + 1 checked = 2) + Family (2 checked members = 2) -> 4 total attending
+    expect(stats.attending).toBe(4);
   });
 
-  it('counts primary guest plus confirmed dependents consistently for family entries', () => {
+  it('counts family with 2 members as 2 pending and 2 total guests', () => {
     const invitees: InviteeRecord[] = [
       {
-        id: '1',
-        name: 'Marcos Pimienta',
+        id: 'f1',
+        name: 'Familia Gómez',
         guestType: 'FAMILY',
         dependents: [
-          { id: 'd1', name: 'Diana Patricia de Pimienta', included: true },
+          { id: 'd1', name: 'Carlos', included: true },
+          { id: 'd2', name: 'Ana', included: true },
         ],
-        status: 'RSVP_YES',
+        status: 'PENDING',
       },
     ];
 
     const stats = computeStats(invitees);
     expect(stats.total).toBe(2);
-    expect(stats.dependents).toBe(1);
-    expect(stats.attending).toBe(2); // Marcos (1) + Diana (1) = 2
+    expect(stats.pending).toBe(2);
+    expect(stats.dependents).toBe(2);
+  });
+
+  it('handles family with zero enumerated dependents as a single placeholder guest', () => {
+    const invitees: InviteeRecord[] = [
+      {
+        id: 'f2',
+        name: 'Familia Gómez',
+        guestType: 'FAMILY',
+        dependents: [],
+        status: 'PENDING',
+      },
+    ];
+
+    const stats = computeStats(invitees);
+    expect(stats.total).toBe(1);
+    expect(stats.pending).toBe(1);
+    expect(stats.dependents).toBe(0);
   });
 });
 

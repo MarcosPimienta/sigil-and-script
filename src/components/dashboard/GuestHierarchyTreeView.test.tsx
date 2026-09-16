@@ -136,4 +136,22 @@ describe('GuestHierarchyTreeView component', () => {
     // Only Guest 00 and Dependent Alpha should be copied
     expect(writeTextMock).toHaveBeenCalledWith(['|', '|_ Guest 00', '         |_ Dependent Alpha'].join('\n'));
   });
+
+  it('calculates total count correctly for family household entries', () => {
+    const familyInvitees: InviteeRecord[] = [
+      {
+        id: 'fam-1',
+        name: 'Familia Gómez',
+        guestType: 'FAMILY',
+        dependents: [
+          { id: 'd-1', name: 'Carlos', included: true },
+          { id: 'd-2', name: 'Ana', included: true },
+        ],
+        status: 'PENDING',
+      },
+    ];
+
+    render(<GuestHierarchyTreeView invitees={familyInvitees} />);
+    expect(screen.getByText(/1 primary • 2 dependents \(2 total\)/i)).toBeTruthy();
+  });
 });

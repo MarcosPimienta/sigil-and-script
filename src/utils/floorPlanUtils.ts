@@ -26,28 +26,40 @@ export function getConfirmedAttendees(invitees: InviteeRecord[] = []): Confirmed
 
   for (const inv of invitees) {
     if (inv.status === 'RSVP_YES') {
-      // Primary guest
-      result.push({
-        id: inv.id,
-        name: inv.name,
-        isDependent: false,
-        primaryInviteeId: inv.id,
-        primaryInviteeName: inv.name,
-      });
+      const isFamily = inv.guestType === 'FAMILY';
+      const deps = Array.isArray(inv.dependents) ? inv.dependents : [];
+      const includedDeps = deps.filter((dep) => dep.included === true || (dep as any).included === 'true');
 
-      // Included dependents
-      if (Array.isArray(inv.dependents)) {
-        for (const dep of inv.dependents) {
-          const isIncluded = dep.included === true || (dep as any).included === 'true';
-          if (isIncluded) {
-            result.push({
-              id: dep.id,
-              name: dep.name,
-              isDependent: true,
-              primaryInviteeId: inv.id,
-              primaryInviteeName: inv.name,
-            });
-          }
+      if (isFamily && deps.length > 0) {
+        // Family container: seat each confirmed family member; omit the family title string
+        for (const dep of includedDeps) {
+          result.push({
+            id: dep.id,
+            name: dep.name,
+            isDependent: true,
+            primaryInviteeId: inv.id,
+            primaryInviteeName: inv.name,
+          });
+        }
+      } else {
+        // Individual guest OR family without individual members enumerated
+        result.push({
+          id: inv.id,
+          name: inv.name,
+          isDependent: false,
+          primaryInviteeId: inv.id,
+          primaryInviteeName: inv.name,
+        });
+
+        // Included dependents
+        for (const dep of includedDeps) {
+          result.push({
+            id: dep.id,
+            name: dep.name,
+            isDependent: true,
+            primaryInviteeId: inv.id,
+            primaryInviteeName: inv.name,
+          });
         }
       }
     }

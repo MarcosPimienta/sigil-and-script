@@ -85,11 +85,22 @@ export function GuestHierarchyTreeView({ invitees }: GuestHierarchyTreeViewProps
 
   const totalPrimary = invitees.length;
   const totalDependents = invitees.reduce((acc, i) => acc + (i.dependents?.length || 0), 0);
-  const totalCount = totalPrimary + totalDependents;
+  const totalCount = invitees.reduce((acc, inv) => {
+    const deps = inv.dependents?.length || 0;
+    if (inv.guestType === 'FAMILY') {
+      return acc + (deps > 0 ? deps : 1);
+    }
+    return acc + 1 + deps;
+  }, 0);
 
   const filteredPrimary = filteredInvitees.length;
-  const filteredDependents = filteredInvitees.reduce((acc, i) => acc + getVisibleDependents(i).length, 0);
-  const filteredTotal = filteredPrimary + filteredDependents;
+  const filteredTotal = filteredInvitees.reduce((acc, inv) => {
+    const deps = getVisibleDependents(inv).length;
+    if (inv.guestType === 'FAMILY') {
+      return acc + (deps > 0 ? deps : (inv.dependents && inv.dependents.length > 0 ? 0 : 1));
+    }
+    return acc + 1 + deps;
+  }, 0);
 
   if (invitees.length === 0) {
     return (

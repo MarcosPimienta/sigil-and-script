@@ -78,6 +78,43 @@ describe('floorPlanUtils', () => {
         ])
       ).toEqual([]);
     });
+
+    it('seats only confirmed family members for FAMILY entries with dependents (no ghost seat for family title)', () => {
+      const invitees: InviteeRecord[] = [
+        {
+          id: 'fam-1',
+          name: 'Familia Gómez',
+          guestType: 'FAMILY',
+          status: 'RSVP_YES',
+          dependents: [
+            { id: 'dep-1', name: 'Carlos Gómez', included: true },
+            { id: 'dep-2', name: 'Ana Gómez', included: true },
+            { id: 'dep-3', name: 'Ignored Member', included: false },
+          ],
+        },
+      ];
+
+      const attendees = getConfirmedAttendees(invitees);
+      expect(attendees).toHaveLength(2);
+      expect(attendees.map((a) => a.name)).toEqual(['Ana Gómez', 'Carlos Gómez']);
+      expect(attendees.find((a) => a.name === 'Familia Gómez')).toBeUndefined();
+    });
+
+    it('seats primary record for FAMILY entry with zero enumerated dependents as a placeholder', () => {
+      const invitees: InviteeRecord[] = [
+        {
+          id: 'fam-2',
+          name: 'Familia Pérez',
+          guestType: 'FAMILY',
+          status: 'RSVP_YES',
+          dependents: [],
+        },
+      ];
+
+      const attendees = getConfirmedAttendees(invitees);
+      expect(attendees).toHaveLength(1);
+      expect(attendees[0].name).toBe('Familia Pérez');
+    });
   });
 
   describe('Geometry calculations', () => {

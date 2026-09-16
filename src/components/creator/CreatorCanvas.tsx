@@ -42,7 +42,9 @@ export function CreatorCanvas() {
   const showRosterDetails = envelopePhase === 'FADING_OUT' || envelopePhase === 'COMPLETED';
 
   const depsCount = Math.max(state.guest.additionalGuests?.length || 0, state.guest.dependents?.length || 0);
-  const reservedSeats = 1 + depsCount;
+  const reservedSeats = state.guest.guestType === 'FAMILY'
+    ? (depsCount > 0 ? depsCount : 1)
+    : 1 + depsCount;
 
   const isPreviewHost = Boolean(user) || state.guest?.routingToken === 'preview' || (typeof window !== 'undefined' && !window.location.pathname.startsWith('/invite/'));
   const shouldShowBackButton = (isRecipient && isPreviewHost) || (!isRecipient && envelopePhase !== 'CLOSED');
