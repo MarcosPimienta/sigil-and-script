@@ -200,4 +200,46 @@ describe('Floor Plan Store Actions', () => {
     expect(table?.seats[0].angle).toBeUndefined();
     expect(table?.seats[1].angle).toBeUndefined();
   });
+
+  it('automatically vacates table seats when an invitee status changes to RSVP_NO', () => {
+    const store = useSigilStore.getState();
+    store.addInvitee('Pedro Pascal', undefined, 'INDIVIDUAL', ['Child Pascal']);
+    const invitees = useSigilStore.getState().guestRoster.invitees;
+    const pedro = invitees.find((i) => i.name === 'Pedro Pascal')!;
+    const child = pedro.dependents[0];
+
+    const tblId = store.addFloorPlanTable({ shape: 'round', seatsCount: 4 });
+    store.assignFloorPlanSeat(tblId, 1, { id: pedro.id, name: pedro.name });
+    store.assignFloorPlanSeat(tblId, 2, { id: child.id, name: child.name, isDependent: true, primaryInviteeId: pedro.id });
+
+    let table = useSigilStore.getState().design.floorPlan?.tables.find((t) => t.id === tblId);
+    expect(table?.seats[0].assignedGuestId).toBe(pedro.id);
+    expect(table?.seats[1].assignedGuestId).toBe(child.id);
+
+    // Pedro declines
+    store.updateInvitee(pedro.id, { status: 'RSVP_NO' });
+
+    table = useSigilStore.getState().design.floorPlan?.tables.find((t) => t.id === tblId);
+    expect(table?.seats[0].assignedGuestId).toBeUndefined();
+    expect(table?.seats[1].assignedGuestId).toBeUndefined();
+  });
+
+  it('automatically vacates table seats when an invitee is removed from the roster', () => {
+    const store = useSigilStore.getState();
+    store.addInvitee('Salma Hayek');
+    const invitees = useSigilStore.getState().guestRoster.invitees;
+    const salma = invitees.find((i) => i.name === 'Salma Hayek')!;
+
+    const tblId = store.addFloorPlanTable({ shape: 'round', seatsCount: 4 });
+    store.assignFloorPlanSeat(tblId, 1, { id: salma.id, name: salma.name });
+
+    let table = useSigilStore.getState().design.floorPlan?.tables.find((t) => t.id === tblId);
+    expect(table?.seats[0].assignedGuestId).toBe(salma.id);
+
+    // Remove Salma
+    store.removeInvitee(salma.id);
+
+    table = useSigilStore.getState().design.floorPlan?.tables.find((t) => t.id === tblId);
+    expect(table?.seats[0].assignedGuestId).toBeUndefined();
+  });
 });

@@ -47,15 +47,29 @@ export function FloorPlanView() {
     return getConfirmedAttendees(invitees);
   }, [invitees]);
 
+  // Sanitize tables to ensure seats with unconfirmed or declined guests are treated as vacant
+  const sanitizedTables = useMemo(() => {
+    const confirmedSet = new Set(confirmedAttendees.map((a) => a.id));
+    return tables.map((tbl) => ({
+      ...tbl,
+      seats: tbl.seats.map((s) => {
+        if (s.assignedGuestId && !confirmedSet.has(s.assignedGuestId)) {
+          return { id: s.id, seatNumber: s.seatNumber };
+        }
+        return s;
+      }),
+    }));
+  }, [tables, confirmedAttendees]);
+
   // Compute live statistics
   const stats = useMemo(() => {
-    return calculateSeatingStats(floorPlan, confirmedAttendees);
-  }, [floorPlan, confirmedAttendees]);
+    return calculateSeatingStats({ ...floorPlan, tables: sanitizedTables }, confirmedAttendees);
+  }, [floorPlan, sanitizedTables, confirmedAttendees]);
 
   // Unassigned attendees list
   const unassignedAttendees = useMemo(() => {
     const assignedIds = new Set<string>();
-    for (const t of tables) {
+    for (const t of sanitizedTables) {
       for (const s of t.seats) {
         if (s.assignedGuestId) {
           assignedIds.add(s.assignedGuestId);
@@ -63,7 +77,7 @@ export function FloorPlanView() {
       }
     }
     return confirmedAttendees.filter((a) => !assignedIds.has(a.id));
-  }, [tables, confirmedAttendees]);
+  }, [sanitizedTables, confirmedAttendees]);
 
   const handleSave = useCallback(async () => {
     setIsSaving(true);
@@ -175,7 +189,7 @@ export function FloorPlanView() {
       {/* ── Workspace with Map, Reference Controls, and optional Drawer ── */}
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden', position: 'relative' }}>
         <FloorPlanCanvas
-          tables={tables}
+          tables={sanitizedTables}
           referenceLayer={referenceLayer}
           onSeatClick={handleSeatClick}
           onDeleteTable={removeFloorPlanTable}
@@ -215,10 +229,10 @@ export function FloorPlanView() {
       {/* ── Seat Assignment Modal ── */}
       <SeatAssignmentModal
         isOpen={activeSeat !== null}
-        table={activeSeat?.table || null}
+        table={activeSeat ? (sanitizedTables.find((t) => t.id === activeSeat.table.id) || activeSeat.table) : null}
         seatNumber={activeSeat?.seatNumber || null}
         confirmedAttendees={confirmedAttendees}
-        allTables={tables}
+        allTables={sanitizedTables}
         onAssign={(guest) => {
           if (activeSeat) {
             assignFloorPlanSeat(activeSeat.table.id, activeSeat.seatNumber, guest);
@@ -239,7 +253,7 @@ export function FloorPlanView() {
       <SeatingManifestModal
         isOpen={isManifestOpen}
         onClose={() => setIsManifestOpen(false)}
-        tables={tables}
+        tables={sanitizedTables}
         confirmedAttendees={confirmedAttendees}
         eventTitle={designTitle}
       />

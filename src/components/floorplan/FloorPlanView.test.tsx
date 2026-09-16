@@ -374,4 +374,45 @@ describe('FloorPlanView Component', () => {
     expect(container.querySelector('.floorplan-stats-bar')).toBeInTheDocument();
     expect(container.querySelector('.floorplan-header-actions')).toBeInTheDocument();
   });
+
+  it('does not render declined guests as occupied seats on the floor plan canvas', () => {
+    const tableId = useSigilStore.getState().addFloorPlanTable({
+      name: 'Table 1',
+      shape: 'round',
+      seatsCount: 2,
+    });
+
+    useSigilStore.setState((state) => ({
+      design: {
+        ...state.design,
+        floorPlan: {
+          ...state.design.floorPlan!,
+          tables: state.design.floorPlan!.tables.map((t) =>
+            t.id === tableId
+              ? {
+                  ...t,
+                  seats: t.seats.map((s) =>
+                    s.seatNumber === 1
+                      ? {
+                          ...s,
+                          assignedGuestId: 'inv-2',
+                          assignedGuestName: 'Pedro Pascal',
+                        }
+                      : s
+                  ),
+                }
+              : t
+          ),
+        },
+      },
+    }));
+
+    render(<FloorPlanView />);
+
+    // Seat 1 should render as vacant, not occupied, because Pedro Pascal is RSVP_NO
+    const seat1 = screen.getByTestId(`seat-node-${tableId}-1`);
+    expect(seat1).toHaveClass('fp-seat-node--vacant');
+    expect(seat1).not.toHaveClass('fp-seat-node--occupied');
+    expect(screen.queryByText('Pedro Pascal')).not.toBeInTheDocument();
+  });
 });

@@ -470,6 +470,7 @@ export function calculateSeatingStats(
 ): SeatingStats {
   const tables = floorPlan?.tables || [];
   const totalConfirmed = confirmedAttendees.length;
+  const confirmedIdSet = new Set(confirmedAttendees.map((a) => a.id));
 
   let totalSeats = 0;
   const assignedAttendeeIds = new Set<string>();
@@ -477,7 +478,7 @@ export function calculateSeatingStats(
   for (const table of tables) {
     totalSeats += table.seats.length;
     for (const seat of table.seats) {
-      if (seat.assignedGuestId) {
+      if (seat.assignedGuestId && confirmedIdSet.has(seat.assignedGuestId)) {
         assignedAttendeeIds.add(seat.assignedGuestId);
       }
     }
@@ -562,15 +563,15 @@ export function generateTableSeatingManifest(
       .sort((a, b) => a.seatNumber - b.seatNumber)
       .map((seat) => {
         const attendee = seat.assignedGuestId ? attendeeMap.get(seat.assignedGuestId) : undefined;
-        const isOccupied = Boolean(seat.assignedGuestId);
+        const isOccupied = Boolean(attendee);
         return {
           seatNumber: seat.seatNumber,
           isOccupied,
-          guestId: seat.assignedGuestId,
-          guestName: seat.assignedGuestName || attendee?.name,
-          isDependent: seat.isDependent ?? attendee?.isDependent ?? false,
-          primaryInviteeId: seat.primaryInviteeId ?? attendee?.primaryInviteeId,
-          primaryInviteeName: attendee?.primaryInviteeName,
+          guestId: isOccupied ? seat.assignedGuestId : undefined,
+          guestName: isOccupied ? (seat.assignedGuestName || attendee?.name) : undefined,
+          isDependent: isOccupied ? (seat.isDependent ?? attendee?.isDependent ?? false) : false,
+          primaryInviteeId: isOccupied ? (seat.primaryInviteeId ?? attendee?.primaryInviteeId) : undefined,
+          primaryInviteeName: isOccupied ? attendee?.primaryInviteeName : undefined,
         };
       });
 
@@ -598,10 +599,11 @@ export function generateGuestSeatingDirectory(
   tables: FloorPlanTable[] = [],
   confirmedAttendees: ConfirmedAttendee[] = []
 ): GuestDirectoryItem[] {
+  const confirmedIdSet = new Set(confirmedAttendees.map((a) => a.id));
   const seatMap = new Map<string, { tableId: string; tableName: string; seatNumber: number }>();
   for (const table of tables) {
     for (const seat of table.seats || []) {
-      if (seat.assignedGuestId) {
+      if (seat.assignedGuestId && confirmedIdSet.has(seat.assignedGuestId)) {
         seatMap.set(seat.assignedGuestId, {
           tableId: table.id,
           tableName: table.name,

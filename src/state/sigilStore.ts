@@ -698,11 +698,40 @@ export const useSigilStore = create<SigilState>((set, get) => ({
 
   removeInvitee: (inviteeId) => {
     set((state) => {
+      const targetInv = state.guestRoster.invitees.find((inv) => inv.id === inviteeId);
+      const targetIds = new Set<string>([inviteeId]);
+      if (targetInv?.dependents) {
+        targetInv.dependents.forEach((d) => targetIds.add(d.id));
+      }
+
       const roster = {
         invitees: state.guestRoster.invitees.filter((inv) => inv.id !== inviteeId),
       };
       localStorage.setItem('sigil-guest-roster', JSON.stringify(roster));
-      return { guestRoster: roster };
+
+      const currentTables = state.design.floorPlan?.tables;
+      const updatedTables = currentTables?.map((tbl) => ({
+        ...tbl,
+        seats: tbl.seats.map((s) => {
+          if (s.assignedGuestId && targetIds.has(s.assignedGuestId)) {
+            return { id: s.id, seatNumber: s.seatNumber };
+          }
+          return s;
+        }),
+      }));
+
+      return {
+        guestRoster: roster,
+        design: updatedTables ? {
+          ...state.design,
+          floorPlan: {
+            ...state.design.floorPlan,
+            tables: updatedTables,
+            canvasWidth: state.design.floorPlan?.canvasWidth ?? 1400,
+            canvasHeight: state.design.floorPlan?.canvasHeight ?? 900,
+          },
+        } : state.design,
+      };
     });
   },
 
@@ -714,7 +743,38 @@ export const useSigilStore = create<SigilState>((set, get) => ({
         ),
       };
       localStorage.setItem('sigil-guest-roster', JSON.stringify(roster));
-      return { guestRoster: roster };
+
+      let updatedTables = state.design.floorPlan?.tables;
+      if (updates.status === 'RSVP_NO' && updatedTables) {
+        const targetInv = state.guestRoster.invitees.find((inv) => inv.id === inviteeId);
+        const targetIds = new Set<string>([inviteeId]);
+        if (targetInv?.dependents) {
+          targetInv.dependents.forEach((d) => targetIds.add(d.id));
+        }
+
+        updatedTables = updatedTables.map((tbl) => ({
+          ...tbl,
+          seats: tbl.seats.map((s) => {
+            if (s.assignedGuestId && targetIds.has(s.assignedGuestId)) {
+              return { id: s.id, seatNumber: s.seatNumber };
+            }
+            return s;
+          }),
+        }));
+      }
+
+      return {
+        guestRoster: roster,
+        design: updatedTables ? {
+          ...state.design,
+          floorPlan: {
+            ...state.design.floorPlan,
+            tables: updatedTables,
+            canvasWidth: state.design.floorPlan?.canvasWidth ?? 1400,
+            canvasHeight: state.design.floorPlan?.canvasHeight ?? 900,
+          },
+        } : state.design,
+      };
     });
   },
 
@@ -749,7 +809,27 @@ export const useSigilStore = create<SigilState>((set, get) => ({
         ),
       };
       localStorage.setItem('sigil-guest-roster', JSON.stringify(roster));
-      return { guestRoster: roster };
+
+      const currentTables = state.design.floorPlan?.tables;
+      const updatedTables = currentTables?.map((tbl) => ({
+        ...tbl,
+        seats: tbl.seats.map((s) =>
+          s.assignedGuestId === dependentId ? { id: s.id, seatNumber: s.seatNumber } : s
+        ),
+      }));
+
+      return {
+        guestRoster: roster,
+        design: updatedTables ? {
+          ...state.design,
+          floorPlan: {
+            ...state.design.floorPlan,
+            tables: updatedTables,
+            canvasWidth: state.design.floorPlan?.canvasWidth ?? 1400,
+            canvasHeight: state.design.floorPlan?.canvasHeight ?? 900,
+          },
+        } : state.design,
+      };
     });
   },
 
@@ -776,20 +856,49 @@ export const useSigilStore = create<SigilState>((set, get) => ({
 
   toggleDependent: (inviteeId, dependentId) => {
     set((state) => {
+      let isNowExcluded = false;
       const roster = {
-        invitees: state.guestRoster.invitees.map((inv) =>
-          inv.id === inviteeId
-            ? {
-                ...inv,
-                dependents: inv.dependents.map((d) =>
-                  d.id === dependentId ? { ...d, included: !d.included } : d,
-                ),
-              }
-            : inv,
-        ),
+        invitees: state.guestRoster.invitees.map((inv) => {
+          if (inv.id === inviteeId) {
+            return {
+              ...inv,
+              dependents: inv.dependents.map((d) => {
+                if (d.id === dependentId) {
+                  const nextVal = !d.included;
+                  if (!nextVal) isNowExcluded = true;
+                  return { ...d, included: nextVal };
+                }
+                return d;
+              }),
+            };
+          }
+          return inv;
+        }),
       };
       localStorage.setItem('sigil-guest-roster', JSON.stringify(roster));
-      return { guestRoster: roster };
+
+      let updatedTables = state.design.floorPlan?.tables;
+      if (isNowExcluded && updatedTables) {
+        updatedTables = updatedTables.map((tbl) => ({
+          ...tbl,
+          seats: tbl.seats.map((s) =>
+            s.assignedGuestId === dependentId ? { id: s.id, seatNumber: s.seatNumber } : s
+          ),
+        }));
+      }
+
+      return {
+        guestRoster: roster,
+        design: updatedTables ? {
+          ...state.design,
+          floorPlan: {
+            ...state.design.floorPlan,
+            tables: updatedTables,
+            canvasWidth: state.design.floorPlan?.canvasWidth ?? 1400,
+            canvasHeight: state.design.floorPlan?.canvasHeight ?? 900,
+          },
+        } : state.design,
+      };
     });
   },
 

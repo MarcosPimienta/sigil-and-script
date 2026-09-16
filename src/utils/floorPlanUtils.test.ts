@@ -292,6 +292,33 @@ describe('floorPlanUtils', () => {
       expect(stats.unassignedCount).toBe(1); // Charlie is not seated
       expect(stats.tableCount).toBe(2);
     });
+
+    it('ignores stale seats assigned to unconfirmed or declined guests in calculateSeatingStats', () => {
+      const attendees = [
+        { id: 'confirmed-1', name: 'Alice', isDependent: false, primaryInviteeId: 'confirmed-1', primaryInviteeName: 'Alice' },
+      ];
+      const config: FloorPlanConfig = {
+        tables: [
+          {
+            id: 't-1',
+            name: 'Table 1',
+            shape: 'round',
+            seatsCount: 2,
+            x: 100,
+            y: 100,
+            seats: [
+              { id: 't-1-s-1', seatNumber: 1, assignedGuestId: 'confirmed-1', assignedGuestName: 'Alice' },
+              { id: 't-1-s-2', seatNumber: 2, assignedGuestId: 'declined-99', assignedGuestName: 'Declined Bob' },
+            ],
+          },
+        ],
+      };
+
+      const stats = calculateSeatingStats(config, attendees);
+      expect(stats.totalConfirmed).toBe(1);
+      expect(stats.seatedCount).toBe(1); // Only Alice is counted, Declined Bob is ignored
+      expect(stats.unassignedCount).toBe(0);
+    });
   });
 
   describe('createEmptySeats', () => {
@@ -355,6 +382,34 @@ describe('floorPlanUtils', () => {
       expect(vip.seats[1].primaryInviteeName).toBe('Adam Jones');
       expect(vip.seats[2].isOccupied).toBe(false);
       expect(vip.seats[2].guestName).toBeUndefined();
+    });
+
+    it('marks seats with declined or unconfirmed guest assignments as empty in generateTableSeatingManifest', () => {
+      const tables: FloorPlanTable[] = [
+        {
+          id: 't-1',
+          name: 'Table 1',
+          shape: 'round',
+          seatsCount: 2,
+          x: 0,
+          y: 0,
+          seats: [
+            { id: 's-1', seatNumber: 1, assignedGuestId: 'confirmed-1', assignedGuestName: 'Alice' },
+            { id: 's-2', seatNumber: 2, assignedGuestId: 'declined-2', assignedGuestName: 'Declined Bob' },
+          ],
+        },
+      ];
+      const attendees = [
+        { id: 'confirmed-1', name: 'Alice', isDependent: false, primaryInviteeId: 'confirmed-1', primaryInviteeName: 'Alice' },
+      ];
+
+      const manifest = generateTableSeatingManifest(tables, attendees);
+      expect(manifest[0].occupiedCount).toBe(1);
+      expect(manifest[0].emptyCount).toBe(1);
+      expect(manifest[0].seats[0].isOccupied).toBe(true);
+      expect(manifest[0].seats[0].guestName).toBe('Alice');
+      expect(manifest[0].seats[1].isOccupied).toBe(false);
+      expect(manifest[0].seats[1].guestName).toBeUndefined();
     });
 
     it('generates guest seating directory sorted alphabetically', () => {

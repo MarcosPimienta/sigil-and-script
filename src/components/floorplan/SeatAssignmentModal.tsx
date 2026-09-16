@@ -30,13 +30,17 @@ export function SeatAssignmentModal({
   if (!isOpen || !table || seatNumber === null) return null;
 
   const currentSeat = table.seats.find((s) => s.seatNumber === seatNumber);
-  const isOccupied = Boolean(currentSeat?.assignedGuestId);
+  const isOccupantConfirmed = Boolean(
+    currentSeat?.assignedGuestId && confirmedAttendees.some((a) => a.id === currentSeat.assignedGuestId)
+  );
+  const isOccupied = Boolean(currentSeat?.assignedGuestId && isOccupantConfirmed);
 
   // Build a map of where each attendee is currently seated across all tables
+  const confirmedIdSet = new Set(confirmedAttendees.map((a) => a.id));
   const attendeeSeatingMap = new Map<string, { tableName: string; seatNum: number }>();
   for (const t of allTables) {
     for (const s of t.seats) {
-      if (s.assignedGuestId) {
+      if (s.assignedGuestId && confirmedIdSet.has(s.assignedGuestId)) {
         attendeeSeatingMap.set(s.assignedGuestId, { tableName: t.name, seatNum: s.seatNumber });
       }
     }
