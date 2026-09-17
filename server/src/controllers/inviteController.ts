@@ -146,7 +146,7 @@ function getClosedEnvelopeImageUrl(designDataStr?: string | null): string {
   if (!designDataStr) return fallback;
   try {
     const data = typeof designDataStr === 'string' ? JSON.parse(designDataStr) : designDataStr;
-    const img = data.closedEnvelopeImage || data.openedEnvelopeImage || data.headerImage;
+    const img = data.envelopeCoverClosedImage || data.closedEnvelopeImage || data.openedEnvelopeImage || data.headerImage;
     if (typeof img === 'string' && img.startsWith('http') && !img.toLowerCase().endsWith('.svg')) {
       return img;
     }

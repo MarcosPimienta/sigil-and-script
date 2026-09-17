@@ -168,6 +168,16 @@ export const PANEL_STRINGS = {
   styleHeadingFont: { ES: 'Títulos', EN: 'Headings' },
   styleBodyFont: { ES: 'Texto', EN: 'Body text' },
   styleEnvelopeGroup: { ES: 'Sobre y sello', EN: 'Envelope and seal' },
+  styleEnvelopeClosedCover: { ES: 'Sobre cerrado', EN: 'Closed envelope' },
+  styleEnvelopeClosedCoverHint: {
+    ES: 'Imagen PNG con transparencia para el sobre cerrado (recomendado 4:3)',
+    EN: 'PNG image with transparency for the closed envelope (recommended 4:3)',
+  },
+  styleEnvelopeOpenedCover: { ES: 'Sobre abierto', EN: 'Opened envelope' },
+  styleEnvelopeOpenedCoverHint: {
+    ES: 'Imagen PNG con transparencia detrás de la carta abierta',
+    EN: 'PNG image with transparency behind the unfolded letter',
+  },
   styleEnvelopeLogo: { ES: 'Logo o monograma del sobre', EN: 'Envelope logo or monogram' },
   styleEnvelopeLogoHint: {
     ES: 'Se muestra en la solapa de apertura del sobre',

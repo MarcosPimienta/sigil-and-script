@@ -99,4 +99,39 @@ describe('EnvelopeWrapper', () => {
     expect(mockVibrate).toHaveBeenCalledWith([25, 40, 30]);
     vi.unstubAllGlobals();
   });
+
+  it('renders default closed and opened envelope images when not overridden', () => {
+    render(
+      <EnvelopeWrapper>
+        <div>Test Letter</div>
+      </EnvelopeWrapper>,
+    );
+
+    const closedImg = screen.getByAltText('Closed Envelope') as HTMLImageElement;
+    const openedImg = screen.getByAltText('Opened Envelope') as HTMLImageElement;
+    expect(closedImg.src).toContain('/ClosedEnvelope00.png');
+    expect(openedImg.src).toContain('/OpenedEnvelope00.png');
+  });
+
+  it('renders custom closed and opened envelope images when defined in design', () => {
+    mockState = {
+      design: {
+        envelopeStyle: 'CLASSIC',
+        backgroundColor: '#e0cfa9',
+        envelopeCoverClosedImage: 'https://example.com/custom-closed.png',
+        envelopeCoverOpenedImage: 'https://example.com/custom-opened.png',
+      } as any,
+    };
+
+    render(
+      <EnvelopeWrapper>
+        <div>Test Letter</div>
+      </EnvelopeWrapper>,
+    );
+
+    const closedImg = screen.getByAltText('Closed Envelope') as HTMLImageElement;
+    const openedImg = screen.getByAltText('Opened Envelope') as HTMLImageElement;
+    expect(closedImg.src).toBe('https://example.com/custom-closed.png');
+    expect(openedImg.src).toBe('https://example.com/custom-opened.png');
+  });
 });

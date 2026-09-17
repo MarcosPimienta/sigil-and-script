@@ -250,6 +250,8 @@ export interface InvitationDesign {
   registryImage?: string;
   registryImageScale?: number;
   closedEnvelopeImage?: string;
+  envelopeCoverClosedImage?: string;
+  envelopeCoverOpenedImage?: string;
   openedEnvelopeImage?: string;
   openedEnvelopeImageScale?: number;
   stickerImage?: string;

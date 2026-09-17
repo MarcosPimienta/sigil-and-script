@@ -104,8 +104,39 @@ export function StyleTab() {
       <CollapsibleGroup
         title={t('styleEnvelopeGroup')}
         defaultOpen
-        summary={design.stickerImage || design.openedEnvelopeImage ? '●' : t('none')}
+        summary={
+          design.stickerImage ||
+          design.openedEnvelopeImage ||
+          design.envelopeCoverClosedImage ||
+          design.envelopeCoverOpenedImage
+            ? '●'
+            : t('none')
+        }
       >
+        <ImageUploadSlot
+          id="upload-envelope-closed"
+          label={t('styleEnvelopeClosedCover')}
+          hint={t('styleEnvelopeClosedCoverHint')}
+          value={design.envelopeCoverClosedImage}
+          onUpload={upload('envelopeCoverClosedImage')}
+          onClear={() => updateDesign({ envelopeCoverClosedImage: undefined })}
+          isUploading={uploading.envelopeCoverClosedImage}
+          removeLabel={t('remove')}
+          uploadingLabel={t('uploading')}
+        />
+
+        <ImageUploadSlot
+          id="upload-envelope-opened"
+          label={t('styleEnvelopeOpenedCover')}
+          hint={t('styleEnvelopeOpenedCoverHint')}
+          value={design.envelopeCoverOpenedImage}
+          onUpload={upload('envelopeCoverOpenedImage')}
+          onClear={() => updateDesign({ envelopeCoverOpenedImage: undefined })}
+          isUploading={uploading.envelopeCoverOpenedImage}
+          removeLabel={t('remove')}
+          uploadingLabel={t('uploading')}
+        />
+
         <ImageUploadSlot
           id="upload-opened-envelope"
           label={t('styleEnvelopeLogo')}

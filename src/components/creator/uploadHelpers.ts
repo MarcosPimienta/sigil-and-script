@@ -73,7 +73,14 @@ export function getCleanFileName(url: string): string {
 }
 
 /** Which formats get PNG (transparency matters) rather than JPEG. */
-const TRANSPARENT_FIELDS = new Set(['stickerImage', 'openedEnvelopeImage', 'registryImage', 'headerImage']);
+const TRANSPARENT_FIELDS = new Set([
+  'stickerImage',
+  'openedEnvelopeImage',
+  'envelopeCoverClosedImage',
+  'envelopeCoverOpenedImage',
+  'registryImage',
+  'headerImage',
+]);
 
 /**
  * Reads a picked image, compresses it, pushes it to storage and hands back the

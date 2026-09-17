@@ -175,8 +175,9 @@ export default async function handler(req, res) {
               rawHostNames = headline.content.trim();
             }
           }
-          if (data.closedEnvelopeImage && typeof data.closedEnvelopeImage === 'string' && data.closedEnvelopeImage.startsWith('http') && !data.closedEnvelopeImage.endsWith('.svg')) {
-            ogImage = data.closedEnvelopeImage;
+          const coverImg = data.envelopeCoverClosedImage || data.closedEnvelopeImage;
+          if (coverImg && typeof coverImg === 'string' && coverImg.startsWith('http') && !coverImg.endsWith('.svg')) {
+            ogImage = coverImg;
           }
         }
       }

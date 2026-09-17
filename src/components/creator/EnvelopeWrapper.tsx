@@ -395,7 +395,7 @@ export function EnvelopeWrapper({ children, onPhaseChange, alwaysOpen }: Envelop
           <div className="envelope-png-container">
             {/* Closed Envelope */}
             <img
-              src="/ClosedEnvelope00.png"
+              src={design.envelopeCoverClosedImage || design.closedEnvelopeImage || '/ClosedEnvelope00.png'}
               alt="Closed Envelope"
               className="envelope-png-layer layer-closed"
               style={{
@@ -405,7 +405,7 @@ export function EnvelopeWrapper({ children, onPhaseChange, alwaysOpen }: Envelop
 
             {/* Opened Envelope */}
             <img
-              src="/OpenedEnvelope00.png"
+              src={design.envelopeCoverOpenedImage || '/OpenedEnvelope00.png'}
               alt="Opened Envelope"
               className="envelope-png-layer layer-opened"
               style={{
