@@ -2,6 +2,7 @@ import { useState, type KeyboardEvent } from 'react';
 import type { InviteeRecord, InvitationStatus } from '../../types/sigil.types';
 import { useSigil } from '../../context/SigilContext';
 import { DependentCheckbox } from './DependentCheckbox';
+import { QrCardModal } from './QrCardModal';
 
 interface InviteeRowProps {
   invitee: InviteeRecord;
@@ -14,6 +15,7 @@ export function InviteeRow({ invitee }: InviteeRowProps) {
   const [isEditingName, setIsEditingName] = useState(false);
   const [nameInput, setNameInput] = useState(invitee.name);
   const [copied, setCopied] = useState(false);
+  const [showQrModal, setShowQrModal] = useState(false);
 
   function handleRemove() {
     if (window.confirm(`Remove ${invitee.name} from the guest list?`)) {
@@ -201,6 +203,25 @@ export function InviteeRow({ invitee }: InviteeRowProps) {
           {copied ? 'Copied! ✓' : '📋 Link'}
         </button>
 
+        {/* View & Print QR Card */}
+        <button
+          type="button"
+          onClick={() => setShowQrModal(true)}
+          style={{
+            fontSize: '0.78rem',
+            padding: '4px 8px',
+            borderRadius: '4px',
+            border: '1px solid var(--cr-border, #ccc)',
+            background: 'var(--cr-input-bg, #fff)',
+            color: 'inherit',
+            cursor: 'pointer',
+            transition: 'all 0.2s ease',
+          }}
+          title="QR Code Card"
+        >
+          🔲 QR
+        </button>
+
         {/* Expand Dependents */}
         <button
           type="button"
@@ -271,6 +292,13 @@ export function InviteeRow({ invitee }: InviteeRowProps) {
             </button>
           </div>
         </div>
+      )}
+
+      {showQrModal && (
+        <QrCardModal
+          invitee={invitee}
+          onClose={() => setShowQrModal(false)}
+        />
       )}
     </li>
   );

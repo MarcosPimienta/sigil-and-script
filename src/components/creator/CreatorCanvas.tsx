@@ -6,6 +6,7 @@ import { SectionStack } from './sections/SectionStack';
 import { getPhrasing } from '../../utils/eventPhrasing';
 import { AudioToggle } from '../shared/AudioToggle';
 import { PreviewBackButton } from './PreviewBackButton';
+import { QrCardPreview } from '../shared/QrCardPreview';
 import { useSigil } from '../../context/SigilContext';
 import { useSigilStore } from '../../state/sigilStore';
 import { formatGuestTitleName } from '../../utils/formatGuestTitle';
@@ -14,6 +15,7 @@ import { audioEngine } from '../../utils/audioEngine';
 export function CreatorCanvas() {
   const { state, setAppMode } = useSigil();
   const user = useSigilStore((s) => s.user);
+  const panelTab = useSigilStore((s) => s.panelTab);
   const isRecipient = state.appMode === 'RECIPIENT';
 
   // Sync background song url on load / update to prevent async browser play blocks
@@ -157,6 +159,17 @@ export function CreatorCanvas() {
                     </div>
                   ) : null}
                 </div>
+              ) : panelTab === 'QR' ? (
+                /* ── QR Printable Card Studio Preview ── */
+                <div className="qr-preview-stage">
+                  <QrCardPreview
+                    config={state.design.qrCard}
+                    design={state.design}
+                    guestName={state.guest ? formatGuestTitleName(state.guest, state.guest?.language || state.design.language) : undefined}
+                    inviteUrl={`${window.location.origin}/invite/sample-preview`}
+                    lang={state.design.language === 'EN' ? 'EN' : 'ES'}
+                  />
+                </div>
               ) : (
                 /* ── Host Editor View ── */
                 <>
@@ -238,11 +251,11 @@ export function CreatorCanvas() {
                       {getPhrasing(state.design.eventType, state.guest?.language || state.design.language).songLine}
                     </p>
                   </div>
+
+                  {/* Host editing preview — same renderer as the guest view */}
+                  <SectionStack mode="host" />
                 </>
               )}
-
-              {/* Host editing preview — same renderer as the guest view */}
-              {!isRecipient && <SectionStack mode="host" />}
             </div>
              <AudioToggle />
           </div>

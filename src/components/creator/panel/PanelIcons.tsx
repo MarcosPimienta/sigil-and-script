@@ -72,3 +72,17 @@ export function GripIcon({ size = 16 }: IconProps) {
     </svg>
   );
 }
+
+export function QrIcon({ size = 16 }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" {...base}>
+      <rect x="3" y="3" width="7" height="7" />
+      <rect x="14" y="3" width="7" height="7" />
+      <rect x="3" y="14" width="7" height="7" />
+      <rect x="14" y="14" width="3" height="3" />
+      <rect x="18" y="18" width="3" height="3" />
+      <rect x="18" y="14" width="3" height="3" />
+      <rect x="14" y="18" width="3" height="3" />
+    </svg>
+  );
+}

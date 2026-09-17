@@ -265,6 +265,8 @@ export interface InvitationDesign {
   defaultFonts?: SectionFonts;
   /** Floor plan and seating arrangement configuration */
   floorPlan?: FloorPlanConfig;
+  /** Configuration for physical printable QR invitation cards */
+  qrCard?: QrCardConfig;
 }
 
 // ── Floor Plan & Seating ──────────────────────────────────────────────────────
@@ -352,10 +354,28 @@ export type InspectorFocus =
 
 // ── Left Panel Navigation ────────────────────────────────
 
-/** The three top-level tabs of the Invitation Studio's left panel. */
-export type PanelTab = 'EVENT' | 'SECTIONS' | 'STYLE';
+/** The top-level tabs of the Invitation Studio's left panel. */
+export type PanelTab = 'EVENT' | 'SECTIONS' | 'STYLE' | 'QR';
 
-export const PANEL_TABS: PanelTab[] = ['EVENT', 'SECTIONS', 'STYLE'];
+export const PANEL_TABS: PanelTab[] = ['EVENT', 'SECTIONS', 'STYLE', 'QR'];
+
+// ── Physical QR Invitation Cards ──────────────────────────────
+
+export type QrCardTheme = 'PARCHMENT' | 'MINIMAL_WHITE' | 'MODERN_DARK' | 'GOLDEN_BORDER';
+export type QrCardSize = '4x6' | '3.5x2' | 'A6' | 'SQUARE';
+
+export interface QrCardConfig {
+  theme?: QrCardTheme;
+  cardSize?: QrCardSize;
+  orientation?: 'PORTRAIT' | 'LANDSCAPE';
+  headline?: string;
+  instructionsText?: string;
+  includeGuestName?: boolean;
+  includeSealLogo?: boolean;
+  showDate?: boolean;
+  qrColor?: string;
+  qrBgColor?: string;
+}
 
 // ── Canvas Selection ──────────────────────────────────────────────────────────
 

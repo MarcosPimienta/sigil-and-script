@@ -81,4 +81,13 @@ describe('InviteeRow', () => {
     fireEvent.click(screen.getByRole('button', { name: /confirm add dependent/i }));
     expect(mockAddDependent).toHaveBeenCalledWith('inv-1', 'Luca');
   });
+
+  it('opens QR modal when QR button is clicked', () => {
+    render(<InviteeRow invitee={baseInvitee} />);
+    const qrBtn = screen.getByTitle('QR Code Card');
+    expect(qrBtn).toBeInTheDocument();
+
+    fireEvent.click(qrBtn);
+    expect(screen.getByText(/tarjeta qr de invitación/i)).toBeInTheDocument();
+  });
 });

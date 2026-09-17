@@ -91,5 +91,14 @@ export function baseDesign(eventType: EventType, lang: TemplateLang, headline: s
     paperSaturate: 1.0,
     language: lang,
     sections: [],
+    qrCard: {
+      theme: 'PARCHMENT',
+      cardSize: '4x6',
+      orientation: 'PORTRAIT',
+      includeGuestName: true,
+      includeSealLogo: false,
+      showDate: true,
+      qrColor: '#2b2622',
+    },
   };
 }

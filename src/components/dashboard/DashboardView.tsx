@@ -8,6 +8,7 @@ import { AddInviteeForm } from '../creator/AddInviteeForm';
 import { CsvIngestionButton } from '../creator/CsvIngestionButton';
 import { DependentCheckbox } from '../creator/DependentCheckbox';
 import { GuestHierarchyTreeView } from './GuestHierarchyTreeView';
+import { QrCardModal } from '../creator/QrCardModal';
 
 export type SortColumn = 'name' | 'guestType' | 'dependents' | 'language' | 'status' | 'openedAt';
 export type SortDirection = 'asc' | 'desc';
@@ -125,6 +126,7 @@ export function DashboardView() {
   const [editingNameId, setEditingNameId] = useState<string | null>(null);
   const [editingNameValue, setEditingNameValue] = useState<string>('');
   const [depInputMap, setDepInputMap] = useState<Record<string, string>>({});
+  const [activeQrInvitee, setActiveQrInvitee] = useState<InviteeRecord | null>(null);
 
   // ── Sorting state ──────────────────────────────────────────────────────────
   const [sortColumn, setSortColumn] = useState<SortColumn>('name');
@@ -572,6 +574,14 @@ export function DashboardView() {
                     {/* Actions cell */}
                     <td className="dashboard-actions-cell">
                       <CopyLinkCell invitee={inv} />
+                      <button
+                        type="button"
+                        className="dashboard-action-btn"
+                        onClick={() => setActiveQrInvitee(inv)}
+                        title="View and print personalized QR code card"
+                      >
+                        🔲 QR
+                      </button>
                       {inv.status === 'PENDING' && (
                         <button
                           type="button"
@@ -663,6 +673,13 @@ export function DashboardView() {
     )}
   </>
 )}
+
+      {activeQrInvitee && (
+        <QrCardModal
+          invitee={activeQrInvitee}
+          onClose={() => setActiveQrInvitee(null)}
+        />
+      )}
     </div>
   );
 }

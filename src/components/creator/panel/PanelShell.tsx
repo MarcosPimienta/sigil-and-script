@@ -16,11 +16,13 @@ import { usePanelStrings, type PanelStringKey } from './panelStrings';
 import { EventTab } from './EventTab';
 import { SectionsTab } from './SectionsTab';
 import { StyleTab } from './StyleTab';
+import { QrTab } from './QrTab';
 
 const TAB_LABEL: Record<PanelTab, PanelStringKey> = {
   EVENT: 'tabEvent',
   SECTIONS: 'tabSections',
   STYLE: 'tabStyle',
+  QR: 'tabQr',
 };
 
 /** "14 feb 2027" from the countdown target, or nothing if it is unset. */
@@ -116,6 +118,7 @@ export function PanelShell({ onCloseMobile }: PanelShellProps = {}) {
         {panelTab === 'EVENT' && <EventTab />}
         {panelTab === 'SECTIONS' && <SectionsTab />}
         {panelTab === 'STYLE' && <StyleTab />}
+        {panelTab === 'QR' && <QrTab />}
       </div>
     </div>
   );

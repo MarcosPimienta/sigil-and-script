@@ -180,6 +180,16 @@ export function normalizeDesign(input: InvitationDesign): InvitationDesign {
   } = input;
   void _dct; void _mh; void _mt; void _ms; void _mc; void _fh; void _ft; void _fs; void _fc;
 
+  const qrCard = input.qrCard ?? {
+    theme: 'PARCHMENT',
+    cardSize: '4x6',
+    orientation: 'PORTRAIT',
+    includeGuestName: true,
+    includeSealLogo: false,
+    showDate: true,
+    qrColor: '#2b2622',
+  };
+
   return {
     ...rest,
     eventType,
@@ -187,5 +197,6 @@ export function normalizeDesign(input: InvitationDesign): InvitationDesign {
     dressCode,
     itinerary,
     rsvpFormConfig,
+    qrCard,
   };
 }
